@@ -19,38 +19,6 @@ using AndlEra;
 namespace SupplierData {
   ///===========================================================================
   /// <summary>
-  /// Generated relation type for S (suppliers)
-  /// </summary>
-  public class RelS : RelationBase {
-    static RelS() {
-      _heading = new string[] { "SNo", "Sname", "Status", "City" };
-      _key = new string[] { "SNo" };
-    }
-
-    public RelS(IList<TupS> tuples) : base(
-      new HashSet<object>(tuples.Cast<object>())) {
-    }
-  }
-  /// <summary>
-  /// Generated tuple type for S (suppliers)
-  /// </summary>
-  public class TupS : TupleBase {
-    public string Sno { get { return (string)_values[0]; } }
-    public string Sname { get { return (string)_values[1]; } }
-    public int Status { get { return (int)_values[2]; } }
-    public string City { get { return (string)_values[3]; } }
-
-    static TupS() {
-      _heading = new string[] { "SNo", "Sname", "Status", "City" };
-    }
-
-    public TupS(string Sno, string Sname, int Status, string City) : base(
-      new object[] { Sno, Sname, Status, City }) {
-    }
-  }
-
-  ///===========================================================================
-  /// <summary>
   /// Sample supplier data
   /// </summary>
   public class Supplier {
@@ -65,28 +33,28 @@ namespace SupplierData {
 
     public static RelP P = new RelP(
       new List<TupP> {
-        new TupP( "P1","Nut",   "Red",  12.0m,"London" ),
-        new TupP( "P2","Bolt",  "Green",17.0m,"Paris"  ),
-        new TupP( "P3","Screw", "Blue", 17.0m,"Oslo"   ),
-        new TupP( "P4","Screw", "Red",  14.0m,"London" ),
-        new TupP( "P5","Cam",   "Blue", 12.0m,"Paris"  ),
-        new TupP( "P6","Cog",   "Red",  19.0m,"London" ),
+        new TupP( "P1", "Nut",   "Red",   12.0m,"London" ),
+        new TupP( "P2", "Bolt",  "Green", 17.0m,"Paris"  ),
+        new TupP( "P3", "Screw", "Blue",  17.0m,"Oslo"   ),
+        new TupP( "P4", "Screw", "Red",   14.0m,"London" ),
+        new TupP( "P5", "Cam",   "Blue",  12.0m,"Paris"  ),
+        new TupP( "P6", "Cog",   "Red",   19.0m,"London" ),
       });
 
     public static RelSP SP = new RelSP(
       new List<TupSP> {
-        new TupSP( "S1","P1",300 ),
-        new TupSP( "S1","P2",200 ),
-        new TupSP( "S1","P3",400 ),
-        new TupSP( "S1","P4",200 ),
-        new TupSP( "S1","P5",100 ),
-        new TupSP( "S1","P6",100 ),
-        new TupSP( "S2","P1",300 ),
-        new TupSP( "S2","P2",400 ),
-        new TupSP( "S3","P2",200 ),
-        new TupSP( "S4","P2",200 ),
-        new TupSP( "S4","P4",300 ),
-        new TupSP( "S4","P5",400 ),
+        new TupSP( "S1", "P1", 300 ),
+        new TupSP( "S1", "P2", 200 ),
+        new TupSP( "S1", "P3", 400 ),
+        new TupSP( "S1", "P4", 200 ),
+        new TupSP( "S1", "P5", 100 ),
+        new TupSP( "S1", "P6", 100 ),
+        new TupSP( "S2", "P1", 300 ),
+        new TupSP( "S2", "P2", 400 ),
+        new TupSP( "S3", "P2", 200 ),
+        new TupSP( "S4", "P2", 200 ),
+        new TupSP( "S4", "P4", 300 ),
+        new TupSP( "S4", "P5", 400 ),
       });
     public static RelJ J = new RelJ(
       new List<TupJ> {
@@ -101,45 +69,75 @@ namespace SupplierData {
 
     public static RelSPJ SPJ = new RelSPJ(
       new List<TupSPJ> {
-        new TupSPJ("S1","P1","J1",200),
-        new TupSPJ("S1","P1","J4",700),
-        new TupSPJ("S2","P3","J1",400),
-        new TupSPJ("S2","P3","J2",200),
-        new TupSPJ("S2","P3","J3",200),
-        new TupSPJ("S2","P3","J4",500),
-        new TupSPJ("S2","P3","J5",600),
-        new TupSPJ("S2","P3","J6",400),
-        new TupSPJ("S2","P3","J7",800),
-        new TupSPJ("S2","P5","J2",100),
-        new TupSPJ("S3","P3","J1",200),
-        new TupSPJ("S3","P4","J2",500),
-        new TupSPJ("S4","P6","J3",300),
-        new TupSPJ("S4","P6","J7",300),
-        new TupSPJ("S5","P2","J2",200),
-        new TupSPJ("S5","P2","J4",100),
-        new TupSPJ("S5","P5","J5",500),
-        new TupSPJ("S5","P5","J7",100),
-        new TupSPJ("S5","P6","J2",200),
-        new TupSPJ("S5","P1","J4",100),
-        new TupSPJ("S5","P3","J4",200),
-        new TupSPJ("S5","P4","J4",800),
-        new TupSPJ("S5","P5","J4",400),
-        new TupSPJ("S5","P6","J4",500),
-        });
+        new TupSPJ( "S1", "P1", "J1", 200),
+        new TupSPJ( "S1", "P1", "J4", 700),
+        new TupSPJ( "S2", "P3", "J1", 400),
+        new TupSPJ( "S2", "P3", "J2", 200),
+        new TupSPJ( "S2", "P3", "J3", 200),
+        new TupSPJ( "S2", "P3", "J4", 500),
+        new TupSPJ( "S2", "P3", "J5", 600),
+        new TupSPJ( "S2", "P3", "J6", 400),
+        new TupSPJ( "S2", "P3", "J7", 800),
+        new TupSPJ( "S2", "P5", "J2", 100),
+        new TupSPJ( "S3", "P3", "J1", 200),
+        new TupSPJ( "S3", "P4", "J2", 500),
+        new TupSPJ( "S4", "P6", "J3", 300),
+        new TupSPJ( "S4", "P6", "J7", 300),
+        new TupSPJ( "S5", "P2", "J2", 200),
+        new TupSPJ( "S5", "P2", "J4", 100),
+        new TupSPJ( "S5", "P5", "J5", 500),
+        new TupSPJ( "S5", "P5", "J7", 100),
+        new TupSPJ( "S5", "P6", "J2", 200),
+        new TupSPJ( "S5", "P1", "J4", 100),
+        new TupSPJ( "S5", "P3", "J4", 200),
+        new TupSPJ( "S5", "P4", "J4", 800),
+        new TupSPJ( "S5", "P5", "J4", 400),
+        new TupSPJ( "S5", "P6", "J4", 500),
+      });
+  }
+
+  ///===========================================================================
+  /// <summary>
+  /// Generated relation type for S (suppliers)
+  /// </summary>
+  public class RelS : RelationBase<TupS> {
+    static RelS() {
+      Heading = new string[] { "SNo", "Sname", "Status", "City" };
+      Key = new string[] { "SNo" };
+    }
+
+    public RelS(IList<TupS> tuples) : base(tuples) {
+    }
+  }
+  /// <summary>
+  /// Generated tuple type for S (suppliers)
+  /// </summary>
+  public class TupS : TupleBase {
+    public string Sno { get { return (string)_values[0]; } }
+    public string Sname { get { return (string)_values[1]; } }
+    public int Status { get { return (int)_values[2]; } }
+    public string City { get { return (string)_values[3]; } }
+
+    static TupS() {
+      Heading = new string[] { "SNo", "Sname", "Status", "City" };
+    }
+
+    public TupS(string Sno, string Sname, int Status, string City) : base(
+      new object[] { Sno, Sname, Status, City }) {
+    }
   }
 
   ///===========================================================================
   /// <summary>
   /// Generated relation type for P (products)
   /// </summary>
-  public class RelP : RelationBase {
+  public class RelP : RelationBase<TupP> {
     static RelP() {
-      _heading = new string[] { "Pno", "Pname", "Color", "Weight", "City" };
-      _key = new string[] { "PNo" };
+      Heading = new string[] { "Pno", "Pname", "Color", "Weight", "City" };
+      Key = new string[] { "PNo" };
     }
 
-    public RelP(IList<TupP> tuples) : base(
-      new HashSet<object>(tuples.Cast<object>())) {
+    public RelP(IList<TupP> tuples) : base(tuples) {
     }
 
   }
@@ -155,7 +153,7 @@ namespace SupplierData {
     public string City { get { return (string)_values[4]; } }
 
     static TupP() {
-      _heading = new string[] { "Pno", "Pname", "Color", "Weight", "City" };
+      Heading = new string[] { "Pno", "Pname", "Color", "Weight", "City" };
     }
     public TupP(string pno, string pname, string color, decimal weight, string city) :
       base(new object[] { pno, pname, color, weight, city }) {
@@ -166,14 +164,13 @@ namespace SupplierData {
   /// <summary>
   /// Generated relation type for SP (supplies)
   /// </summary>
-  public class RelSP : RelationBase {
+  public class RelSP : RelationBase<TupSP> {
     static RelSP() {
-      _heading = new string[] { "Sno", "Pno", "Qty" };
-      _key = new string[] { "Sno", "PNo" };
+      Heading = new string[] { "Sno", "Pno", "Qty" };
+      Key = new string[] { "Sno", "PNo" };
     }
 
-    public RelSP(IList<TupSP> tuples) : base(
-      new HashSet<object>(tuples.Cast<object>())) {
+    public RelSP(IList<TupSP> tuples) : base(tuples) {
     }
   }
 
@@ -186,7 +183,7 @@ namespace SupplierData {
     public int Qty { get { return (int)_values[2]; } }
 
     static TupSP() {
-      _heading = new string[] { "Sno", "Pno", "Qty" };
+      Heading = new string[] { "Sno", "Pno", "Qty" };
     }
 
     public TupSP(string Sno, string Pno, int Qty) : base(
@@ -198,14 +195,13 @@ namespace SupplierData {
   /// <summary>
   /// Generated relation type for J (jobs)
   /// </summary>
-  public class RelJ : RelationBase {
+  public class RelJ : RelationBase<TupJ> {
     static RelJ() {
-      _heading = new string[] { "Jno", "Jname", "City " };
-      _key = new string[] { "JNo" };
+      Heading = new string[] { "Jno", "Jname", "City " };
+      Key = new string[] { "JNo" };
     }
 
-    public RelJ(IList<TupJ> tuples) : base(
-      new HashSet<object>(tuples.Cast<object>())) {
+    public RelJ(IList<TupJ> tuples) : base(tuples) {
     }
 
   }
@@ -218,7 +214,7 @@ namespace SupplierData {
     public string City { get { return (string)_values[2]; } }
 
     static TupJ() {
-      _heading = new string[] { "Jno", "Jname", "City " };
+      Heading = new string[] { "Jno", "Jname", "City " };
     }
 
     public TupJ(string jno, string jname, string city) : base(
@@ -230,14 +226,13 @@ namespace SupplierData {
   /// <summary>
   /// Generated relation type for SPJ (job supplies)
   /// </summary>
-  public class RelSPJ : RelationBase {
+  public class RelSPJ : RelationBase<TupSPJ> {
     static RelSPJ() {
-      _heading = new string[] { "Sno", "Pno", "Jno", "Qty" };
-      _key = new string[] { "Sno", "PNo", "Jno" };
+      Heading = new string[] { "Sno", "Pno", "Jno", "Qty" };
+      Key = new string[] { "Sno", "PNo", "Jno" };
     }
 
-    public RelSPJ(IList<TupSPJ> tuples) : base(
-      new HashSet<object>(tuples.Cast<object>())) {
+    public RelSPJ(IList<TupSPJ> tuples) : base(tuples) {
     }
 
   }
@@ -252,7 +247,7 @@ namespace SupplierData {
     public int Qty { get { return (int)_values[3]; } }
 
     static TupSPJ() {
-      _heading = new string[] { "Sno", "Pno", "Jno", "Qty" };
+      Heading = new string[] { "Sno", "Pno", "Jno", "Qty" };
     }
 
     public TupSPJ(string Sno, string Pno, string Jno, int Qty) : base(
