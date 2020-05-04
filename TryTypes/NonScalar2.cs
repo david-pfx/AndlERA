@@ -10,11 +10,13 @@ namespace AndlEra {
   /// Base type for relations
   /// </summary>
   public abstract class RelationBase {
-    protected string[] _heading;
-    protected string[] _key;
+    static protected string[] _heading;
+    static protected string[] _key;
     protected HashSet<object> _body;
     protected int _hashcode;
+
     public string[] Heading { get { return _heading; } }
+    public string[] Key { get { return _key; } }
 
     public override int GetHashCode() {
       return _hashcode;
@@ -33,9 +35,7 @@ namespace AndlEra {
       return true;
     }
 
-    public RelationBase(string[] heading, string[] key, HashSet<object> body) {
-      _heading = heading;
-      _key = key;
+    public RelationBase(HashSet<object> body) {
       _body = body;
       _hashcode = CalcHashCode(body);
     }
@@ -52,7 +52,7 @@ namespace AndlEra {
   /// Base type for tuples
   /// </summary>
   public abstract class TupleBase {
-    protected string[] _heading;
+    static protected string[] _heading;
     protected object[] _values;
     protected int _hashcode;
     public string[] Heading { get { return _heading; } }
@@ -73,8 +73,7 @@ namespace AndlEra {
       return _values.Join(",");
     }
 
-    public TupleBase(string[] heading, object[] values) {
-      _heading = heading;
+    public TupleBase(object[] values) {
       _values = values;
       _hashcode = CalcHashCode(values);
     }
@@ -92,10 +91,12 @@ namespace AndlEra {
   /// Generated relation type for S (suppliers)
   /// </summary>
   class RelS : RelationBase {
+    static RelS() {
+      _heading = new string[] { "SNo", "Sname", "Status", "City" };
+      _key = new string[] { "SNo" };
+    }
 
     RelS(IList<TupS> tuples) : base(
-      new string[] { "SNo", "Sname", "Status", "City" }, 
-      new string[] { "SNo" },
       new HashSet<object>(tuples.Cast<object>())) {
     }
 
@@ -110,8 +111,11 @@ namespace AndlEra {
     public int Status { get { return (int)_values[2]; } }
     public string City { get { return (string)_values[3]; } }
 
+    static TupS() {
+      _heading = new string[] { "SNo", "Sname", "Status", "City" };
+    }
+
     public TupS(string Sno, string Sname, int Status, string City) : base(
-      new string[] { "SNo", "Sname", "Status", "City" },
       new object[] { Sno, Sname, Status, City }) { 
     }
    }
