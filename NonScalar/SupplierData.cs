@@ -22,7 +22,7 @@ namespace SupplierData {
   /// Sample supplier data
   /// </summary>
   public static class Supplier {
-    public static RelS S = new RelS(
+    public static RelS S = RelS.Create(
       new List<TupS> {
         TupS.Create( "S1", "Smith", 20, "London" ),
         TupS.Create( "S2", "Jones", 10, "Paris" ),
@@ -31,7 +31,7 @@ namespace SupplierData {
         TupS.Create( "S5", "Adams", 30, "Athens" ),
       });
 
-    public static RelP P = new RelP(
+    public static RelP P = RelP.Create(
       new List<TupP> {
         TupP.Create( "P1", "Nut",   "Red",   12.0m,"London" ),
         TupP.Create( "P2", "Bolt",  "Green", 17.0m,"Paris"  ),
@@ -41,7 +41,7 @@ namespace SupplierData {
         TupP.Create( "P6", "Cog",   "Red",   19.0m,"London" ),
       });
 
-    public static RelSP SP = new RelSP(
+    public static RelSP SP = RelSP.Create(
       new List<TupSP> {
         TupSP.Create( "S1", "P1", 300 ),
         TupSP.Create( "S1", "P2", 200 ),
@@ -56,7 +56,7 @@ namespace SupplierData {
         TupSP.Create( "S4", "P4", 300 ),
         TupSP.Create( "S4", "P5", 400 ),
       });
-    public static RelJ J = new RelJ(
+    public static RelJ J = RelJ.Create(
       new List<TupJ> {
         TupJ.Create("J1","Sorter","Paris"),
         TupJ.Create("J2","Display","Rome"),
@@ -67,7 +67,7 @@ namespace SupplierData {
         TupJ.Create("J7","Tape","London"),
       });
 
-    public static RelSPJ SPJ = new RelSPJ(
+    public static RelSPJ SPJ = RelSPJ.Create(
       new List<TupSPJ> {
         TupSPJ.Create( "S1", "P1", "J1", 200),
         TupSPJ.Create( "S1", "P1", "J4", 700),
@@ -101,7 +101,8 @@ namespace SupplierData {
   /// Generated relation type for S (suppliers)
   /// </summary>
   public class RelS : RelationBase<TupS> {
-    public RelS(IList<TupS> tuples) : base(tuples) {
+    public static RelS Create(IList<TupS> tuples) {
+      return Create<RelS>(tuples);
     }
   }
   /// <summary>
@@ -116,9 +117,7 @@ namespace SupplierData {
     public string City { get { return (string)_values[3]; } }
 
     public static TupS Create(string Sno, string Sname, int Status, string City) {
-      var tuple = new TupS();
-      tuple.Init(new object[] { Sno, Sname, Status, City });
-      return tuple;
+      return Create<TupS>(new object[] { Sno, Sname, Status, City });
     }
   }
 
@@ -127,7 +126,8 @@ namespace SupplierData {
   /// Generated relation type for P (products)
   /// </summary>
   public class RelP : RelationBase<TupP> {
-    public RelP(IList<TupP> tuples) : base(tuples) {
+    public static RelP Create(IList<TupP> tuples) {
+      return Create<RelP>(tuples);
     }
   }
 
@@ -144,9 +144,7 @@ namespace SupplierData {
     public string City { get { return (string)_values[4]; } }
 
     public static TupP Create(string pno, string pname, string color, decimal weight, string city) {
-      var tuple = new TupP();
-      tuple.Init(new object[] { pno, pname, color, weight, city });
-      return tuple;
+      return Create<TupP>(new object[] { pno, pname, color, weight, city });
     }
   }
 
@@ -155,7 +153,8 @@ namespace SupplierData {
   /// Generated relation type for SP (supplies)
   /// </summary>
   public class RelSP : RelationBase<TupSP> {
-    public RelSP(IList<TupSP> tuples) : base(tuples) {
+    public static RelSP Create(IList<TupSP> tuples) {
+      return Create<RelSP>(tuples);
     }
   }
 
@@ -170,9 +169,7 @@ namespace SupplierData {
     public int Qty { get { return (int)_values[2]; } }
 
     public static TupSP Create(string Sno, string Pno, int Qty) {
-      var tuple = new TupSP();
-      tuple.Init(new object[] { Sno, Pno, Qty });
-      return tuple;
+      return Create<TupSP>(new object[] { Sno, Pno, Qty });
     }
   }
 
@@ -181,9 +178,9 @@ namespace SupplierData {
   /// Generated relation type for J (jobs)
   /// </summary>
   public class RelJ : RelationBase<TupJ> {
-    public RelJ(IList<TupJ> tuples) : base(tuples) {
+    public static RelJ Create(IList<TupJ> tuples) {
+      return Create<RelJ>(tuples);
     }
-
   }
   /// <summary>
   /// Generated tuple type for J (jobs)
@@ -196,9 +193,7 @@ namespace SupplierData {
     public string City { get { return (string)_values[2]; } }
 
     public static TupJ Create(string jno, string jname, string city) {
-      var tuple = new TupJ();
-      tuple.Init(new object[] { jno, jname, city });
-      return tuple;
+      return Create<TupJ>(new object[] { jno, jname, city });
     }
   }
 
@@ -207,9 +202,9 @@ namespace SupplierData {
   /// Generated relation type for SPJ (job supplies)
   /// </summary>
   public class RelSPJ : RelationBase<TupSPJ> {
-    public RelSPJ(IList<TupSPJ> tuples) : base(tuples) {
+    public static RelSPJ Create(IList<TupSPJ> tuples) {
+      return Create<RelSPJ>(tuples);
     }
-
   }
 
   /// <summary>
@@ -224,9 +219,7 @@ namespace SupplierData {
     public int Qty { get { return (int)_values[3]; } }
 
     public static TupSPJ Create(string Sno, string Pno, string Jno, int Qty) {
-      var tuple = new TupSPJ();
-      tuple.Init(new object[] { Sno, Pno, Jno, Qty });
-      return tuple;
+      return Create<TupSPJ>(new object[] { Sno, Pno, Jno, Qty });
     }
   }
 }

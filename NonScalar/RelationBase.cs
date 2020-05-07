@@ -54,9 +54,12 @@ namespace AndlEra {
     }
 
     // create new relation value from body
-    public RelationBase(IEnumerable<Ttuple> tuples) {
-      Body = new HashSet<Ttuple>(tuples);
-      _hashcode = CalcHashCode(Body);
+    public static T Create<T>(IEnumerable<Ttuple> tuples) where T:RelationBase<Ttuple>,new() {
+      var body = new HashSet<Ttuple>(tuples);
+      return new T() {
+        Body = body,
+        _hashcode = CalcHashCode(body),
+      };
     }
 
     // return singleton tuple: error if none, random if more than one
@@ -69,14 +72,14 @@ namespace AndlEra {
     }
 
     public RelationBase<Ttuple> Select(Func<Ttuple, bool> predicate) {
-      return new RelationBase<Ttuple>(Body.Where(t => predicate(t)));
+      return Create<RelationBase<Ttuple>>(Body.Where(t => predicate(t)));
     }
 
-    public RelationBase<Ttuple> Rename<T>() 
-    where T:TupleBase,new() {
+    public static RelationBase<Ttuple> Rename<T>(RelationBase<T> relation)
+    where T : TupleBase, new() {
       var map = MapRename(Heading, RelationBase<T>.Heading);
-      var body = Body.Select(t => NewTuple(t.MapValues(map)));
-      return new RelationBase<Ttuple>(body);
+      var body = relation.Body.Select(t => NewTuple(t.MapValues(map)));
+      return Create<RelationBase<Ttuple>>(body);
     }
 
     // construct renaming map from two headings
@@ -91,7 +94,7 @@ namespace AndlEra {
         }
       }
       for (int ox = 0; ox < ohead.Length; ++ox) {
-        if (Array.FindIndex(map, i => i == map[ox]) == -1) {
+        if (Array.FindIndex(map, i => i == ox) == -1) {
           map[odd] = ox;
           break;
         }

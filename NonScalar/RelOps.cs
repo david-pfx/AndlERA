@@ -14,17 +14,14 @@ namespace AndlEra {
     public int N { get { return (int)_values[0]; } }
 
     public static TupSequence Create(int N) {
-      var tuple = new TupSequence();
-      tuple.Init(new object[] { N });
-      return tuple;
+      return Create<TupSequence>(new object[] { N });
     }
   }
 
   public class RelSequence : RelationBase<TupSequence> {
-    public RelSequence(int count)
-      : base(Enumerable.Range(0, count).Select(n => TupSequence.Create(n))) {
+    public static RelSequence Create(int count) {
+      return Create<RelSequence>(Enumerable.Range(0, count).Select(n => TupSequence.Create(n)));
     }
-
   }
 
   ///===========================================================================
@@ -38,16 +35,15 @@ namespace AndlEra {
     public string Line { get { return (string)_values[1]; } }
 
     public static TupText Create(int Seq, string Line) {
-      var tuple = new TupText();
-      tuple.Init(new object[] { Seq, Line });
-      return tuple;
+      return Create<TupText>(new object[] { Seq, Line });
     }
   }
 
   public class RelText : RelationBase<TupText> {
-    public RelText(IList<string> text)
-      : base(Enumerable.Range(0, text.Count).Select(n => TupText.Create(n, text[n]))) {
+    public static RelText Create(IList<string> text) {
+      return Create<RelText>(Enumerable.Range(0, text.Count)
+        .Select(n => TupText
+        .Create(n, text[n])));
     }
-
   }
 }

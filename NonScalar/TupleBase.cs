@@ -37,13 +37,15 @@ namespace AndlEra {
         .Join(", ");
     }
 
-    protected void Init(object[] values) {
-      _values = values;
-      _hashcode = CalcHashCode(values);
+    public static T Create<T>(object[] values) where T : TupleBase, new() {
+      return new T() {
+        _values = values,
+        _hashcode = CalcHashCode(values),
+      };
     }
 
-      //--- impl
-      internal static int CalcHashCode(object[] values) {
+    //--- impl
+    internal static int CalcHashCode(object[] values) {
       int code = 1;
       foreach (object value in values)
         code = (code << 1) ^ value.GetHashCode();

@@ -16,9 +16,7 @@ namespace AndlEra {
     public int Y { get { return (int)_values[1]; } }
 
     public static TupPoint Create(int X, int Y) {
-      var tuple = new TupPoint();
-      tuple.Init(new object[] { X, Y });
-      return tuple;
+      return Create<TupPoint>(new object[] { X, Y });
     }
   }
 
@@ -26,7 +24,8 @@ namespace AndlEra {
   /// 
   /// </summary>
   public class RelPoint : RelationBase<TupPoint> {
-    public RelPoint(IList<TupPoint> tuples) : base(tuples) {
+    public static RelPoint Create(IList<TupPoint> tuples) {
+      return Create<RelPoint>(tuples);
     }
   }
 
@@ -36,10 +35,10 @@ namespace AndlEra {
   /// </summary>
   public static class NoneData {
     // Empty relation empty header is DUM
-    public static RelNone Zero = new RelNone(
+    public static RelNone Zero = RelNone.Create(
       new List<TupNone> { } );
     // Full relation empty header is DEE
-    public static RelNone One = new RelNone(
+    public static RelNone One = RelNone.Create(
       new List<TupNone> { new TupNone() });
   }
 
@@ -50,9 +49,7 @@ namespace AndlEra {
     public readonly static string[] Heading = { };
 
     public static TupNone Create() {
-      var tuple = new TupNone();
-      tuple.Init(new object[] { });
-      return tuple;
+      return Create<TupNone>(new object[] { });
     }
   }
 
@@ -60,7 +57,8 @@ namespace AndlEra {
   /// Relation with degree of zero
   /// </summary>
   public class RelNone : RelationBase<TupNone> {
-    public RelNone(IList<TupNone> tuples) : base(tuples) {
+    public static RelNone Create(IList<TupNone> tuples) {
+      return Create<RelNone>(tuples);
     }
   }
 
