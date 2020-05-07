@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RelOps.cs" />
     <Compile Include="SampleData.cs" />
     <Compile Include="NonScalar.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -24,75 +24,75 @@ namespace SupplierData {
   public static class Supplier {
     public static RelS S = new RelS(
       new List<TupS> {
-        new TupS( "S1", "Smith", 20, "London" ),
-        new TupS( "S2", "Jones", 10, "Paris" ),
-        new TupS( "S3", "Blake", 30, "Paris" ),
-        new TupS( "S4", "Clark", 20, "London" ),
-        new TupS( "S5", "Adams", 30, "Athens" ),
+        TupS.Create( "S1", "Smith", 20, "London" ),
+        TupS.Create( "S2", "Jones", 10, "Paris" ),
+        TupS.Create( "S3", "Blake", 30, "Paris" ),
+        TupS.Create( "S4", "Clark", 20, "London" ),
+        TupS.Create( "S5", "Adams", 30, "Athens" ),
       });
 
     public static RelP P = new RelP(
       new List<TupP> {
-        new TupP( "P1", "Nut",   "Red",   12.0m,"London" ),
-        new TupP( "P2", "Bolt",  "Green", 17.0m,"Paris"  ),
-        new TupP( "P3", "Screw", "Blue",  17.0m,"Oslo"   ),
-        new TupP( "P4", "Screw", "Red",   14.0m,"London" ),
-        new TupP( "P5", "Cam",   "Blue",  12.0m,"Paris"  ),
-        new TupP( "P6", "Cog",   "Red",   19.0m,"London" ),
+        TupP.Create( "P1", "Nut",   "Red",   12.0m,"London" ),
+        TupP.Create( "P2", "Bolt",  "Green", 17.0m,"Paris"  ),
+        TupP.Create( "P3", "Screw", "Blue",  17.0m,"Oslo"   ),
+        TupP.Create( "P4", "Screw", "Red",   14.0m,"London" ),
+        TupP.Create( "P5", "Cam",   "Blue",  12.0m,"Paris"  ),
+        TupP.Create( "P6", "Cog",   "Red",   19.0m,"London" ),
       });
 
     public static RelSP SP = new RelSP(
       new List<TupSP> {
-        new TupSP( "S1", "P1", 300 ),
-        new TupSP( "S1", "P2", 200 ),
-        new TupSP( "S1", "P3", 400 ),
-        new TupSP( "S1", "P4", 200 ),
-        new TupSP( "S1", "P5", 100 ),
-        new TupSP( "S1", "P6", 100 ),
-        new TupSP( "S2", "P1", 300 ),
-        new TupSP( "S2", "P2", 400 ),
-        new TupSP( "S3", "P2", 200 ),
-        new TupSP( "S4", "P2", 200 ),
-        new TupSP( "S4", "P4", 300 ),
-        new TupSP( "S4", "P5", 400 ),
+        TupSP.Create( "S1", "P1", 300 ),
+        TupSP.Create( "S1", "P2", 200 ),
+        TupSP.Create( "S1", "P3", 400 ),
+        TupSP.Create( "S1", "P4", 200 ),
+        TupSP.Create( "S1", "P5", 100 ),
+        TupSP.Create( "S1", "P6", 100 ),
+        TupSP.Create( "S2", "P1", 300 ),
+        TupSP.Create( "S2", "P2", 400 ),
+        TupSP.Create( "S3", "P2", 200 ),
+        TupSP.Create( "S4", "P2", 200 ),
+        TupSP.Create( "S4", "P4", 300 ),
+        TupSP.Create( "S4", "P5", 400 ),
       });
     public static RelJ J = new RelJ(
       new List<TupJ> {
-        new TupJ("J1","Sorter","Paris"),
-        new TupJ("J2","Display","Rome"),
-        new TupJ("J3","OCR","Athens"),
-        new TupJ("J4","Console","Athens"),
-        new TupJ("J5","RAID","London"),
-        new TupJ("J6","EDS","Oslo"),
-        new TupJ("J7","Tape","London"),
+        TupJ.Create("J1","Sorter","Paris"),
+        TupJ.Create("J2","Display","Rome"),
+        TupJ.Create("J3","OCR","Athens"),
+        TupJ.Create("J4","Console","Athens"),
+        TupJ.Create("J5","RAID","London"),
+        TupJ.Create("J6","EDS","Oslo"),
+        TupJ.Create("J7","Tape","London"),
       });
 
     public static RelSPJ SPJ = new RelSPJ(
       new List<TupSPJ> {
-        new TupSPJ( "S1", "P1", "J1", 200),
-        new TupSPJ( "S1", "P1", "J4", 700),
-        new TupSPJ( "S2", "P3", "J1", 400),
-        new TupSPJ( "S2", "P3", "J2", 200),
-        new TupSPJ( "S2", "P3", "J3", 200),
-        new TupSPJ( "S2", "P3", "J4", 500),
-        new TupSPJ( "S2", "P3", "J5", 600),
-        new TupSPJ( "S2", "P3", "J6", 400),
-        new TupSPJ( "S2", "P3", "J7", 800),
-        new TupSPJ( "S2", "P5", "J2", 100),
-        new TupSPJ( "S3", "P3", "J1", 200),
-        new TupSPJ( "S3", "P4", "J2", 500),
-        new TupSPJ( "S4", "P6", "J3", 300),
-        new TupSPJ( "S4", "P6", "J7", 300),
-        new TupSPJ( "S5", "P2", "J2", 200),
-        new TupSPJ( "S5", "P2", "J4", 100),
-        new TupSPJ( "S5", "P5", "J5", 500),
-        new TupSPJ( "S5", "P5", "J7", 100),
-        new TupSPJ( "S5", "P6", "J2", 200),
-        new TupSPJ( "S5", "P1", "J4", 100),
-        new TupSPJ( "S5", "P3", "J4", 200),
-        new TupSPJ( "S5", "P4", "J4", 800),
-        new TupSPJ( "S5", "P5", "J4", 400),
-        new TupSPJ( "S5", "P6", "J4", 500),
+        TupSPJ.Create( "S1", "P1", "J1", 200),
+        TupSPJ.Create( "S1", "P1", "J4", 700),
+        TupSPJ.Create( "S2", "P3", "J1", 400),
+        TupSPJ.Create( "S2", "P3", "J2", 200),
+        TupSPJ.Create( "S2", "P3", "J3", 200),
+        TupSPJ.Create( "S2", "P3", "J4", 500),
+        TupSPJ.Create( "S2", "P3", "J5", 600),
+        TupSPJ.Create( "S2", "P3", "J6", 400),
+        TupSPJ.Create( "S2", "P3", "J7", 800),
+        TupSPJ.Create( "S2", "P5", "J2", 100),
+        TupSPJ.Create( "S3", "P3", "J1", 200),
+        TupSPJ.Create( "S3", "P4", "J2", 500),
+        TupSPJ.Create( "S4", "P6", "J3", 300),
+        TupSPJ.Create( "S4", "P6", "J7", 300),
+        TupSPJ.Create( "S5", "P2", "J2", 200),
+        TupSPJ.Create( "S5", "P2", "J4", 100),
+        TupSPJ.Create( "S5", "P5", "J5", 500),
+        TupSPJ.Create( "S5", "P5", "J7", 100),
+        TupSPJ.Create( "S5", "P6", "J2", 200),
+        TupSPJ.Create( "S5", "P1", "J4", 100),
+        TupSPJ.Create( "S5", "P3", "J4", 200),
+        TupSPJ.Create( "S5", "P4", "J4", 800),
+        TupSPJ.Create( "S5", "P5", "J4", 400),
+        TupSPJ.Create( "S5", "P6", "J4", 500),
       });
   }
 
@@ -115,8 +115,10 @@ namespace SupplierData {
     public int Status { get { return (int)_values[2]; } }
     public string City { get { return (string)_values[3]; } }
 
-    public TupS(string Sno, string Sname, int Status, string City) : base(
-      new object[] { Sno, Sname, Status, City }) {
+    public static TupS Create(string Sno, string Sname, int Status, string City) {
+      var tuple = new TupS();
+      tuple.Init(new object[] { Sno, Sname, Status, City });
+      return tuple;
     }
   }
 
@@ -141,8 +143,10 @@ namespace SupplierData {
     public decimal Weight { get { return (decimal)_values[3]; } }
     public string City { get { return (string)_values[4]; } }
 
-    public TupP(string pno, string pname, string color, decimal weight, string city) :
-      base(new object[] { pno, pname, color, weight, city }) {
+    public static TupP Create(string pno, string pname, string color, decimal weight, string city) {
+      var tuple = new TupP();
+      tuple.Init(new object[] { pno, pname, color, weight, city });
+      return tuple;
     }
   }
 
@@ -165,8 +169,10 @@ namespace SupplierData {
     public string Pno { get { return (string)_values[1]; } }
     public int Qty { get { return (int)_values[2]; } }
 
-    public TupSP(string Sno, string Pno, int Qty) : base(
-      new object[] { Sno, Pno, Qty }) {
+    public static TupSP Create(string Sno, string Pno, int Qty) {
+      var tuple = new TupSP();
+      tuple.Init(new object[] { Sno, Pno, Qty });
+      return tuple;
     }
   }
 
@@ -189,8 +195,10 @@ namespace SupplierData {
     public string Jname { get { return (string)_values[1]; } }
     public string City { get { return (string)_values[2]; } }
 
-    public TupJ(string jno, string jname, string city) : base(
-      new object[] { jno, jname, city }) {
+    public static TupJ Create(string jno, string jname, string city) {
+      var tuple = new TupJ();
+      tuple.Init(new object[] { jno, jname, city });
+      return tuple;
     }
   }
 
@@ -215,8 +223,10 @@ namespace SupplierData {
     public string Jno { get { return (string)_values[2]; } }
     public int Qty { get { return (int)_values[3]; } }
 
-    public TupSPJ(string Sno, string Pno, string Jno, int Qty) : base(
-      new object[] { Sno, Pno, Jno, Qty }) {
+    public static TupSPJ Create(string Sno, string Pno, string Jno, int Qty) {
+      var tuple = new TupSPJ();
+      tuple.Init(new object[] { Sno, Pno, Jno, Qty });
+      return tuple;
     }
   }
 }

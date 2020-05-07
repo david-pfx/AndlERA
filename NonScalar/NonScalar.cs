@@ -12,8 +12,8 @@ namespace AndlEra {
   /// Base type for tuples
   /// </summary>
   public abstract class TupleBase {
-    protected object[] _values { get; private set; }
-    private int _hashcode;
+    protected internal object[] _values { get; internal set; }
+    internal int _hashcode;
 
     public override int GetHashCode() {
       return _hashcode;
@@ -37,16 +37,24 @@ namespace AndlEra {
         .Join(", ");
     }
 
-    public TupleBase(object[] values) {
+    protected void Init(object[] values) {
       _values = values;
       _hashcode = CalcHashCode(values);
     }
 
-    internal static int CalcHashCode(object[] values) {
+      //--- impl
+      internal static int CalcHashCode(object[] values) {
       int code = 1;
       foreach (object value in values)
         code = (code << 1) ^ value.GetHashCode();
       return code;
+    }
+
+    // build new values array using map of indexes
+    internal object[] MapValues(IList<int> map) {
+      return Enumerable.Range(0, map.Count)
+        .Select(x => _values[map[x]])
+        .ToArray();
     }
 
   }
@@ -55,7 +63,7 @@ namespace AndlEra {
   /// <summary>
   /// Base type for relations
   /// </summary>
-  public class RelationBase<Ttuple> where Ttuple:TupleBase {
+  public class RelationBase<Ttuple> where Ttuple:TupleBase,new() {
     public static string[] Heading { get; protected set; }
     public int Count { get { return Body.Count; } }
     public bool IsEmpty { get { return Body.Count == 0; } }
@@ -82,6 +90,14 @@ namespace AndlEra {
       return true;
     }
 
+    // create a new tuple of matching type generically
+    public static Ttuple NewTuple(object[] values) {
+      return new Ttuple() { 
+        _values = values,
+        _hashcode = TupleBase.CalcHashCode(values),
+      };
+    }
+
     //--- ctor
     static RelationBase() {
       // hack to get heading value from tuple
@@ -89,6 +105,7 @@ namespace AndlEra {
       Heading = (string[])prop.GetValue(null);
     }
 
+    // create new relation value from body
     public RelationBase(IEnumerable<Ttuple> tuples) {
       Body = new HashSet<Ttuple>(tuples);
       _hashcode = CalcHashCode(Body);
@@ -107,6 +124,33 @@ namespace AndlEra {
       return new RelationBase<Ttuple>(Body.Where(t => predicate(t)));
     }
 
+    public RelationBase<Ttuple> Rename<T>() 
+    where T:TupleBase,new() {
+      var map = MapRename(Heading, RelationBase<T>.Heading);
+      var body = Body.Select(t => NewTuple(t.MapValues(map)));
+      return new RelationBase<Ttuple>(body);
+    }
+
+    // construct renaming map from two headings
+    private static int[] MapRename(string[] head, string[] ohead) {
+      var map = new int[head.Length];
+      var odd = -1;
+      for (int hx = 0; hx < head.Length; ++hx) {
+        map[hx] = Array.FindIndex(ohead, s => s == Heading[hx]);  // equals?
+        if (map[hx] == -1) {
+          Logger.Assert(odd == -1);
+          odd = hx;
+        }
+      }
+      for (int ox = 0; ox < ohead.Length; ++ox) {
+        if (Array.FindIndex(map, i => i == map[ox]) == -1) {
+          map[odd] = ox;
+          break;
+        }
+      }
+      return map;
+    }
+
     // --- impl
     internal static int CalcHashCode(HashSet<Ttuple> body) {
       int code = 1;
@@ -122,49 +166,5 @@ namespace AndlEra {
 
   }
 
-  ///===========================================================================
-  /// <summary>
-  /// 
-  /// </summary>
-  public class TupSequence : TupleBase {
-    public readonly static string[] Heading = { "N" };
-    public int N { get { return (int)_values[0]; } }
-
-    //static TupSequence() {
-    //  Heading = new string[] { "N" };
-    //}
-
-    public TupSequence(int N) : base(
-      new object[] { N }) {
-    }
-  }
-
-  public class RelSequence : RelationBase<TupSequence> {
-    public RelSequence(int count) 
-      : base(Enumerable.Range(0, count).Select(n => new TupSequence(n))) {
-    }
-
-  }
-
-  ///===========================================================================
-  /// <summary>
-  /// 
-  /// </summary>
-  public class TupText : TupleBase {
-    public readonly static string[] Heading = { "Seq", "Line" };
-
-    public int Seq { get { return (int)_values[0]; } }
-    public string Line { get { return (string)_values[1]; } }
-
-    public TupText(int Seq, string Line) : base(
-      new object[] { Seq, Line }) {
-    }
-  }
-
-  public class RelText : RelationBase<TupText> {
-    public RelText(IList<string> text)
-      : base(Enumerable.Range(0, text.Count).Select(n => new TupText(n, text[n]))) {
-    }
-
-  }
+  
 }

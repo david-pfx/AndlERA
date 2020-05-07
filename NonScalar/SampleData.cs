@@ -11,16 +11,14 @@ namespace AndlEra {
   /// </summary>
   public class TupPoint : TupleBase {
     public readonly static string[] Heading = { "X", "Y" };
-    
+
     public int X { get { return (int)_values[0]; } }
     public int Y { get { return (int)_values[1]; } }
 
-    //static TupPoint() {
-    //  Heading = new string[] { "X", "Y" };
-    //}
-
-    public TupPoint(int X, int Y) : base(
-      new object[] { X, Y }) {
+    public static TupPoint Create(int X, int Y) {
+      var tuple = new TupPoint();
+      tuple.Init(new object[] { X, Y });
+      return tuple;
     }
   }
 
@@ -50,12 +48,11 @@ namespace AndlEra {
   /// </summary>
   public class TupNone : TupleBase {
     public readonly static string[] Heading = { };
-    //static TupNone() {
-    //  Heading = new string[] { };
-    //}
 
-    public TupNone() : base(
-      new object[] { }) {
+    public static TupNone Create() {
+      var tuple = new TupNone();
+      tuple.Init(new object[] { });
+      return tuple;
     }
   }
 
