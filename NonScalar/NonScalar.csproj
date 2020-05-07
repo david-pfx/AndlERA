@@ -43,7 +43,8 @@
   <ItemGroup>
     <Compile Include="RelOps.cs" />
     <Compile Include="SampleData.cs" />
-    <Compile Include="NonScalar.cs" />
+    <Compile Include="RelationBase.cs" />
+    <Compile Include="TupleBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SupplierData.cs" />
   </ItemGroup>
