@@ -12,35 +12,39 @@ namespace AndlEra {
   /// Base type for tuples
   /// </summary>
   public abstract class TupleBase {
-    protected internal object[] _values { get; internal set; }
-    internal int _hashcode;
+    // Ordered set of values, accessible to create in relation
+    protected internal object[] Values { get; internal set; }
+    // Calculated hash code, never changes, accessible to create in relation
+    internal int HashCode { get; set; }
 
+    // override used by hash collections
     public override int GetHashCode() {
-      return _hashcode;
+      return HashCode;
     }
 
     public override bool Equals(object obj) {
       if (!(obj is TupleBase)) return false;
       var other = (TupleBase)obj;
-      if (other._values.Length != _values.Length) return false;
-      for (int x = 0; x < _values.Length; ++x)
-        if (!_values[x].Equals(other._values[x])) return false;
+      if (other.Values.Length != Values.Length) return false;
+      for (int x = 0; x < Values.Length; ++x)
+        if (!Values[x].Equals(other.Values[x])) return false;
       return true;
     }
     public override string ToString() {
-      return _values.Join(",");
+      return Values.Join(",");
     }
 
+    // Format tuple with heading (which this base does not know)
     public string Format(string[] heading) {
-      return Enumerable.Range(0, _values.Length)
-        .Select(x => heading[x] + ": " + _values[x].ToString())
+      return Enumerable.Range(0, Values.Length)
+        .Select(x => heading[x] + ": " + Values[x].ToString())
         .Join(", ");
     }
 
     public static T Create<T>(object[] values) where T : TupleBase, new() {
       return new T() {
-        _values = values,
-        _hashcode = CalcHashCode(values),
+        Values = values,
+        HashCode = CalcHashCode(values),
       };
     }
 
@@ -50,13 +54,6 @@ namespace AndlEra {
       foreach (object value in values)
         code = (code << 1) ^ value.GetHashCode();
       return code;
-    }
-
-    // build new values array using map of indexes
-    internal object[] MapValues(IList<int> map) {
-      return Enumerable.Range(0, map.Count)
-        .Select(x => _values[map[x]])
-        .ToArray();
     }
   }
 }

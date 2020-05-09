@@ -25,8 +25,12 @@ namespace AndlEra {
     }
 
     public override string ToString() {
-      //return Body.Take(5).Join(";");
-      return Body.Take(5).Select(t => t.Format(Heading)).Join("\n");
+      return (Count > 5) ? Body.Take(5).Join(";") + "..."
+        : Body.Join(";");
+    }
+
+    public string Format() {
+      return Body.Select(t => t.Format(Heading)).Join("\n");
     }
 
     public override bool Equals(object obj) {
@@ -41,8 +45,8 @@ namespace AndlEra {
     // create a new tuple of matching type generically
     public static Ttuple NewTuple(object[] values) {
       return new Ttuple() { 
-        _values = values,
-        _hashcode = TupleBase.CalcHashCode(values),
+        Values = values,
+        HashCode = TupleBase.CalcHashCode(values),
       };
     }
 
@@ -54,12 +58,16 @@ namespace AndlEra {
     }
 
     // create new relation value from body
-    public static T Create<T>(IEnumerable<Ttuple> tuples) where T:RelationBase<Ttuple>,new() {
+    public static T Create<T>(ISet<Ttuple> tuples) where T:RelationBase<Ttuple>,new() {
       var body = new HashSet<Ttuple>(tuples);
       return new T() {
         Body = body,
         _hashcode = CalcHashCode(body),
       };
+    }
+
+    public static T Create<T>(IEnumerable<Ttuple> tuples) where T : RelationBase<Ttuple>, new() {
+      return Create<T>(new HashSet<Ttuple>(tuples));
     }
 
     // return singleton tuple: error if none, random if more than one
@@ -71,36 +79,56 @@ namespace AndlEra {
       return Body.Contains(tuple);
     }
 
+    // generate a new relation with a selection of tuples
     public RelationBase<Ttuple> Select(Func<Ttuple, bool> predicate) {
       return Create<RelationBase<Ttuple>>(Body.Where(t => predicate(t)));
     }
 
+    // generate a new relation with one attribute renamed
     public static RelationBase<Ttuple> Rename<T>(RelationBase<T> relation)
     where T : TupleBase, new() {
-      var map = MapRename(Heading, RelationBase<T>.Heading);
-      var body = relation.Body.Select(t => NewTuple(t.MapValues(map)));
+      var map = RelOps.MapRename(Heading, RelationBase<T>.Heading);
+      var body = relation.Body.Select(t => NewTuple(RelOps.MapValues(t.Values, map)));
       return Create<RelationBase<Ttuple>>(body);
     }
 
-    // construct renaming map from two headings
-    private static int[] MapRename(string[] head, string[] ohead) {
-      var map = new int[head.Length];
-      var odd = -1;
-      for (int hx = 0; hx < head.Length; ++hx) {
-        map[hx] = Array.FindIndex(ohead, s => s == Heading[hx]);  // equals?
-        if (map[hx] == -1) {
-          Logger.Assert(odd == -1);
-          odd = hx;
-        }
-      }
-      for (int ox = 0; ox < ohead.Length; ++ox) {
-        if (Array.FindIndex(map, i => i == ox) == -1) {
-          map[odd] = ox;
-          break;
-        }
-      }
-      return map;
+    // generate a new relation that is a projection
+    public static RelationBase<Ttuple> Project<T>(RelationBase<T> relation)
+    where T : TupleBase, new() {
+      var map = RelOps.MapProject(Heading, RelationBase<T>.Heading);
+      var body = relation.Body.Select(t => NewTuple(RelOps.MapValues(t.Values, map)));
+      return Create<RelationBase<Ttuple>>(body);
     }
+
+    // generate a new relation that is a set union
+    public static RelationBase<Ttuple> Union<T>(RelationBase<Ttuple> relation1, RelationBase<Ttuple> relation2)
+    where T : TupleBase, new() {
+      return Create<RelationBase<Ttuple>>(relation1.Body.Union(relation2.Body));
+    }
+
+    // generate a new relation that is a set minus
+    public static RelationBase<Ttuple> Minus<T>(RelationBase<Ttuple> relation1, RelationBase<Ttuple> relation2)
+    where T : TupleBase, new() {
+      return Create<RelationBase<Ttuple>>(relation1.Body.Except(relation2.Body));
+    }
+
+    // generate a new relation that is a set intersection
+    public static RelationBase<Ttuple> Intersect<T>(RelationBase<Ttuple> relation1, RelationBase<Ttuple> relation2)
+    where T : TupleBase, new() {
+      return Create<RelationBase<Ttuple>>(relation1.Body.Intersect(relation2.Body));
+    }
+
+    // generate a new relation that is a natural join
+    public static RelationBase<Ttuple> Join<T,T1,T2>(RelationBase<T1> relation1, RelationBase<T2> relation2)
+    where T : TupleBase, new()
+    where T1 : TupleBase, new()
+    where T2 : TupleBase, new() {
+      
+      var newbody = RelOps.Join<Ttuple,T1,T2>(relation1.Body, relation2.Body);
+      return Create<RelationBase<Ttuple>>(newbody);
+    }
+
+    class JK : TupleBase { }
 
     // --- impl
     internal static int CalcHashCode(HashSet<Ttuple> body) {

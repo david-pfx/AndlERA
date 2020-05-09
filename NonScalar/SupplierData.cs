@@ -22,7 +22,7 @@ namespace SupplierData {
   /// Sample supplier data
   /// </summary>
   public static class Supplier {
-    public static RelS S = RelS.Create(
+    public static RelS S = RelS.Create<RelS>(
       new List<TupS> {
         TupS.Create( "S1", "Smith", 20, "London" ),
         TupS.Create( "S2", "Jones", 10, "Paris" ),
@@ -31,7 +31,7 @@ namespace SupplierData {
         TupS.Create( "S5", "Adams", 30, "Athens" ),
       });
 
-    public static RelP P = RelP.Create(
+    public static RelP P = RelP.Create<RelP>(
       new List<TupP> {
         TupP.Create( "P1", "Nut",   "Red",   12.0m,"London" ),
         TupP.Create( "P2", "Bolt",  "Green", 17.0m,"Paris"  ),
@@ -41,7 +41,7 @@ namespace SupplierData {
         TupP.Create( "P6", "Cog",   "Red",   19.0m,"London" ),
       });
 
-    public static RelSP SP = RelSP.Create(
+    public static RelSP SP = RelSP.Create<RelSP>(
       new List<TupSP> {
         TupSP.Create( "S1", "P1", 300 ),
         TupSP.Create( "S1", "P2", 200 ),
@@ -56,7 +56,7 @@ namespace SupplierData {
         TupSP.Create( "S4", "P4", 300 ),
         TupSP.Create( "S4", "P5", 400 ),
       });
-    public static RelJ J = RelJ.Create(
+    public static RelJ J = RelJ.Create<RelJ>(
       new List<TupJ> {
         TupJ.Create("J1","Sorter","Paris"),
         TupJ.Create("J2","Display","Rome"),
@@ -67,7 +67,7 @@ namespace SupplierData {
         TupJ.Create("J7","Tape","London"),
       });
 
-    public static RelSPJ SPJ = RelSPJ.Create(
+    public static RelSPJ SPJ = RelSPJ.Create<RelSPJ>(
       new List<TupSPJ> {
         TupSPJ.Create( "S1", "P1", "J1", 200),
         TupSPJ.Create( "S1", "P1", "J4", 700),
@@ -100,24 +100,20 @@ namespace SupplierData {
   /// <summary>
   /// Generated relation type for S (suppliers)
   /// </summary>
-  public class RelS : RelationBase<TupS> {
-    public static RelS Create(IList<TupS> tuples) {
-      return Create<RelS>(tuples);
-    }
-  }
+  public class RelS : RelationBase<TupS> { }
   /// <summary>
   /// Generated tuple type for S (suppliers)
   /// </summary>
   public class TupS : TupleBase {
-    public readonly static string[] Heading = { "SNo", "Sname", "Status", "City" };
+    public readonly static string[] Heading = { "SNo", "SName", "Status", "City" };
 
-    public string Sno { get { return (string)_values[0]; } }
-    public string Sname { get { return (string)_values[1]; } }
-    public int Status { get { return (int)_values[2]; } }
-    public string City { get { return (string)_values[3]; } }
+    public string SNo { get { return (string)Values[0]; } }
+    public string SName { get { return (string)Values[1]; } }
+    public int Status { get { return (int)Values[2]; } }
+    public string City { get { return (string)Values[3]; } }
 
-    public static TupS Create(string Sno, string Sname, int Status, string City) {
-      return Create<TupS>(new object[] { Sno, Sname, Status, City });
+    public static TupS Create(string sno, string sname, int status, string city) {
+      return Create<TupS>(new object[] { sno, sname, status, city });
     }
   }
 
@@ -125,23 +121,16 @@ namespace SupplierData {
   /// <summary>
   /// Generated relation type for P (products)
   /// </summary>
-  public class RelP : RelationBase<TupP> {
-    public static RelP Create(IList<TupP> tuples) {
-      return Create<RelP>(tuples);
-    }
-  }
+  public class RelP : RelationBase<TupP> { }
 
-  /// <summary>
-  /// Generated tuple type for P (products)
-  /// </summary>
   public class TupP : TupleBase {
-    public readonly static string[] Heading = { "Pno", "Pname", "Color", "Weight", "City" };
+    public readonly static string[] Heading = { "PNo", "PName", "Color", "Weight", "City" };
 
-    public string Pno { get { return (string)_values[0]; } }
-    public string Pname { get { return (string)_values[1]; } }
-    public string Color { get { return (string)_values[2]; } }
-    public decimal Weight { get { return (decimal)_values[3]; } }
-    public string City { get { return (string)_values[4]; } }
+    public string PNo { get { return (string)Values[0]; } }
+    public string PName { get { return (string)Values[1]; } }
+    public string Color { get { return (string)Values[2]; } }
+    public decimal Weight { get { return (decimal)Values[3]; } }
+    public string City { get { return (string)Values[4]; } }
 
     public static TupP Create(string pno, string pname, string color, decimal weight, string city) {
       return Create<TupP>(new object[] { pno, pname, color, weight, city });
@@ -152,24 +141,20 @@ namespace SupplierData {
   /// <summary>
   /// Generated relation type for SP (supplies)
   /// </summary>
-  public class RelSP : RelationBase<TupSP> {
-    public static RelSP Create(IList<TupSP> tuples) {
-      return Create<RelSP>(tuples);
-    }
-  }
+  public class RelSP : RelationBase<TupSP> { }
 
   /// <summary>
   /// Generated tuple type for SP (supplies)
   /// </summary>
   public class TupSP : TupleBase {
-    public readonly static string[] Heading = { "Sno", "Pno", "Qty" };
+    public readonly static string[] Heading = { "SNo", "PNo", "Qty" };
 
-    public string Sno { get { return (string)_values[0]; } }
-    public string Pno { get { return (string)_values[1]; } }
-    public int Qty { get { return (int)_values[2]; } }
+    public string Sno { get { return (string)Values[0]; } }
+    public string Pno { get { return (string)Values[1]; } }
+    public int Qty { get { return (int)Values[2]; } }
 
-    public static TupSP Create(string Sno, string Pno, int Qty) {
-      return Create<TupSP>(new object[] { Sno, Pno, Qty });
+    public static TupSP Create(string sno, string pno, int qty) {
+      return Create<TupSP>(new object[] { sno, pno, qty });
     }
   }
 
@@ -177,20 +162,16 @@ namespace SupplierData {
   /// <summary>
   /// Generated relation type for J (jobs)
   /// </summary>
-  public class RelJ : RelationBase<TupJ> {
-    public static RelJ Create(IList<TupJ> tuples) {
-      return Create<RelJ>(tuples);
-    }
-  }
+  public class RelJ : RelationBase<TupJ> { }
   /// <summary>
   /// Generated tuple type for J (jobs)
   /// </summary>
   public class TupJ : TupleBase {
-    public readonly static string[] Heading = { "Jno", "Jname", "City " };
+    public readonly static string[] Heading = { "JNo", "JName", "City " };
 
-    public string Jno { get { return (string)_values[0]; } }
-    public string Jname { get { return (string)_values[1]; } }
-    public string City { get { return (string)_values[2]; } }
+    public string JNo { get { return (string)Values[0]; } }
+    public string JName { get { return (string)Values[1]; } }
+    public string City { get { return (string)Values[2]; } }
 
     public static TupJ Create(string jno, string jname, string city) {
       return Create<TupJ>(new object[] { jno, jname, city });
@@ -201,25 +182,21 @@ namespace SupplierData {
   /// <summary>
   /// Generated relation type for SPJ (job supplies)
   /// </summary>
-  public class RelSPJ : RelationBase<TupSPJ> {
-    public static RelSPJ Create(IList<TupSPJ> tuples) {
-      return Create<RelSPJ>(tuples);
-    }
-  }
+  public class RelSPJ : RelationBase<TupSPJ> { }
 
   /// <summary>
   /// Generated tuple type for SPJ (job supplies)
   /// </summary>
   public class TupSPJ : TupleBase {
-    public readonly static string[] Heading = { "Sno", "Pno", "Jno", "Qty" };
+    public readonly static string[] Heading = { "SNo", "PNo", "JNo", "Qty" };
     
-    public string Sno { get { return (string)_values[0]; } }
-    public string Pno { get { return (string)_values[1]; } }
-    public string Jno { get { return (string)_values[2]; } }
-    public int Qty { get { return (int)_values[3]; } }
+    public string SNo { get { return (string)Values[0]; } }
+    public string PNo { get { return (string)Values[1]; } }
+    public string JNo { get { return (string)Values[2]; } }
+    public int Qty { get { return (int)Values[3]; } }
 
-    public static TupSPJ Create(string Sno, string Pno, string Jno, int Qty) {
-      return Create<TupSPJ>(new object[] { Sno, Pno, Jno, Qty });
+    public static TupSPJ Create(string sno, string pno, string jno, int qty) {
+      return Create<TupSPJ>(new object[] { sno, pno, jno, qty });
     }
   }
 }
