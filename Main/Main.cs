@@ -24,12 +24,10 @@ namespace AndlEra {
       Console.WriteLine(RelSSP.Join<TupSSP,TupS, TupSP>(Supplier.S, Supplier.SP).Format());
 
       //Console.WriteLine(Supplier.S.Rename<RelSX>());
-      //foreach (var t in new RelSequence(5))
-      //  Console.WriteLine(t);
-      //foreach (var t in Supplier.S)
-      //  Console.WriteLine(t);
+      p(TupSX.Heading);
     }
   }
+
 
   public class TupSX : TupleBase {
     public readonly static string[] Heading = { "SNo", "SName", "Status", "Supplier City" };

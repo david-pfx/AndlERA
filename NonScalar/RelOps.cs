@@ -12,6 +12,50 @@ namespace AndlEra {
   /// </summary>
   public static class RelOps {
 
+    // project relation body onto new heading
+    public static ISet<T> Rename<T, T1>(ISet<T1> body1)
+    where T : TupleBase, new()
+    where T1 : TupleBase, new() {
+
+      var map = MakeRenameMap(RelationBase<T>.Heading, RelationBase<T1>.Heading);
+      return new HashSet<T>(body1.Select(t => TupleBase.Create<T>(MapValues(t.Values, map))));
+    }
+
+    public static ISet<T> Project<T, T1>(ISet<T1> body1)
+    where T : TupleBase, new()
+    where T1 : TupleBase, new() {
+
+      var map = MakeProjectMap(RelationBase<T>.Heading, RelationBase<T1>.Heading);
+      return new HashSet<T>(body1.Select(t => TupleBase.Create<T>(MapValues(t.Values, map))));
+    }
+
+    // create new body as set union of two others
+    public static ISet<T> Union<T>(ISet<T> body1, ISet<T> body2)
+    where T : TupleBase, new() {
+
+      var output = new HashSet<T>(body1);
+      output.UnionWith(body2);
+      return output;
+    }
+
+    // create new body as set difference of two others
+    public static ISet<T> Minus<T>(ISet<T> body1, ISet<T> body2)
+    where T : TupleBase, new() {
+
+      var output = new HashSet<T>(body1);
+      output.ExceptWith(body2);
+      return output;
+    }
+
+    // create new body as set intersection of two others
+    public static ISet<T> Intersect<T>(ISet<T> body1, ISet<T> body2)
+    where T : TupleBase, new() {
+
+      var output = new HashSet<T>(body1);
+      output.IntersectWith(body2);
+      return output;
+    }
+
     // natural join T = T1 join T2
     public static ISet<T> Join<T,T1,T2>(ISet<T1> body1, ISet<T2> body2)
     where T:TupleBase,new()
@@ -20,7 +64,7 @@ namespace AndlEra {
 
       var map1 = MakeMap(RelationBase<T>.Heading, RelationBase<T1>.Heading);
       var map2 = MakeMap(RelationBase<T>.Heading, RelationBase<T2>.Heading);
-      var jhead = FindJoin(RelationBase<T1>.Heading, RelationBase<T2>.Heading);
+      var jhead = MakeJoinHeading(RelationBase<T1>.Heading, RelationBase<T2>.Heading);
       var jmap1 = MakeMap(jhead, RelationBase<T1>.Heading);
       var jmap2 = MakeMap(jhead, RelationBase<T2>.Heading);
 
@@ -38,7 +82,19 @@ namespace AndlEra {
       return output;
     }
 
-    internal static int[] MapRename(string[] head, string[] ohead) {
+    // build an index of tuples (because that's where Equals lives)
+    static Dictionary<TupleBase, IList<TupleBase>> BuildIndex(IEnumerable<TupleBase> values, int[] map) {
+      var index = new Dictionary<TupleBase, IList<TupleBase>>();
+      foreach (var tuple in values) {
+        var newkey = TupleBase.Create<TupNone>(MapValues(tuple.Values, map));
+        if (index.ContainsKey(newkey))
+          index[newkey].Add(tuple);
+        else index[newkey] = new List<TupleBase> { tuple };
+      }
+      return index;
+    }
+
+    internal static int[] MakeRenameMap(string[] head, string[] ohead) {
       var map = new int[head.Length];
       var odd = -1;
       for (int hx = 0; hx < head.Length; ++hx) {
@@ -57,7 +113,7 @@ namespace AndlEra {
       return map;
     }
 
-    internal static int[] MapProject(string[] head, string[] ohead) {
+    internal static int[] MakeProjectMap(string[] head, string[] ohead) {
       var map = new int[head.Length];
       for (int hx = 0; hx < head.Length; ++hx) {
         map[hx] = Array.FindIndex(ohead, s => s == head[hx]);  // equals?
@@ -76,7 +132,7 @@ namespace AndlEra {
     }
 
     // Find the set of names in common
-    internal static string[] FindJoin(string[] head1, string[] head2) {
+    internal static string[] MakeJoinHeading(string[] head1, string[] head2) {
       return head1.Where(s1 => head2.Contains(s1)).ToArray();
     }
 
@@ -92,18 +148,6 @@ namespace AndlEra {
       return Enumerable.Range(0, map1.Count)
         .Select(x => map1[x] >= 0 ? t1.Values[map1[x]] : t2.Values[map2[x]])
         .ToArray();
-    }
-
-    // build an index of tuples (because that's where Equals lives)
-    static Dictionary<TupleBase, IList<TupleBase>> BuildIndex(IEnumerable<TupleBase> values, int[] map) {
-      var index = new Dictionary<TupleBase, IList<TupleBase>>();
-      foreach (var tuple in values) {
-        var newkey = TupleBase.Create<TupNone>(MapValues(tuple.Values, map));
-        if (index.ContainsKey(newkey))
-          index[newkey].Add(tuple);
-        else index[newkey] = new List<TupleBase> { tuple };
-      }
-      return index;
     }
 
   }
