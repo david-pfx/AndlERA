@@ -11,13 +11,13 @@ namespace AndlEra {
   /// <summary>
   /// Base type for relations
   /// </summary>
-  public class RelationBase<Ttuple> where Ttuple:TupleBase,new() {
+  public class RelationBase<Ttup> where Ttup : TupleBase, new() {
     public static string[] Heading { get; protected set; }
     public int Count { get { return Body.Count; } }
     public bool IsEmpty { get { return Body.Count == 0; } }
     public bool Exists { get { return Body.Count > 0; } }
 
-    protected HashSet<Ttuple> Body { get; private set; }
+    internal HashSet<Ttup> Body { get; private set; }
     private int _hashcode;
 
     public override int GetHashCode() {
@@ -34,8 +34,8 @@ namespace AndlEra {
     }
 
     public override bool Equals(object obj) {
-      if (!(obj is RelationBase<Ttuple>)) return false;
-      var other = ((RelationBase<Ttuple>)obj);
+      if (!(obj is RelationBase<Ttup>)) return false;
+      var other = ((RelationBase<Ttup>)obj);
       if (other.Body.Count != Body.Count) return false;
       foreach (var b in Body)
         if (!other.Body.Contains(b)) return false;
@@ -43,8 +43,8 @@ namespace AndlEra {
     }
 
     // create a new tuple of matching type generically
-    public static Ttuple NewTuple(object[] values) {
-      return new Ttuple() { 
+    public static Ttup NewTuple(object[] values) {
+      return new Ttup() {
         Values = values,
         HashCode = TupleBase.CalcHashCode(values),
       };
@@ -52,103 +52,133 @@ namespace AndlEra {
 
     //--- ctor
     static RelationBase() {
-      // hack to get heading value from tuple
-      var prop = typeof(Ttuple).GetField("Heading");
+      // reflection hack to get heading value from tuple
+      var prop = typeof(Ttup).GetField("Heading");
       Heading = (string[])prop.GetValue(null);
     }
 
-    // create new relation value from body
-    public static T Create<T>(ISet<Ttuple> tuples) where T:RelationBase<Ttuple>,new() {
-      var body = new HashSet<Ttuple>(tuples);
-      return new T() {
+    // create new relation value from body as set
+    public static Trel Create<Trel>(ISet<Ttup> tuples)
+    where Trel : RelationBase<Ttup>, new() {
+
+      var body = new HashSet<Ttup>(tuples);
+      return new Trel() {
         Body = body,
         _hashcode = CalcHashCode(body),
       };
     }
 
-    public static T Create<T>(IEnumerable<Ttuple> tuples) where T : RelationBase<Ttuple>, new() {
-      return Create<T>(new HashSet<Ttuple>(tuples));
+    // create new relation value from body as enumerable
+    public static Trel Create<Trel>(IEnumerable<Ttup> tuples)
+    where Trel : RelationBase<Ttup>, new() {
+
+      return Create<Trel>(new HashSet<Ttup>(tuples));
     }
 
+    ///===========================================================================
+    /// Functions that return a scalar value
+    /// 
+
     // return singleton tuple: error if none, random if more than one
-    public Ttuple Single() {
+    public Ttup Single() {
       return Body.First();
     }
 
-    public bool Contains(Ttuple tuple) {
+    public bool Contains(Ttup tuple) {
       return Body.Contains(tuple);
     }
 
+    // this relation is a subset of other
+    public bool IsSubset(RelationBase<Ttup> other) {
+      return Body.All(b => other.Body.Contains(b));
+    }
+
+    // this relation is a superset of other
+    public bool IsSuperset(RelationBase<Ttup> other) {
+      return other.Body.All(b => Body.Contains(b));
+    }
+
+    // this relation has no tuples in common with other
+    public bool IsDisjoint(RelationBase<Ttup> other) {
+      return !Body.Any(b => other.Body.Contains(b));
+    }
+
+    ///===========================================================================
+    /// functions that return a relation 
+    /// Note that functions return the new value, so thay can
+    /// be used as a fluent interface (left to right)
+    /// 
+
     // generate a new relation with a selection of tuples
-    public RelationBase<Ttuple> Select(Func<Ttuple, bool> predicate) {
-      return Create<RelationBase<Ttuple>>(Body.Where(t => predicate(t)));
+    public RelationBase<Ttup> Select(Func<Ttup, bool> predicate) {
+      return Create<RelationBase<Ttup>>(Body.Where(t => predicate(t)));
     }
 
     // generate a new relation with one attribute renamed
-    public static RelationBase<Ttuple> Rename<T>(RelationBase<T> relation)
+    public RelationBase<T> Rename<T>()
     where T : TupleBase, new() {
 
-      var map = RelOps.MakeRenameMap(Heading, RelationBase<T>.Heading);
-      var body = relation.Body.Select(t => NewTuple(RelOps.MapValues(t.Values, map)));
-      return Create<RelationBase<Ttuple>>(body);
+      var newbody = RelOps.Rename<Ttup, T>(Body);
+      return RelationBase<T>.Create<RelationBase<T>>(newbody);
     }
 
     // generate a new relation that is a projection
-    public static RelationBase<Ttuple> Project<T>(RelationBase<T> relation)
+    public RelationBase<T> Project<T>()
     where T : TupleBase, new() {
 
-      var newbody = RelOps.Project<Ttuple,T>(relation.Body);
-      return Create<RelationBase<Ttuple>>(newbody);
+      var newbody = RelOps.Project<Ttup, T>(Body);
+      return RelationBase<T>.Create<RelationBase<T>>(newbody);
     }
 
     // generate a new relation that is a set union
-    public static RelationBase<Ttuple> Union<T>(RelationBase<Ttuple> relation1, RelationBase<Ttuple> relation2)
-    where T : TupleBase, new() {
+    public RelationBase<Ttup> Union(RelationBase<Ttup> other) {
 
-      var newbody = RelOps.Minus<Ttuple>(relation1.Body, relation2.Body);
-      return Create<RelationBase<Ttuple>>(newbody);
+      var newbody = RelOps.Union<Ttup>(Body, other.Body);
+      return Create<RelationBase<Ttup>>(newbody);
     }
 
     // generate a new relation that is a set minus
-    public static RelationBase<Ttuple> Minus<T>(RelationBase<Ttuple> relation1, RelationBase<Ttuple> relation2)
-    where T : TupleBase, new() {
+    public RelationBase<Ttup> Minus(RelationBase<Ttup> other) {
 
-      var newbody = RelOps.Minus<Ttuple>(relation1.Body, relation2.Body);
-      return Create<RelationBase<Ttuple>>(newbody);
+      var newbody = RelOps.Minus<Ttup>(Body, other.Body);
+      return Create<RelationBase<Ttup>>(newbody);
     }
 
     // generate a new relation that is a set intersection
-    public static RelationBase<Ttuple> Intersect<T>(RelationBase<Ttuple> relation1, RelationBase<Ttuple> relation2)
-    where T : TupleBase, new() {
+    public RelationBase<Ttup> Intersect(RelationBase<Ttup> other) {
 
-      var newbody = RelOps.Intersect<Ttuple>(relation1.Body, relation2.Body);
-      return Create<RelationBase<Ttuple>>(newbody);
+      var newbody = RelOps.Intersect<Ttup>(Body, other.Body);
+      return Create<RelationBase<Ttup>>(newbody);
     }
 
     // generate a new relation that is a natural join
-    public static RelationBase<Ttuple> Join<T,T1,T2>(RelationBase<T1> relation1, RelationBase<T2> relation2)
+    public RelationBase<T> Join<T1,T>(RelationBase<T1> other)
     where T : TupleBase, new()
-    where T1 : TupleBase, new()
-    where T2 : TupleBase, new() {
-      
-      var newbody = RelOps.Join<Ttuple,T1,T2>(relation1.Body, relation2.Body);
-      return Create<RelationBase<Ttuple>>(newbody);
+    where T1 : TupleBase, new() {
+
+      var newbody = RelOps.Join<T,Ttup,T1>(Body, other.Body);
+      return RelationBase<T>.Create<RelationBase<T>>(newbody);
     }
 
-    class JK : TupleBase { }
+    public RelationBase<T> AntiJoin<T1, T>(RelationBase<T1> other)
+    where T : TupleBase, new()
+    where T1 : TupleBase, new() {
+
+      var newbody = RelOps.AntiJoin<T, Ttup, T1>(Body, other.Body);
+      return RelationBase<T>.Create<RelationBase<T>>(newbody);
+    }
 
     // --- impl
-    internal static int CalcHashCode(HashSet<Ttuple> body) {
+    internal static int CalcHashCode(HashSet<Ttup> body) {
       int code = 1;
-      foreach (Ttuple b in body)
+      foreach (Ttup b in body)
         code = (code << 1) ^ b.GetHashCode();
       return code;
     }
 
-    public IEnumerator<Ttuple> GetEnumerator() {
+    public IEnumerator<Ttup> GetEnumerator() {
       foreach (var tuple in Body)
         yield return tuple;
     }
   }
-  
 }

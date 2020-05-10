@@ -8,29 +8,39 @@ using Andl.Common;
 namespace AndlEra {
   ///===========================================================================
   /// <summary>
-  /// 
+  /// The real algorithms. All statics but making heavy use of generics for type safety
   /// </summary>
-  public static class RelOps {
+  internal static class RelOps {
 
     // project relation body onto new heading
-    public static ISet<T> Rename<T, T1>(ISet<T1> body1)
+    internal static ISet<T> Rename<T1, T>(ISet<T1> body1)
     where T : TupleBase, new()
     where T1 : TupleBase, new() {
 
       var map = MakeRenameMap(RelationBase<T>.Heading, RelationBase<T1>.Heading);
+      Logger.Assert(map.All(x => x >= 0), "rename heading has missing attribute");
       return new HashSet<T>(body1.Select(t => TupleBase.Create<T>(MapValues(t.Values, map))));
     }
 
-    public static ISet<T> Project<T, T1>(ISet<T1> body1)
+    internal static ISet<T> Project<T1, T>(ISet<T1> body1)
     where T : TupleBase, new()
     where T1 : TupleBase, new() {
 
-      var map = MakeProjectMap(RelationBase<T>.Heading, RelationBase<T1>.Heading);
+      var map = MakeMap(RelationBase<T>.Heading, RelationBase<T1>.Heading);
+      Logger.Assert(map.All(x => x >= 0), "project heading has missing attribute");
       return new HashSet<T>(body1.Select(t => TupleBase.Create<T>(MapValues(t.Values, map))));
     }
 
+    internal static ISet<T> Extend<T1, T>(ISet<T1> body1, Func<T1,object> func)
+    where T : TupleBase, new()
+    where T1 : TupleBase, new() {
+
+      var map = MakeMap(RelationBase<T>.Heading, RelationBase<T1>.Heading);
+      return new HashSet<T>(body1.Select(t => TupleBase.Create<T>(MapValues(t.Values, map, func(t)))));
+    }
+
     // create new body as set union of two others
-    public static ISet<T> Union<T>(ISet<T> body1, ISet<T> body2)
+    internal static ISet<T> Union<T>(ISet<T> body1, ISet<T> body2)
     where T : TupleBase, new() {
 
       var output = new HashSet<T>(body1);
@@ -39,7 +49,7 @@ namespace AndlEra {
     }
 
     // create new body as set difference of two others
-    public static ISet<T> Minus<T>(ISet<T> body1, ISet<T> body2)
+    internal static ISet<T> Minus<T>(ISet<T> body1, ISet<T> body2)
     where T : TupleBase, new() {
 
       var output = new HashSet<T>(body1);
@@ -48,7 +58,7 @@ namespace AndlEra {
     }
 
     // create new body as set intersection of two others
-    public static ISet<T> Intersect<T>(ISet<T> body1, ISet<T> body2)
+    internal static ISet<T> Intersect<T>(ISet<T> body1, ISet<T> body2)
     where T : TupleBase, new() {
 
       var output = new HashSet<T>(body1);
@@ -57,7 +67,7 @@ namespace AndlEra {
     }
 
     // natural join T = T1 join T2
-    public static ISet<T> Join<T,T1,T2>(ISet<T1> body1, ISet<T2> body2)
+    internal static ISet<T> Join<T,T1,T2>(ISet<T1> body1, ISet<T2> body2)
     where T:TupleBase,new()
     where T1:TupleBase,new()
     where T2:TupleBase,new() {
@@ -67,6 +77,8 @@ namespace AndlEra {
       var jhead = MakeJoinHeading(RelationBase<T1>.Heading, RelationBase<T2>.Heading);
       var jmap1 = MakeMap(jhead, RelationBase<T1>.Heading);
       var jmap2 = MakeMap(jhead, RelationBase<T2>.Heading);
+
+      if (map2.All(x => x == -1)) return SemiJoin<T,T1,T2>(body1, body2, map1, jmap1, jmap2);
 
       var index = BuildIndex(body2, jmap2);
       var output = new HashSet<T>();
@@ -82,6 +94,34 @@ namespace AndlEra {
       return output;
     }
 
+    // natural anti join T = T1 join T2
+    internal static ISet<T> AntiJoin<T, T1, T2>(ISet<T1> body1, ISet<T2> body2)
+    where T : TupleBase, new()
+    where T1 : TupleBase, new()
+    where T2 : TupleBase, new() {
+
+      var map1 = MakeMap(RelationBase<T>.Heading, RelationBase<T1>.Heading);
+      var map2 = MakeMap(RelationBase<T>.Heading, RelationBase<T2>.Heading);
+      Logger.Assert(map2.All(x => x == -1), "antijoin cannot use right side attributes");
+      var jhead = MakeJoinHeading(RelationBase<T1>.Heading, RelationBase<T2>.Heading);
+      var jmap1 = MakeMap(jhead, RelationBase<T1>.Heading);
+      var jmap2 = MakeMap(jhead, RelationBase<T2>.Heading);
+
+      return SemiJoin<T, T1, T2>(body1, body2, map1, jmap1, jmap2, false);
+    }
+
+    static HashSet<T> SemiJoin<T, T1, T2>(ISet<T1> body1, ISet<T2> body2, 
+      int[] map1, int[] jmap1, int[] jmap2, bool issemi = true)
+      where T : TupleBase, new()
+      where T1 : TupleBase, new()
+      where T2 : TupleBase, new() {
+
+      var index = BuildSet(body2, jmap2);
+      return new HashSet<T>(body1
+        .Where(b => issemi == index.Contains(TupleBase.Create<TupNone>(MapValues(b.Values, jmap1))))
+        .Select(b => TupleBase.Create<T>(MapValues(b.Values, map1))));
+    }
+
     // build an index of tuples (because that's where Equals lives)
     static Dictionary<TupleBase, IList<TupleBase>> BuildIndex(IEnumerable<TupleBase> values, int[] map) {
       var index = new Dictionary<TupleBase, IList<TupleBase>>();
@@ -94,7 +134,11 @@ namespace AndlEra {
       return index;
     }
 
-    internal static int[] MakeRenameMap(string[] head, string[] ohead) {
+    static HashSet<TupleBase> BuildSet(IEnumerable<TupleBase> values, int[] map) {
+      return new HashSet<TupleBase>(values.Select(v => TupleBase.Create<TupNone>(MapValues(v.Values, map))));
+    }
+
+    static int[] MakeRenameMap(string[] head, string[] ohead) {
       var map = new int[head.Length];
       var odd = -1;
       for (int hx = 0; hx < head.Length; ++hx) {
@@ -113,17 +157,8 @@ namespace AndlEra {
       return map;
     }
 
-    internal static int[] MakeProjectMap(string[] head, string[] ohead) {
-      var map = new int[head.Length];
-      for (int hx = 0; hx < head.Length; ++hx) {
-        map[hx] = Array.FindIndex(ohead, s => s == head[hx]);  // equals?
-        Logger.Assert(map[hx] != -1);
-      }
-      return map;
-    }
-
     // Create a map from head1 to head2 for names that match
-    internal static int[] MakeMap(string[] head1, string[] head2) {
+    static int[] MakeMap(string[] head1, string[] head2) {
       var map = new int[head1.Length];
       for (int hx = 0; hx < head1.Length; ++hx) {
         map[hx] = Array.FindIndex(head2, s => s == head1[hx]);  // equals?
@@ -132,18 +167,24 @@ namespace AndlEra {
     }
 
     // Find the set of names in common
-    internal static string[] MakeJoinHeading(string[] head1, string[] head2) {
+    static string[] MakeJoinHeading(string[] head1, string[] head2) {
       return head1.Where(s1 => head2.Contains(s1)).ToArray();
     }
 
 
-    internal static object[] MapValues(IList<object>values, IList<int> map) {
+    static object[] MapValues(IList<object>values, IList<int> map) {
       return Enumerable.Range(0, map.Count)
         .Select(x => values[map[x]])
         .ToArray();
     }
 
-    internal static object[] MapValues(TupleBase t1, IList<int> map1, TupleBase t2, IList<int> map2) {
+    static object[] MapValues(IList<object> values, IList<int> map, object newvalue) {
+      return Enumerable.Range(0, map.Count)
+        .Select(x => map[x] == -1 ? newvalue : values[map[x]])
+        .ToArray();
+    }
+
+    static object[] MapValues(TupleBase t1, IList<int> map1, TupleBase t2, IList<int> map2) {
       Logger.Assert(map1.Count == map2.Count);
       return Enumerable.Range(0, map1.Count)
         .Select(x => map1[x] >= 0 ? t1.Values[map1[x]] : t2.Values[map2[x]])

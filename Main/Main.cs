@@ -4,27 +4,29 @@ using System.Linq;
 
 using Andl.Common;
 using SupplierData;
+using static System.Console;
 
 namespace AndlEra {
   class Program {
     static void Main(string[] args) {
-      Console.WriteLine("Andl Era");
+      WriteLine("Andl Era");
       Exec();
     }
 
     private static void Exec() {
-      Console.WriteLine(RelSequence.Create(5));
-      Console.WriteLine(Supplier.S);
-      //Console.WriteLine(Supplier.S.Select(t => t.Status < 20));
-      //Console.WriteLine(RelSX.Rename(Supplier.S));
-      //Console.WriteLine(Rel1.Project(Supplier.S));
+      WriteLine(RelSequence.Create(5));
+      WriteLine(Supplier.S);
 
-      Console.WriteLine(Rel1.Project(RelSX.Rename(Supplier.S.Select(t => t.Status == 30))));
-      //Console.WriteLine(RelSSP.Join(Supplier.S, Supplier.SP));
-      Console.WriteLine(RelSSP.Join<TupSSP,TupS, TupSP>(Supplier.S, Supplier.SP).Format());
+      WriteLine(Supplier.S.Select(t => t.Status == 30)
+        .Rename<TupSX>()
+        .Project<Tup1>());
 
-      //Console.WriteLine(Supplier.S.Rename<RelSX>());
-      p(TupSX.Heading);
+      WriteLine(Supplier.P
+        .Rename<TupPcolour>()
+        .Select(t => t.Colour == "Red")
+        .Project<TupPPno>()
+        .Join<TupSP, TupPjoin>(Supplier.SP)
+        .Format());
     }
   }
 
@@ -43,6 +45,18 @@ namespace AndlEra {
   }
   public class RelSSP : RelationBase<TupSSP> { }
 
+  public class TupPcolour : TupleBase {
+    public readonly static string[] Heading = { "PNo", "PName", "Colour", "Weight", "City" };
+    public string Colour { get { return (string)Values[2]; } }
+  }
+
+  public class TupPPno : TupleBase {
+    public readonly static string[] Heading = { "PNo", "PName" };
+  }
+
+  public class TupPjoin : TupleBase {
+    public readonly static string[] Heading = { "PNo", "PName", "SNo", "Qty" };
+  }
 
 
 }
