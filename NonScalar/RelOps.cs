@@ -8,7 +8,8 @@ using Andl.Common;
 namespace AndlEra {
   ///===========================================================================
   /// <summary>
-  /// The real algorithms. All statics but making heavy use of generics for type safety
+  /// The real algorithms. 
+  /// All statics but making heavy use of generics for type safety.
   /// </summary>
   internal static class RelOps {
 
@@ -195,25 +196,6 @@ namespace AndlEra {
 
   ///===========================================================================
   /// <summary>
-  /// 
-  /// </summary>
-  public class TupSequence : TupleBase {
-    public readonly static string[] Heading = { "N" };
-    public int N { get { return (int)Values[0]; } }
-
-    public static TupSequence Create(int N) {
-      return Create<TupSequence>(new object[] { N });
-    }
-  }
-
-  public class RelSequence : RelationBase<TupSequence> {
-    public static RelSequence Create(int count) {
-      return Create<RelSequence>(Enumerable.Range(0, count).Select(n => TupSequence.Create(n)));
-    }
-  }
-
-  ///===========================================================================
-  /// <summary>
   /// The two empty relations DUM and DEE
   /// </summary>
   public static class NoneData {
@@ -235,10 +217,28 @@ namespace AndlEra {
       return Create<TupNone>(new object[] { });
     }
   }
+  ///===========================================================================
+  /// <summary>
+  /// A relation that is a sequence of numbers
+  /// </summary>
+  public class TupSequence : TupleBase {
+    public readonly static string[] Heading = { "N" };
+    public int N { get { return (int)Values[0]; } }
+
+    public static TupSequence Create(int N) {
+      return Create<TupSequence>(new object[] { N });
+    }
+  }
+
+  public class RelSequence : RelationBase<TupSequence> {
+    public static RelSequence Create(int count) {
+      return Create<RelSequence>(Enumerable.Range(0, count).Select(n => TupSequence.Create(n)));
+    }
+  }
 
   ///===========================================================================
   /// <summary>
-  /// 
+  /// A relation that is an array of text strings
   /// </summary>
   public class TupText : TupleBase {
     public readonly static string[] Heading = { "Seq", "Line" };

@@ -15,17 +15,26 @@ namespace AndlEra {
 
     private static void Exec() {
       WriteLine(RelSequence.Create(5));
-      WriteLine(Supplier.S);
+      WriteLine(Supplier.SP);
 
-      WriteLine(Supplier.S.Select(t => t.Status == 30)
-        .Rename<TupSX>()
-        .Project<Tup1>());
+      var v1 = RelVar<TupS>.Create(Supplier.S);
+      WriteLine(v1);
+      var v2 = RelVar<Tup1>.Create(v1.Value
+        .Select(t => t.Status == 30)
+        .Rename<TupSX>()    // "SNo", "SName", "Status", "Supplier City"
+        .Project<Tup1>());    // "Supplier City"
+      WriteLine(v2.Value.Format());
+
+      //WriteLine(Supplier.S.Select(t => t.Status == 30)
+      //  .Rename<TupSX>()    // "SNo", "SName", "Status", "Supplier City"
+      //  .Project<Tup1>()    // "Supplier City"
+      //  .Format());
 
       WriteLine(Supplier.P
-        .Rename<TupPcolour>()
+        .Rename<TupPcolour>()                 //  "PNo", "PName", "Colour", "Weight", "City"
         .Select(t => t.Colour == "Red")
-        .Project<TupPPno>()
-        .Join<TupSP, TupPjoin>(Supplier.SP)
+        .Project<TupPPno>()                   // "PNo", "PName"
+        .Join<TupSP, TupPjoin>(Supplier.SP)   // "PNo", "PName", "SNo", "Qty"
         .Format());
     }
   }

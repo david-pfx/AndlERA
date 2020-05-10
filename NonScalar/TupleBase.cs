@@ -41,6 +41,10 @@ namespace AndlEra {
         .Join(", ");
     }
 
+    public TupleBase() {
+      Values = new object[0];
+    }
+
     public static T Create<T>(object[] values) where T : TupleBase, new() {
       return new T() {
         Values = values,

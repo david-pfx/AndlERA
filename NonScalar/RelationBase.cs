@@ -11,7 +11,8 @@ namespace AndlEra {
   /// <summary>
   /// Base type for relations
   /// </summary>
-  public class RelationBase<Ttup> where Ttup : TupleBase, new() {
+  public class RelationBase<Ttup>
+  where Ttup : TupleBase, new() {
     public static string[] Heading { get; protected set; }
     public int Count { get { return Body.Count; } }
     public bool IsEmpty { get { return Body.Count == 0; } }
@@ -55,6 +56,10 @@ namespace AndlEra {
       // reflection hack to get heading value from tuple
       var prop = typeof(Ttup).GetField("Heading");
       Heading = (string[])prop.GetValue(null);
+    }
+
+    public RelationBase() {
+      Body = new HashSet<Ttup>();
     }
 
     // create new relation value from body as set
@@ -130,6 +135,13 @@ namespace AndlEra {
       return RelationBase<T>.Create<RelationBase<T>>(newbody);
     }
 
+    public RelationBase<T> Extend<T>(Func<Ttup, object> func)
+    where T : TupleBase, new() {
+
+      var newbody = RelOps.Extend<Ttup, T>(Body, func);
+      return RelationBase<T>.Create<RelationBase<T>>(newbody);
+    }
+
     // generate a new relation that is a set union
     public RelationBase<Ttup> Union(RelationBase<Ttup> other) {
 
@@ -152,11 +164,11 @@ namespace AndlEra {
     }
 
     // generate a new relation that is a natural join
-    public RelationBase<T> Join<T1,T>(RelationBase<T1> other)
+    public RelationBase<T> Join<T1, T>(RelationBase<T1> other)
     where T : TupleBase, new()
     where T1 : TupleBase, new() {
 
-      var newbody = RelOps.Join<T,Ttup,T1>(Body, other.Body);
+      var newbody = RelOps.Join<T, Ttup, T1>(Body, other.Body);
       return RelationBase<T>.Create<RelationBase<T>>(newbody);
     }
 
@@ -181,4 +193,53 @@ namespace AndlEra {
         yield return tuple;
     }
   }
+
+
+  ///===========================================================================
+  /// relational stores
+  /// 
+
+  public class RelVar<Ttup>
+  where Ttup : TupleBase, new() {
+
+    public RelationBase<Ttup> Value { get; private set; }
+
+    public static implicit operator RelationBase<Ttup>(RelVar<Ttup> v) => v.Value;
+
+    public RelVar() {
+      Value = new RelationBase<Ttup>();
+    }
+
+    public static RelVar<Ttup> Create(RelationBase<Ttup> value) {
+      return new RelVar<Ttup> {
+        Value = value,
+      };
+    }
+
+    public void Assign(RelationBase<Ttup> value) {
+      Value = value;
+    }
+
+    public void Insert(RelationBase<Ttup> value) {
+
+      var newbody = RelOps.Union(Value.Body, value.Body);
+      Value = RelationBase<Ttup>.Create<RelationBase<Ttup>>(newbody);
+    }
+
+    public void Update(Func<Ttup,bool> selfunc, Func<Ttup,Ttup> upfunc) {
+
+      var newbody = Value.Body.Select(t => selfunc(t) ? upfunc(t) : t);
+      Value = RelationBase<Ttup>.Create<RelationBase<Ttup>>(newbody);
+    }
+
+    public void Delete(RelationBase<Ttup> value, Func<Ttup,bool> selfunc) {
+
+      var newbody = Value.Body.Select(t => !selfunc(t));
+      Value = RelationBase<Ttup>.Create<RelationBase<Ttup>>(RelOps.Union(Value.Body, value.Body));
+    }
+
+
+
+  }
+
 }

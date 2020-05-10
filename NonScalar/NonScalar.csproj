@@ -41,7 +41,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="RelOpExtension.cs" />
     <Compile Include="RelOps.cs" />
     <Compile Include="SampleData.cs" />
     <Compile Include="RelationBase.cs" />
