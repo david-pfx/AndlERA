@@ -56,6 +56,7 @@ namespace AndlEra {
       // reflection hack to get heading value from tuple
       var prop = typeof(Ttup).GetField("Heading");
       Heading = (string[])prop.GetValue(null);
+      Logger.Assert(Heading != null, "Heading must not be null");
     }
 
     public RelationBase() {
@@ -139,6 +140,14 @@ namespace AndlEra {
     where T : TupleBase, new() {
 
       var newbody = RelOps.Extend<Ttup, T>(Body, func);
+      return RelationBase<T>.Create<RelationBase<T>>(newbody);
+    }
+
+    public RelationBase<T> Aggregate<T,T1>(Func<Ttup, T1, T1> func)
+    where T : TupleBase, new()
+    where T1 : new() {
+
+      var newbody = RelOps.Aggregate<Ttup,T,T1>(Body, func);
       return RelationBase<T>.Create<RelationBase<T>>(newbody);
     }
 

@@ -40,6 +40,24 @@ namespace AndlEra {
       return new HashSet<T>(body1.Select(t => TupleBase.Create<T>(MapValues(t.Values, map, func(t)))));
     }
 
+    // agregation
+    internal static HashSet<T> Aggregate<T1, T, T2>(ISet<T1> body1, Func<T1, T2, T2> func)
+      where T : TupleBase, new()
+      where T1 : TupleBase, new()
+      where T2 : new() {
+
+      var jhead = MakeJoinHeading(RelationBase<T>.Heading, RelationBase<T1>.Heading);
+      var jmap = MakeMap(jhead, RelationBase<T1>.Heading);
+      var map = MakeMap(RelationBase<T>.Heading, jhead);
+      var dict = new Dictionary<TupleBase, T2>();
+
+      foreach (var t in body1) {
+        var tup = TupleBase.Create<T>(MapValues(t.Values, jmap));
+        dict[tup] = (dict.ContainsKey(tup)) ? func(t, dict[tup]) : dict[tup] = func(t, new T2());
+      }
+      return new HashSet<T>(dict.Select(p => TupleBase.Create<T>(MapValues(p.Key.Values, map, p.Value))));
+    }
+
     // create new body as set union of two others
     internal static ISet<T> Union<T>(ISet<T> body1, ISet<T> body2)
     where T : TupleBase, new() {
@@ -111,6 +129,7 @@ namespace AndlEra {
       return SemiJoin<T, T1, T2>(body1, body2, map1, jmap1, jmap2, false);
     }
 
+    // natural semijoin/antijoin (fields from left only)
     static HashSet<T> SemiJoin<T, T1, T2>(ISet<T1> body1, ISet<T2> body2, 
       int[] map1, int[] jmap1, int[] jmap2, bool issemi = true)
       where T : TupleBase, new()
@@ -122,6 +141,10 @@ namespace AndlEra {
         .Where(b => issemi == index.Contains(TupleBase.Create<TupNone>(MapValues(b.Values, jmap1))))
         .Select(b => TupleBase.Create<T>(MapValues(b.Values, map1))));
     }
+
+    ///=========================================================================
+    ///  implementation
+    ///  
 
     // build an index of tuples (because that's where Equals lives)
     static Dictionary<TupleBase, IList<TupleBase>> BuildIndex(IEnumerable<TupleBase> values, int[] map) {
@@ -137,6 +160,12 @@ namespace AndlEra {
 
     static HashSet<TupleBase> BuildSet(IEnumerable<TupleBase> values, int[] map) {
       return new HashSet<TupleBase>(values.Select(v => TupleBase.Create<TupNone>(MapValues(v.Values, map))));
+    }
+
+    static int[] MakeRenameMap(Dictionary<string,int> head, Dictionary<string, int> ohead) {
+      var pnew = ohead.FirstOrDefault(p => !head.ContainsKey(p.Key));
+      Logger.Assert(pnew.Key != null, "nothing to rename");
+      return head.Select(p => ohead.SafeLookup(p.Key, pnew.Value)).ToArray();
     }
 
     static int[] MakeRenameMap(string[] head, string[] ohead) {

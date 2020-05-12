@@ -66,5 +66,16 @@ namespace Andl.Common {
       return int.TryParse(s, out value) ? value as int? : null;
     }
 
+    public static U SafeLookup<T, U>(this Dictionary<T, U> dict, T key, U other = default(U)) {
+      U ret;
+      if (dict.TryGetValue(key, out ret)) return ret;
+      return other;
+    }
+
+    public static bool SafeAdd<T, U>(this Dictionary<T, U> dict, T key, U value) {
+      if (dict.ContainsKey(key)) return false;
+      dict.Add(key, value);
+      return true;
+    }
   }
 }
