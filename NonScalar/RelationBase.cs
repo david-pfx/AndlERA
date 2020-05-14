@@ -143,6 +143,13 @@ namespace AndlEra {
       return RelationBase<T>.Create<RelationBase<T>>(newbody);
     }
 
+    public RelationBase<T> Transform<T>(Func<Ttup, T> func)
+    where T : TupleBase, new() {
+
+      var newbody = RelOps.Transform<Ttup, T>(Body, func);
+      return RelationBase<T>.Create<RelationBase<T>>(newbody);
+    }
+
     public RelationBase<T> Aggregate<T,T1>(Func<Ttup, T1, T1> func)
     where T : TupleBase, new()
     where T1 : new() {
@@ -187,6 +194,12 @@ namespace AndlEra {
 
       var newbody = RelOps.AntiJoin<T, Ttup, T1>(Body, other.Body);
       return RelationBase<T>.Create<RelationBase<T>>(newbody);
+    }
+
+    public RelationBase<Ttup> While(Func<RelationBase<Ttup>, RelationBase<Ttup>> func) {
+
+      var newbody = RelOps.While<Ttup>(Body, func);
+      return RelationBase<Ttup>.Create<RelationBase<Ttup>>(newbody);
     }
 
     // --- impl

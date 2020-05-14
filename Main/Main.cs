@@ -41,6 +41,19 @@ namespace AndlEra {
       WriteLine(Supplier.SP
         .Aggregate<TupAgg,int>((t,a) => a + t.Qty)  //  "PNo", "TotQty"
         .Format());
+
+      WriteLine("While");
+      var seed = MMQData.MMQ.Extend<TupMMQA>(t => t.Qty);    // "Major", "Minor", "Qty", "AggQty"
+      var zmq = MMQData.MMQ.Rename<TupzMQ>();    // "zmatch", "Minor", "Qty"
+      var exp = seed.While(t => t
+        .Rename<TupMzA>()             // "Major", "zmatch", "AggQty"
+        .Join<TupzMQ, TupMMQA>(zmq)
+        .Transform<TupMMQA>(tt => TupMMQA.Create(tt.Major, tt.Minor, 0, tt.AggQty * tt.Qty)));
+      WriteLine(exp.Format());
+      WriteLine("P1 -> P5");
+      WriteLine(exp.Select(t => t.Major == "P1" && t.Minor == "P5")
+        .Aggregate<TupMMT,int>((t,a) => a + t.AggQty)
+        .Format());
     }
 
   }
@@ -69,6 +82,24 @@ namespace AndlEra {
   }
   public class TupAgg : TupleBase {
     public readonly static string[] Heading = { "PNo", "TotQty" };
+  }
+
+  public class RelMMQA : RelationBase<TupMMQ> { }
+  public class TupMMQA : TupMMQ {
+    new public readonly static string[] Heading = { "Major", "Minor", "Qty", "AggQty" };
+    public int AggQty { get { return (int)Values[3]; } }
+    public static TupMMQA Create(string major, string minor, int qty, int aggqty) {
+      return Create<TupMMQA>(new object[] { major, minor, qty, aggqty });
+    }
+  }
+  public class TupMzA : TupleBase {
+    public readonly static string[] Heading = { "Major", "zmatch", "AggQty" };
+  }
+  public class TupzMQ : TupleBase {
+    public readonly static string[] Heading = { "zmatch", "Minor", "Qty" };
+  }
+  public class TupMMT : TupleBase {
+    public readonly static string[] Heading = { "Major", "Minor", "TotQty" };
   }
 
 

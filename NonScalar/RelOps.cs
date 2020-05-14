@@ -32,12 +32,20 @@ namespace AndlEra {
       return new HashSet<T>(body1.Select(t => TupleBase.Create<T>(MapValues(t.Values, map))));
     }
 
+    // extend by one new attribute value
     internal static ISet<T> Extend<T1, T>(ISet<T1> body1, Func<T1,object> func)
     where T : TupleBase, new()
     where T1 : TupleBase, new() {
 
       var map = MakeMap(RelationBase<T>.Heading, RelationBase<T1>.Heading);
       return new HashSet<T>(body1.Select(t => TupleBase.Create<T>(MapValues(t.Values, map, func(t)))));
+    }
+
+    internal static ISet<T> Transform<T1, T>(ISet<T1> body, Func<T1, T> func) 
+    where T : TupleBase, new()
+    where T1 : TupleBase, new() {
+
+      return new HashSet<T>(body.Select(t => func(t)));
     }
 
     // agregation
@@ -129,8 +137,8 @@ namespace AndlEra {
       return SemiJoin<T, T1, T2>(body1, body2, map1, jmap1, jmap2, false);
     }
 
-    // natural semijoin/antijoin (fields from left only)
-    static HashSet<T> SemiJoin<T, T1, T2>(ISet<T1> body1, ISet<T2> body2, 
+        // natural semijoin/antijoin (fields from left only)
+    internal static HashSet<T> SemiJoin<T, T1, T2>(ISet<T1> body1, ISet<T2> body2, 
       int[] map1, int[] jmap1, int[] jmap2, bool issemi = true)
       where T : TupleBase, new()
       where T1 : TupleBase, new()
@@ -140,6 +148,24 @@ namespace AndlEra {
       return new HashSet<T>(body1
         .Where(b => issemi == index.Contains(TupleBase.Create<TupNone>(MapValues(b.Values, jmap1))))
         .Select(b => TupleBase.Create<T>(MapValues(b.Values, map1))));
+    }
+
+    // fixed point recursion
+    internal static HashSet<T> While<T>(ISet<T> body, Func<RelationBase<T>, RelationBase<T>> func)
+      where T : TupleBase, new() {
+
+      var stack = new Stack<T>(body);
+      var newbody = new HashSet<T>();
+      while (stack.Count > 0) {
+          var top = stack.Pop();
+          if (!newbody.Contains(top)) {
+            newbody.Add(top);
+            var rel = RelationBase<T>.Create<RelationBase<T>>(Enumerable.Repeat(top, 1));
+            foreach (var t in func(rel).Body)
+              stack.Push(t);
+          }
+      }
+      return newbody;
     }
 
     ///=========================================================================

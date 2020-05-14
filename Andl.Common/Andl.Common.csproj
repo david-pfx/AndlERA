@@ -41,8 +41,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Converter.cs" />
-    <Compile Include="ISqlDatabase.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Exceptions.cs" />
     <Compile Include="OptionParser.cs" />
