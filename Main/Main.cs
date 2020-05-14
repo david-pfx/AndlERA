@@ -54,6 +54,24 @@ namespace AndlEra {
       WriteLine(exp.Select(t => t.Major == "P1" && t.Minor == "P5")
         .Aggregate<TupMMT,int>((t,a) => a + t.AggQty)
         .Format());
+
+      WriteLine("Insert P6 P7");
+      v1.Insert(
+        RelS.Create<RelS>(
+          new List<TupS> {
+            TupS.Create( "S6", "White", 25, "Paris" ),
+            TupS.Create( "S7", "Black", 15, "London" ),
+          })
+        );
+      WriteLine(v1.Format());
+
+      WriteLine("Move to Sydney");
+      v1.Update(t => t.City == "Paris", t => TupS.Create(t.SNo, t.SName, t.Status, "Sydney"));
+      WriteLine(v1.Format());
+
+      WriteLine("Delete Sydneysiders");
+      v1.Delete(t => t.City == "Sydney");
+      WriteLine(v1.Format());
     }
 
   }

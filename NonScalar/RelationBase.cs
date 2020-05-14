@@ -228,6 +228,10 @@ namespace AndlEra {
 
     public static implicit operator RelationBase<Ttup>(RelVar<Ttup> v) => v.Value;
 
+    public override string ToString() => Value.ToString();
+
+    public string Format() => Value.Format();
+
     public RelVar() {
       Value = new RelationBase<Ttup>();
     }
@@ -254,10 +258,10 @@ namespace AndlEra {
       Value = RelationBase<Ttup>.Create<RelationBase<Ttup>>(newbody);
     }
 
-    public void Delete(RelationBase<Ttup> value, Func<Ttup,bool> selfunc) {
+    public void Delete(Func<Ttup,bool> selfunc) {
 
-      var newbody = Value.Body.Select(t => !selfunc(t));
-      Value = RelationBase<Ttup>.Create<RelationBase<Ttup>>(RelOps.Union(Value.Body, value.Body));
+      var newbody = Value.Body.Where(t => !selfunc(t));
+      Value = RelationBase<Ttup>.Create<RelationBase<Ttup>>(newbody);
     }
 
 
