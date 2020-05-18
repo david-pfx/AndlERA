@@ -14,7 +14,7 @@ namespace AndlEra {
   internal static class RelOps {
 
     // project relation body onto new heading
-    internal static ISet<T> Rename<T1, T>(ISet<T1> body1)
+    internal static ISet<T> Rename<T1, T>(IEnumerable<T1> body1)
     where T : TupleBase, new()
     where T1 : TupleBase, new() {
 
@@ -23,7 +23,7 @@ namespace AndlEra {
       return new HashSet<T>(body1.Select(t => TupleBase.Create<T>(MapValues(t.Values, map))));
     }
 
-    internal static ISet<T> Project<T1, T>(ISet<T1> body1)
+    internal static ISet<T> Project<T1, T>(IEnumerable<T1> body1)
     where T : TupleBase, new()
     where T1 : TupleBase, new() {
 
@@ -33,7 +33,7 @@ namespace AndlEra {
     }
 
     // extend by one new attribute value
-    internal static ISet<T> Extend<T1, T>(ISet<T1> body1, Func<T1,object> func)
+    internal static ISet<T> Extend<T1, T>(IEnumerable<T1> body1, Func<T1,object> func)
     where T : TupleBase, new()
     where T1 : TupleBase, new() {
 
@@ -41,7 +41,7 @@ namespace AndlEra {
       return new HashSet<T>(body1.Select(t => TupleBase.Create<T>(MapValues(t.Values, map, func(t)))));
     }
 
-    internal static ISet<T> Transform<T1, T>(ISet<T1> body, Func<T1, T> func) 
+    internal static ISet<T> Transform<T1, T>(IEnumerable<T1> body, Func<T1, T> func) 
     where T : TupleBase, new()
     where T1 : TupleBase, new() {
 
@@ -49,7 +49,7 @@ namespace AndlEra {
     }
 
     // agregation
-    internal static HashSet<T> Aggregate<T1, T, T2>(ISet<T1> body1, Func<T1, T2, T2> func)
+    internal static HashSet<T> Aggregate<T1, T, T2>(IEnumerable<T1> body1, Func<T1, T2, T2> func)
       where T : TupleBase, new()
       where T1 : TupleBase, new()
       where T2 : new() {
@@ -67,7 +67,7 @@ namespace AndlEra {
     }
 
     // create new body as set union of two others
-    internal static ISet<T> Union<T>(ISet<T> body1, ISet<T> body2)
+    internal static ISet<T> Union<T>(IEnumerable<T> body1, IEnumerable<T> body2)
     where T : TupleBase, new() {
 
       var output = new HashSet<T>(body1);
@@ -76,7 +76,7 @@ namespace AndlEra {
     }
 
     // create new body as set difference of two others
-    internal static ISet<T> Minus<T>(ISet<T> body1, ISet<T> body2)
+    internal static ISet<T> Minus<T>(IEnumerable<T> body1, IEnumerable<T> body2)
     where T : TupleBase, new() {
 
       var output = new HashSet<T>(body1);
@@ -85,7 +85,7 @@ namespace AndlEra {
     }
 
     // create new body as set intersection of two others
-    internal static ISet<T> Intersect<T>(ISet<T> body1, ISet<T> body2)
+    internal static ISet<T> Intersect<T>(IEnumerable<T> body1, IEnumerable<T> body2)
     where T : TupleBase, new() {
 
       var output = new HashSet<T>(body1);
@@ -94,7 +94,7 @@ namespace AndlEra {
     }
 
     // natural join T = T1 join T2
-    internal static ISet<T> Join<T,T1,T2>(ISet<T1> body1, ISet<T2> body2)
+    internal static ISet<T> Join<T,T1,T2>(IEnumerable<T1> body1, IEnumerable<T2> body2)
     where T:TupleBase,new()
     where T1:TupleBase,new()
     where T2:TupleBase,new() {
@@ -122,7 +122,7 @@ namespace AndlEra {
     }
 
     // natural anti join T = T1 join T2
-    internal static ISet<T> AntiJoin<T, T1, T2>(ISet<T1> body1, ISet<T2> body2)
+    internal static ISet<T> AntiJoin<T, T1, T2>(IEnumerable<T1> body1, IEnumerable<T2> body2)
     where T : TupleBase, new()
     where T1 : TupleBase, new()
     where T2 : TupleBase, new() {
@@ -138,7 +138,7 @@ namespace AndlEra {
     }
 
         // natural semijoin/antijoin (fields from left only)
-    internal static HashSet<T> SemiJoin<T, T1, T2>(ISet<T1> body1, ISet<T2> body2, 
+    internal static HashSet<T> SemiJoin<T, T1, T2>(IEnumerable<T1> body1, IEnumerable<T2> body2, 
       int[] map1, int[] jmap1, int[] jmap2, bool issemi = true)
       where T : TupleBase, new()
       where T1 : TupleBase, new()
@@ -151,7 +151,7 @@ namespace AndlEra {
     }
 
     // fixed point recursion
-    internal static HashSet<T> While<T>(ISet<T> body, Func<RelationBase<T>, RelationBase<T>> func)
+    internal static HashSet<T> While<T>(IEnumerable<T> body, Func<RelationBase<T>, RelationBase<T>> func)
       where T : TupleBase, new() {
 
       var stack = new Stack<T>(body);

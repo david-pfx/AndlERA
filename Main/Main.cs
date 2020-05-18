@@ -10,12 +10,29 @@ namespace AndlEra {
   class Program {
     static void Main(string[] args) {
       WriteLine("Andl Era");
-      Exec();
+      Sample1();
+      //Sample2();
     }
 
-    private static void Exec() {
+    // basic samples, operators return relations
+    static void Sample2() {
+
+      //WriteLine(Supplier.S
+      //  .Select(t => t.Status == 30)
+      //  .Rename<TupS, TupSX>()    // "SNo", "SName", "Status", "Supplier City"
+      //  .Project<TupSX, Tup1>()    // "Supplier City"
+      //  .Format());
+
+      //WriteLine(Supplier.S
+      //  .Extend<TupS,TupSX>(t => "XXX")    // "SNo", "SName", "Status", "Supplier City"
+      //  .Format());
+    }
+
+    // basic samples, operators return relations
+    static void Sample1() {
       WriteLine(RelSequence.Create(5));
       WriteLine(Supplier.SP);
+//#if RELVAL
 
       var v1 = RelVar<TupS>.Create(Supplier.S);
       WriteLine(v1);
@@ -72,8 +89,8 @@ namespace AndlEra {
       WriteLine("Delete Sydneysiders");
       v1.Delete(t => t.City == "Sydney");
       WriteLine(v1.Format());
+//#endif
     }
-
   }
 
 

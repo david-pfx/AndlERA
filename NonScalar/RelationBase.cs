@@ -1,6 +1,7 @@
 ﻿// Non-scalar base types
 //
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -11,7 +12,7 @@ namespace AndlEra {
   /// <summary>
   /// Base type for relations
   /// </summary>
-  public class RelationBase<Ttup>
+  public class RelationBase<Ttup> : IEnumerable<Ttup>
   where Ttup : TupleBase, new() {
     public static string[] Heading { get; protected set; }
     public int Count { get { return Body.Count; } }
@@ -28,6 +29,18 @@ namespace AndlEra {
     public override string ToString() {
       return (Count > 5) ? Body.Take(5).Join(";") + "..."
         : Body.Join(";");
+    }
+
+    // interfaces
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<Ttup>)Body).GetEnumerator();
+    public IEnumerator<Ttup> GetEnumerator() => ((IEnumerable<Ttup>)Body).GetEnumerator();
+
+    // --- impl
+    internal static int CalcHashCode(HashSet<Ttup> body) {
+      int code = 1;
+      foreach (Ttup b in body)
+        code = (code << 1) ^ b.GetHashCode();
+      return code;
     }
 
     public string Format() {
@@ -84,7 +97,6 @@ namespace AndlEra {
     ///===========================================================================
     /// Functions that return a scalar value
     /// 
-
     // return singleton tuple: error if none, random if more than one
     public Ttup Single() {
       return Body.First();
@@ -114,7 +126,7 @@ namespace AndlEra {
     /// Note that functions return the new value, so thay can
     /// be used as a fluent interface (left to right)
     /// 
-
+    
     // generate a new relation with a selection of tuples
     public RelationBase<Ttup> Select(Func<Ttup, bool> predicate) {
       return Create<RelationBase<Ttup>>(Body.Where(t => predicate(t)));
@@ -201,21 +213,7 @@ namespace AndlEra {
       var newbody = RelOps.While<Ttup>(Body, func);
       return RelationBase<Ttup>.Create<RelationBase<Ttup>>(newbody);
     }
-
-    // --- impl
-    internal static int CalcHashCode(HashSet<Ttup> body) {
-      int code = 1;
-      foreach (Ttup b in body)
-        code = (code << 1) ^ b.GetHashCode();
-      return code;
-    }
-
-    public IEnumerator<Ttup> GetEnumerator() {
-      foreach (var tuple in Body)
-        yield return tuple;
-    }
   }
-
 
   ///===========================================================================
   /// relational stores
