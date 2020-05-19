@@ -54,9 +54,9 @@
       <Project>{0bac8131-8533-47ea-add8-ac8bb3332a05}</Project>
       <Name>Andl.Common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\NonScalar\NonScalar.csproj">
+    <ProjectReference Include="..\NonScalar\Andl.EraLib.csproj">
       <Project>{c3f85f31-05fa-4746-8683-c8884dc7c07b}</Project>
-      <Name>NonScalar</Name>
+      <Name>Andl.EraLib</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

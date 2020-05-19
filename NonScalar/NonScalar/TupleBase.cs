@@ -45,11 +45,20 @@ namespace AndlEra {
       Values = new object[0];
     }
 
-    public static T Create<T>(object[] values) where T : TupleBase, new() {
+    public static T Create<T>(object[] values) 
+    where T : TupleBase, new() {
       return new T() {
         Values = values,
         HashCode = CalcHashCode(values),
       };
+    }
+
+    internal T Init<T>(object[] values)
+    where T : TupleBase {
+
+      Values = values;
+      HashCode = CalcHashCode(values);
+      return this as T;
     }
 
     //--- impl

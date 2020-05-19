@@ -31,6 +31,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -41,12 +42,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="RelOps.cs" />
-    <Compile Include="SampleData.cs" />
-    <Compile Include="RelationBase.cs" />
-    <Compile Include="TupleBase.cs" />
+    <Compile Include="DataSource\DataSourceSql.cs" />
+    <Compile Include="DataSource\DataSourceStream.cs" />
+    <Compile Include="DataSource\RelationStream.cs" />
+    <Compile Include="DataSource\SampleData.cs" />
+    <Compile Include="DataSource\SupplierData.cs" />
+    <Compile Include="NonScalar\RelOps.cs" />
+    <Compile Include="NonScalar\RelationBase.cs" />
+    <Compile Include="NonScalar\TupleBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SupplierData.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Andl.Common\Andl.Common.csproj">

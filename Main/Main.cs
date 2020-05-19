@@ -10,29 +10,23 @@ namespace AndlEra {
   class Program {
     static void Main(string[] args) {
       WriteLine("Andl Era");
-      Sample1();
-      //Sample2();
+      //SampleBasic();
+      SampleSource();
     }
 
     // basic samples, operators return relations
-    static void Sample2() {
+    static void SampleSource() {
 
-      //WriteLine(Supplier.S
-      //  .Select(t => t.Status == 30)
-      //  .Rename<TupS, TupSX>()    // "SNo", "SName", "Status", "Supplier City"
-      //  .Project<TupSX, Tup1>()    // "Supplier City"
-      //  .Format());
-
-      //WriteLine(Supplier.S
-      //  .Extend<TupS,TupSX>(t => "XXX")    // "SNo", "SName", "Status", "Supplier City"
-      //  .Format());
+      var rs = new RelationStream<TupS>(SourceKind.Csv, ".", "S");
+      //var rs = new RelationStream<TupS>(SourceKind.Csv, ".", "S", "Sno:text,Sname:text,Status:integer,City:text");
+      var e = rs.GetEnumerator();
+      WriteLine(rs.Select(t => t.Format(rs.Heading.ToNames())).Join("; "));
     }
 
     // basic samples, operators return relations
-    static void Sample1() {
+    static void SampleBasic() {
       WriteLine(RelSequence.Create(5));
       WriteLine(Supplier.SP);
-//#if RELVAL
 
       var v1 = RelVar<TupS>.Create(Supplier.S);
       WriteLine(v1);
@@ -89,7 +83,6 @@ namespace AndlEra {
       WriteLine("Delete Sydneysiders");
       v1.Delete(t => t.City == "Sydney");
       WriteLine(v1.Format());
-//#endif
     }
   }
 

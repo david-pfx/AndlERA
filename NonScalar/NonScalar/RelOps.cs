@@ -161,7 +161,7 @@ namespace AndlEra {
           if (!newbody.Contains(top)) {
             newbody.Add(top);
             var rel = RelationBase<T>.Create<RelationBase<T>>(Enumerable.Repeat(top, 1));
-            foreach (var t in func(rel).Body)
+            foreach (var t in func(rel))
               stack.Push(t);
           }
       }
