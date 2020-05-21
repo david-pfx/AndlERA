@@ -86,6 +86,25 @@ using System.Text;
     public override string ToString() {
       return $"{Fields.Join(",")}";
     }
+
+    public CommonHeading Adapt(string newheading) {
+      return Adapt(newheading.Split(','));
+    }
+
+    public CommonHeading Adapt(string[] newheading) {
+      var fields = newheading.Select(name => {
+        var field = Fields.FirstOrDefault(f => f.Name == name);
+        return (field.CType == CommonType.None) ? new CommonField(name, CommonType.None) : field;
+      });
+      return CommonHeading.Create(fields.ToArray());
+    }
+
+    // Create a map from other to this
+    public int[] CreateMap(CommonHeading other) {
+      return Enumerable.Range(0, Fields.Length)
+        .Select(x => Array.FindIndex(other.Fields, f => f.Name == Fields[x].Name))  // equals?
+        .ToArray();
+    }
   }
 
   /// <summary>

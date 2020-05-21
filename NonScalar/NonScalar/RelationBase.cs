@@ -66,10 +66,7 @@ namespace AndlEra {
 
     //--- ctor
     static RelationBase() {
-      // reflection hack to get heading value from tuple
-      var prop = typeof(Ttup).GetField("Heading");
-      Heading = (string[])prop.GetValue(null);
-      Logger.Assert(Heading != null, "Heading must not be null");
+      Heading = TupleBase.GetHeading(typeof(Ttup));
     }
 
     public RelationBase() {

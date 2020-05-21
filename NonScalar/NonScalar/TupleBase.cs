@@ -17,6 +17,8 @@ namespace AndlEra {
     // Calculated hash code, never changes, accessible to create in relation
     internal int HashCode { get; set; }
 
+    public object this[int i] { get { return Values[i]; } }
+
     // override used by hash collections
     public override int GetHashCode() {
       return HashCode;
@@ -59,6 +61,21 @@ namespace AndlEra {
       Values = values;
       HashCode = CalcHashCode(values);
       return this as T;
+    }
+
+    // construct a new set of values based on a map
+    internal object[] MapValues(IList<int> map) {
+      return Enumerable.Range(0, map.Count)
+        .Select(x => Values[map[x]])
+        .ToArray();
+    }
+
+    // reflection hack to get heading value from tuple
+    internal static string[] GetHeading(Type ttype) {
+      var prop = ttype.GetField("Heading");
+      var heading = (string[])prop.GetValue(null);
+      if (heading == null) throw Error.NullArg("Heading must not be null");
+      return heading;
     }
 
     //--- impl

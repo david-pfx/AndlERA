@@ -17,10 +17,12 @@ namespace AndlEra {
     // basic samples, operators return relations
     static void SampleSource() {
 
-      var rs = new RelationStream<TupS>(SourceKind.Csv, ".", "S");
-      //var rs = new RelationStream<TupS>(SourceKind.Csv, ".", "S", "Sno:text,Sname:text,Status:integer,City:text");
-      var e = rs.GetEnumerator();
-      WriteLine(rs.Select(t => t.Format(rs.Heading.ToNames())).Join("; "));
+      var sn = RelationNode.Import(SourceKind.Csv, ".", "S", "Sno:text,Sname:text,Status:integer,City:text");
+      var ss = sn.Select("City", new TupSelect(t => (string)t[0] == "Paris"));
+      WriteLine("Select\n" + ss.Format());
+
+      var sp = sn.Project("City");
+      WriteLine("Project\n" + sp.Format());
     }
 
     // basic samples, operators return relations

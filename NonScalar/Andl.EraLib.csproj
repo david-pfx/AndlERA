@@ -51,6 +51,7 @@
     <Compile Include="NonScalar\RelationBase.cs" />
     <Compile Include="NonScalar\TupleBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RelationNode.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Andl.Common\Andl.Common.csproj">
