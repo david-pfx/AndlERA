@@ -65,9 +65,9 @@ using System.Text;
       set { Fields[index] = value; }
     }
 
-    public static CommonHeading Create(CommonField[] fields) {
+    public static CommonHeading Create(IEnumerable<CommonField> fields) {
       return new CommonHeading {
-        Fields = fields,
+        Fields = fields.ToArray(),
       };
     }
 
@@ -87,6 +87,14 @@ using System.Text;
       return $"{Fields.Join(",")}";
     }
 
+    //public override bool Equals(object obj) {
+    //  var other = obj as CommonHeading;
+    //  if (other == null) return false;
+    //  return other.Degree == Degree
+    //    && Fields.e
+    //}
+
+    // create a new heading but using types from current where matching
     public CommonHeading Adapt(string newheading) {
       return Adapt(newheading.Split(','));
     }
@@ -96,14 +104,25 @@ using System.Text;
         var field = Fields.FirstOrDefault(f => f.Name == name);
         return (field.CType == CommonType.None) ? new CommonField(name, CommonType.None) : field;
       });
-      return CommonHeading.Create(fields.ToArray());
+      return CommonHeading.Create(fields);
     }
 
     // Create a map from other to this
-    public int[] CreateMap(CommonHeading other) {
-      return Enumerable.Range(0, Fields.Length)
-        .Select(x => Array.FindIndex(other.Fields, f => f.Name == Fields[x].Name))  // equals?
-        .ToArray();
+    //public int[] CreateMap(CommonHeading other) {
+    //  return Enumerable.Range(0, Fields.Length)
+    //    .Select(x => Array.FindIndex(other.Fields, f => f.Name == Fields[x].Name))  // equals?
+    //    .ToArray();
+    //}
+    public int[] CreateMap(CommonHeading other, bool dorename = false) {
+      // a queue of indexes to new fields in other
+      var q = new Queue<int>(Enumerable.Range(0, other.Degree)
+        .Where(x => !Fields.Any(f => f.Name == other.Fields[x].Name)));
+
+      return Fields.Select(f => {
+          var x = Array.FindIndex(other.Fields, o => f.Name == o.Name);  // equals?
+          return (dorename && x == -1 && q.Count > 0) ? q.Dequeue() : x;
+        }).ToArray();
+
     }
   }
 
@@ -130,6 +149,7 @@ using System.Text;
     public override string ToString() {
       return $"{TableName}:{Heading}";
     }
+
   }
 
   /// <summary>

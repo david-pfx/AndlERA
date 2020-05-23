@@ -17,11 +17,26 @@ namespace AndlEra {
     // basic samples, operators return relations
     static void SampleSource() {
 
-      var sn = RelationNode.Import(SourceKind.Csv, ".", "S", "Sno:text,Sname:text,Status:integer,City:text");
-      var ss = sn.Select("City", new TupSelect(t => (string)t[0] == "Paris"));
+      var si = RelationNode.Import(SourceKind.Csv, ".", "S", "Sno:text,Sname:text,Status:integer,City:text");
+      var s8i = RelationNode.Import(SourceKind.Csv, ".", "S8", "Sno:text,Sname:text,Status:integer,City:text");
+      var pi = RelationNode.Import(SourceKind.Csv, ".", "P", "PNo:text,Pname:text,Color:text,Weight:number,City:text");
+      var spi = RelationNode.Import(SourceKind.Csv, ".", "SP", "SNo:text,PNo:text,Qty:integer");
+
+      var se = pi.Extend("Weight,WeightKg", new TupExtend(t => (decimal)t[0] * 0.454m));
+      WriteLine("Extend\n" + se.Format());
+
+      var sr = si.Rename("Sno,Sname,Status,SCITY");
+      WriteLine("Rename\n" + sr.Format());
+
+      //var su = sn.Union(sn8);
+      //var su = sn.Minus(sn8);
+      var su = si.Intersect(s8i);
+      WriteLine("Union\n" + su.Format());
+
+      var ss = si.Select("City", new TupSelect(t => (string)t[0] == "Paris"));
       WriteLine("Select\n" + ss.Format());
 
-      var sp = sn.Project("City");
+      var sp = si.Project("City");
       WriteLine("Project\n" + sp.Format());
     }
 

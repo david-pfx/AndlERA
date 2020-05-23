@@ -31,6 +31,18 @@ namespace SupplierData {
         TupS.Create( "S5", "Adams", 30, "Athens" ),
       });
 
+    public static RelS S8 = RelS.Create<RelS>(
+      new List<TupS> {
+        TupS.Create( "S1", "Smith", 20, "London" ),
+        TupS.Create( "S2", "Jones", 10, "Paris" ),
+        TupS.Create( "S3", "Blake", 30, "Paris" ),
+        TupS.Create( "S4", "Clark", 20, "London" ),
+        TupS.Create( "S6", "Black", 20, "Sydney" ),
+        TupS.Create( "S7", "White", 30, "Sydney" ),
+        TupS.Create( "S8", "Roberts", 40, "Sydney" ),
+        TupS.Create( "S9", "Sullivan", 50, "Sydney" ),
+      });
+
     public static RelP P = RelP.Create<RelP>(
       new List<TupP> {
         TupP.Create( "P1", "Nut",   "Red",   12.0m,"London" ),

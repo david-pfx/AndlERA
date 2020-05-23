@@ -21,6 +21,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Work", "Work", "{3B0CB768-1
 		Work\Chinook.sqlite = Work\Chinook.sqlite
 		Work\P.csv = Work\P.csv
 		Work\S.csv = Work\S.csv
+		Work\S8.csv = Work\S8.csv
 		Work\SP.csv = Work\SP.csv
 		Work\testfile.txt = Work\testfile.txt
 	EndProjectSection
