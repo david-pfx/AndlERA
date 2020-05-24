@@ -11,6 +11,9 @@ namespace AndlEra {
   enum SetOp {
     Union, Minus, Intersect,
   }
+  enum JoinOp {
+    Full, Compose, Semijoin, Antijoin,
+  }
 
   // tuple type used for all pipeline nodes
   public class TupMin : TupleBase { }
@@ -44,11 +47,14 @@ namespace AndlEra {
       return new ImportNode(kind, connector, name, heading);
     }
 
+    //--------------------------------------------------------------------------
+    // RA Nodes
+
     public RelationNode Project(string newheading) {
-      return new UnaryNode(this, newheading, true);
+      return new ProjectNode(this, newheading);
     }
     public RelationNode Rename(string newheading) {
-      return new UnaryNode(this, newheading, false);
+      return new RenameNode(this, newheading);
     }
     public RelationNode Select(string heading, TupSelect tupsel) {
       return new SelectNode(this, heading, tupsel);
@@ -57,19 +63,32 @@ namespace AndlEra {
       return new ExtendNode(this, heading, tupext);
     }
     public RelationNode Union(RelationNode other) {
-      return new SetOperationNode(this, SetOp.Union, other);
+      return new SetOpNode(this, SetOp.Union, other);
     }
     public RelationNode Minus(RelationNode other) {
-      return new SetOperationNode(this, SetOp.Minus, other);
+      return new SetOpNode(this, SetOp.Minus, other);
     }
     public RelationNode Intersect(RelationNode other) {
-      return new SetOperationNode(this, SetOp.Intersect, other);
+      return new SetOpNode(this, SetOp.Intersect, other);
+    }
+    public RelationNode Join(RelationNode other) {
+      return new JoinOpNode(this, JoinOp.Full, other);
+    }
+    public RelationNode Compose(RelationNode other) {
+      return new JoinOpNode(this, JoinOp.Compose, other);
+    }
+    public RelationNode Semijoin(RelationNode other) {
+      return new JoinOpNode(this, JoinOp.Semijoin, other);
+    }
+    public RelationNode Antijoin(RelationNode other) {
+      return new JoinOpNode(this, JoinOp.Antijoin, other);
     }
 
   }
 
+  ///===========================================================================
   /// <summary>
-  /// Node that imports tuples from a source
+  /// Implement node that imports tuples from a source
   /// </summary>
   class ImportNode : RelationNode {
     protected RelationStream<TupMin> _source;
@@ -82,34 +101,50 @@ namespace AndlEra {
     }
   }
 
+  ///===========================================================================
   /// <summary>
-  /// Pipeline node that passes tuples through
+  /// Implement project node 
+  /// Heading set required output
   /// </summary>
-  class UnaryNode : RelationNode {
+  class ProjectNode : RelationNode {
     RelationNode _source;
     int[] _map;
-    bool _isproject;
 
-    public UnaryNode(RelationNode source, string newheading, bool isproject) {
+    public ProjectNode(RelationNode source, string newheading) {
       _source = source;
       Heading = _source.Heading.Adapt(newheading);
-      _map = Heading.CreateMap(_source.Heading, !isproject);
-      if (isproject != (Heading.Degree < _source.Heading.Degree)) throw Error.Fatal("too many attributes for project");
+      _map = Heading.CreateMap(_source.Heading);
+      if (Heading.Degree >= _source.Heading.Degree) throw Error.Fatal("too many attributes for project");
       if (_map.Any(x => x < 0)) throw Error.Fatal("headings do not match");
-      _isproject = isproject;
     }
 
     public override IEnumerator<TupMin> GetEnumerator() {
       var hash = new HashSet<TupMin>();
       foreach (var tuple in _source) {
-        var newvalues = tuple.MapValues(_map);
-        var newtuple = TupleBase.Create<TupMin>(newvalues);
-        if (_isproject) {
-          if (hash.Contains(newtuple)) continue;
-          hash.Add(newtuple);
-        }
+        var newtuple = TupMin.Create<TupMin>(RelOps.MapValues(tuple.Values, _map));
+        if (hash.Contains(newtuple)) continue;
+        hash.Add(newtuple);
         yield return newtuple;
       }
+    }
+  }
+
+  ///===========================================================================
+  /// <summary>
+  /// Implement rename node 
+  /// Heading is name->name
+  /// </summary>
+  class RenameNode : RelationNode {
+    RelationNode _source;
+
+    public RenameNode(RelationNode source, string newheading) {
+      _source = source;
+      if (newheading.Split(',').Length != 2) throw Error.Fatal("rename requires 2 attributes");
+      Heading = _source.Heading.Rename(newheading);
+    }
+
+    public override IEnumerator<TupMin> GetEnumerator() {
+      return _source.GetEnumerator();
     }
   }
 
@@ -135,13 +170,13 @@ namespace AndlEra {
 
     public override IEnumerator<TupMin> GetEnumerator() {
       foreach (var tuple in _source) {
-        var newvalues = tuple.MapValues(_selmap);
-        var newtuple = TupleBase.Create<TupMin>(newvalues);
+        var newtuple = TupMin.Create<TupMin>(RelOps.MapValues(tuple.Values, _selmap));
         if (_selfunc(newtuple)) yield return newtuple;
       }
     }
   }
 
+  ///===========================================================================
   /// <summary>
   /// Extend function node
   /// Heading excluding last must be subset of other
@@ -167,8 +202,7 @@ namespace AndlEra {
     public override IEnumerator<TupMin> GetEnumerator() {
       foreach (var tuple in _source) {
         // pick out the argument values, pass them to the function, get return
-        var argvalues = tuple.MapValues(_argmap);
-        var argtuple = TupleBase.Create<TupMin>(argvalues);
+        var argtuple = TupMin.Create<TupMin>(RelOps.MapValues(tuple.Values, _argmap));
         var result = _extfunc(argtuple);
 
         // append return to original tuple as final result
@@ -179,16 +213,18 @@ namespace AndlEra {
     }
   }
 
+  ///===========================================================================
   /// <summary>
   /// implement set operations
+  /// heading is always as per input
   /// </summary>
-  class SetOperationNode : RelationNode {
+  class SetOpNode : RelationNode {
     RelationNode _left;
     RelationNode _right;
     SetOp _setop;
     int[] _othermap;
 
-    public SetOperationNode(RelationNode left, SetOp setop, RelationNode right) {
+    public SetOpNode(RelationNode left, SetOp setop, RelationNode right) {
       _setop = setop;
       _left = left;
       _right = right;
@@ -207,13 +243,13 @@ namespace AndlEra {
           yield return tuple;
         }
         foreach (var tuple in _right) {
-          var newtuple = TupleBase.Create<TupMin>(tuple.MapValues(_othermap));
+          var newtuple = TupMin.Create<TupMin>(RelOps.MapValues(tuple.Values, _othermap));
           if (!hash.Contains(newtuple)) yield return newtuple;
         }
         break;
       case SetOp.Minus:
         foreach (var tuple in _right) {
-          var newtuple = TupleBase.Create<TupMin>(tuple.MapValues(_othermap));
+          var newtuple = TupMin.Create<TupMin>(RelOps.MapValues(tuple.Values, _othermap));
           hash.Add(newtuple);
         }
         foreach (var tuple in _left) {
@@ -225,12 +261,76 @@ namespace AndlEra {
           hash.Add(tuple);
         }
         foreach (var tuple in _right) {
-          var newtuple = TupleBase.Create<TupMin>(tuple.MapValues(_othermap));
+          var newtuple = TupMin.Create<TupMin>(RelOps.MapValues(tuple.Values, _othermap));
           if (hash.Contains(newtuple)) yield return newtuple;
         }
         break;
       default:
         break;
+      }
+    }
+  }
+
+  ///===========================================================================
+  /// <summary>
+  /// implement join operations
+  /// heading is inferred from arguments
+  /// </summary>
+  class JoinOpNode : RelationNode {
+    RelationNode _leftarg;
+    RelationNode _rightarg;
+    JoinOp _joinop;
+    private int[] _jmapleft;
+    private int[] _jmapright;
+    private int[] _tmapleft;
+    private int[] _tmapright;
+
+    public JoinOpNode(RelationNode leftarg, JoinOp joinop, RelationNode rightarg) {
+      _joinop = joinop;
+      _leftarg = leftarg;
+      _rightarg = rightarg;
+      var join = _leftarg.Heading.Intersect(_rightarg.Heading);
+      var left = _leftarg.Heading.Minus(join);
+      var right = _rightarg.Heading.Minus(join);
+      Heading = (joinop == JoinOp.Full) ? _leftarg.Heading.Union(right)
+        : (joinop == JoinOp.Compose) ? left.Union(right)
+        : _leftarg.Heading;
+      _jmapleft = join.CreateMap(_leftarg.Heading);
+      _jmapright = join.CreateMap(_rightarg.Heading);
+      _tmapleft = Heading.CreateMap(_leftarg.Heading);
+      _tmapright = Heading.CreateMap(_rightarg.Heading);
+    }
+
+    public override IEnumerator<TupMin> GetEnumerator() {
+      return (_joinop == JoinOp.Full || _joinop == JoinOp.Compose) ? GetFull()
+        : GetSemi(_joinop == JoinOp.Antijoin);
+    }
+
+    // enumerator for full join and compose (only the output is different)
+    IEnumerator<TupMin> GetFull() {
+      var index = RelOps.BuildIndex(_rightarg, _jmapright);
+      var hash = new HashSet<TupMin>();
+      foreach (var tuple in _leftarg) {
+        var key = TupMin.Create<TupMin>(RelOps.MapValues(tuple.Values, _jmapleft));
+        if (index.ContainsKey(key)) {
+          foreach (var tother in index[key]) {
+            var newtuple = TupMin.Create<TupMin>(RelOps.MapValues(tother.Values, _jmapright));
+            if (hash.Contains(newtuple)) continue;
+            hash.Add(newtuple);
+            yield return (newtuple);
+          }
+        }
+      }
+    }
+
+    // enumerator for semijoin and antijoin (only the logic test is different)
+    IEnumerator<TupMin> GetSemi(bool isanti) {
+
+      var set = RelOps.BuildSet(_rightarg, _jmapright);
+      foreach (var tuple in _leftarg) {
+        var key = TupMin.Create<TupMin>(RelOps.MapValues(tuple.Values, _jmapleft));
+        if (!isanti == set.Contains(key))
+            yield return (tuple);
       }
     }
   }

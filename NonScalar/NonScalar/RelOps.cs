@@ -173,7 +173,7 @@ namespace AndlEra {
     ///  
 
     // build an index of tuples (because that's where Equals lives)
-    static Dictionary<TupleBase, IList<TupleBase>> BuildIndex(IEnumerable<TupleBase> values, int[] map) {
+    static internal Dictionary<TupleBase, IList<TupleBase>> BuildIndex(IEnumerable<TupleBase> values, int[] map) {
       var index = new Dictionary<TupleBase, IList<TupleBase>>();
       foreach (var tuple in values) {
         var newkey = TupleBase.Create<TupNone>(MapValues(tuple.Values, map));
@@ -184,7 +184,7 @@ namespace AndlEra {
       return index;
     }
 
-    static HashSet<TupleBase> BuildSet(IEnumerable<TupleBase> values, int[] map) {
+    static internal HashSet<TupleBase> BuildSet(IEnumerable<TupleBase> values, int[] map) {
       return new HashSet<TupleBase>(values.Select(v => TupleBase.Create<TupNone>(MapValues(v.Values, map))));
     }
 
@@ -228,19 +228,19 @@ namespace AndlEra {
     }
 
 
-    static object[] MapValues(IList<object>values, IList<int> map) {
+    static internal object[] MapValues(IList<object>values, IList<int> map) {
       return Enumerable.Range(0, map.Count)
         .Select(x => values[map[x]])
         .ToArray();
     }
 
-    static object[] MapValues(IList<object> values, IList<int> map, object newvalue) {
+    static internal object[] MapValues(IList<object> values, IList<int> map, object newvalue) {
       return Enumerable.Range(0, map.Count)
         .Select(x => map[x] == -1 ? newvalue : values[map[x]])
         .ToArray();
     }
 
-    static object[] MapValues(TupleBase t1, IList<int> map1, TupleBase t2, IList<int> map2) {
+    static internal object[] MapValues(TupleBase t1, IList<int> map1, TupleBase t2, IList<int> map2) {
       Logger.Assert(map1.Count == map2.Count);
       return Enumerable.Range(0, map1.Count)
         .Select(x => map1[x] >= 0 ? t1.Values[map1[x]] : t2.Values[map2[x]])

@@ -107,13 +107,40 @@ using System.Text;
       return CommonHeading.Create(fields);
     }
 
+    // rename a field from old to new
+    public CommonHeading Rename(string rename) {
+      var s = rename.Split(',');
+      return Rename(s[0], s[1]);
+    }
+
+    public CommonHeading Rename(string oldname, string newname) {
+      var fields = Fields.Select(f => (f.Name == oldname) ? new CommonField(newname, f.CType) : f);
+      return CommonHeading.Create(fields);
+    }
+
+    public CommonHeading Intersect(CommonHeading other) {
+      var fields = Fields.Where(f => other.Fields.Any(o => f.Name == o.Name));
+      return CommonHeading.Create(fields);
+    }
+
+    public CommonHeading Minus(CommonHeading other) {
+      var fields = Fields.Where(f => !other.Fields.Any(o => f.Name == o.Name));
+      return CommonHeading.Create(fields);
+    }
+    public CommonHeading Union(CommonHeading other) {
+      var fields = Fields.Concat(other.Fields.Where(f => !Fields.Any(o => f.Name == o.Name)));
+      return CommonHeading.Create(fields);
+    }
+
     // Create a map from other to this
-    //public int[] CreateMap(CommonHeading other) {
-    //  return Enumerable.Range(0, Fields.Length)
-    //    .Select(x => Array.FindIndex(other.Fields, f => f.Name == Fields[x].Name))  // equals?
-    //    .ToArray();
-    //}
-    public int[] CreateMap(CommonHeading other, bool dorename = false) {
+    public int[] CreateMap(CommonHeading other) {
+      return Enumerable.Range(0, Fields.Length)
+        .Select(x => Array.FindIndex(other.Fields, f => f.Name == Fields[x].Name))  // equals?
+        .ToArray();
+    }
+
+    // Create map using old rename method
+    public int[] CreateMapRename(CommonHeading other, bool dorename = false) {
       // a queue of indexes to new fields in other
       var q = new Queue<int>(Enumerable.Range(0, other.Degree)
         .Where(x => !Fields.Any(f => f.Name == other.Fields[x].Name)));

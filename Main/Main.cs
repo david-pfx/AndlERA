@@ -17,15 +17,21 @@ namespace AndlEra {
     // basic samples, operators return relations
     static void SampleSource() {
 
-      var si = RelationNode.Import(SourceKind.Csv, ".", "S", "Sno:text,Sname:text,Status:integer,City:text");
-      var s8i = RelationNode.Import(SourceKind.Csv, ".", "S8", "Sno:text,Sname:text,Status:integer,City:text");
-      var pi = RelationNode.Import(SourceKind.Csv, ".", "P", "PNo:text,Pname:text,Color:text,Weight:number,City:text");
+      var si = RelationNode.Import(SourceKind.Csv, ".", "S", "SNo:text,SName:text,Status:integer,City:text");
+      var s8i = RelationNode.Import(SourceKind.Csv, ".", "S8", "SNo:text,SName:text,Status:integer,City:text");
+      var pi = RelationNode.Import(SourceKind.Csv, ".", "P", "PNo:text,PName:text,Color:text,Weight:number,City:text");
       var spi = RelationNode.Import(SourceKind.Csv, ".", "SP", "SNo:text,PNo:text,Qty:integer");
+
+      //var sj = si.Join(spi);
+      //var sj = si.Compose(spi);
+      //var sj = si.Semijoin(spi);
+      var sj = si.Antijoin(spi);
+      WriteLine("Join\n" + sj.Format());
 
       var se = pi.Extend("Weight,WeightKg", new TupExtend(t => (decimal)t[0] * 0.454m));
       WriteLine("Extend\n" + se.Format());
 
-      var sr = si.Rename("Sno,Sname,Status,SCITY");
+      var sr = si.Rename("City,SCITY");
       WriteLine("Rename\n" + sr.Format());
 
       //var su = sn.Union(sn8);

@@ -47,7 +47,7 @@ namespace AndlEra {
       Values = new object[0];
     }
 
-    public static T Create<T>(object[] values) 
+    public static T Create<T>(object[] values)
     where T : TupleBase, new() {
       return new T() {
         Values = values,
@@ -61,13 +61,6 @@ namespace AndlEra {
       Values = values;
       HashCode = CalcHashCode(values);
       return this as T;
-    }
-
-    // construct a new set of values based on a map
-    internal object[] MapValues(IList<int> map) {
-      return Enumerable.Range(0, map.Count)
-        .Select(x => Values[map[x]])
-        .ToArray();
     }
 
     // reflection hack to get heading value from tuple
