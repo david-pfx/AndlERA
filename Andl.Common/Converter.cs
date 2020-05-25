@@ -108,30 +108,29 @@ using System.Text;
     }
 
     // rename a field from old to new
-    public CommonHeading Rename(string rename) {
-      var s = rename.Split(',');
-      return Rename(s[0], s[1]);
-    }
-
-    public CommonHeading Rename(string oldname, string newname) {
-      var fields = Fields.Select(f => (f.Name == oldname) ? new CommonField(newname, f.CType) : f);
+    public CommonHeading Rename(CommonHeading heading) {
+      Logger.Assert(heading.Degree == 2);
+      var fields = Fields.Select(f => (f.Name == heading[0].Name) ? new CommonField(heading[1].Name, f.CType) : f);
       return CommonHeading.Create(fields);
     }
 
-    public CommonHeading Intersect(CommonHeading other) {
-      var fields = Fields.Where(f => other.Fields.Any(o => f.Name == o.Name));
-      return CommonHeading.Create(fields);
-    }
-
-    public CommonHeading Minus(CommonHeading other) {
-      var fields = Fields.Where(f => !other.Fields.Any(o => f.Name == o.Name));
-      return CommonHeading.Create(fields);
-    }
+    // create a heading as the union of this and other
     public CommonHeading Union(CommonHeading other) {
       var fields = Fields.Concat(other.Fields.Where(f => !Fields.Any(o => f.Name == o.Name)));
       return CommonHeading.Create(fields);
     }
 
+    // create a heading as the intersection of this and other
+    public CommonHeading Intersect(CommonHeading other) {
+      var fields = Fields.Where(f => other.Fields.Any(o => f.Name == o.Name));
+      return CommonHeading.Create(fields);
+    }
+
+    // create a heading as the this minus other
+    public CommonHeading Minus(CommonHeading other) {
+      var fields = Fields.Where(f => !other.Fields.Any(o => f.Name == o.Name));
+      return CommonHeading.Create(fields);
+    }
     // Create a map from other to this
     public int[] CreateMap(CommonHeading other) {
       return Enumerable.Range(0, Fields.Length)

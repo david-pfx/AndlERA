@@ -61,7 +61,7 @@ namespace AndlEra {
 
       foreach (var t in body1) {
         var tup = TupleBase.Create<T>(MapValues(t.Values, jmap));
-        dict[tup] = (dict.ContainsKey(tup)) ? func(t, dict[tup]) : dict[tup] = func(t, new T2());
+        dict[tup] = (dict.ContainsKey(tup)) ? func(t, dict[tup]) : dict[tup] = func(t, new T2()); //BUG
       }
       return new HashSet<T>(dict.Select(p => TupleBase.Create<T>(MapValues(p.Key.Values, map, p.Value))));
     }
@@ -169,8 +169,36 @@ namespace AndlEra {
     }
 
     ///=========================================================================
-    ///  implementation
+    ///  support utility methods
     ///  
+
+    // create a tuple from a tuple and a map
+    static internal T CreateByMap<T>(TupleBase tuple, IList<int> map) 
+    where T : TupleBase, new() {
+      return TupleBase.Create<T>(Enumerable
+        .Range(0, map.Count)
+        .Select(x => tuple.Values[map[x]])
+        .ToArray());
+    }
+
+    // create a tuple from a tuple and a map and a value
+    static internal T CreateByMap<T>(TupleBase tuple, IList<int> map, object newvalue)
+    where T : TupleBase, new() {
+      return TupleBase.Create<T>(Enumerable
+        .Range(0, map.Count)
+        .Select(x => map[x] == -1 ? newvalue : tuple.Values[map[x]])
+        .ToArray());
+    }
+
+    // create a tuple from two tuples and two map2
+    static internal T CreateByMap<T>(TupleBase t1, IList<int> map1, TupleBase t2, IList<int> map2)
+    where T : TupleBase, new() {
+      Logger.Assert(map1.Count == map2.Count);
+      return TupleBase.Create<T>(Enumerable
+        .Range(0, map1.Count)
+        .Select(x => map1[x] >= 0 ? t1.Values[map1[x]] : t2.Values[map2[x]])
+        .ToArray());
+    }
 
     // build an index of tuples (because that's where Equals lives)
     static internal Dictionary<TupleBase, IList<TupleBase>> BuildIndex(IEnumerable<TupleBase> values, int[] map) {
@@ -187,6 +215,10 @@ namespace AndlEra {
     static internal HashSet<TupleBase> BuildSet(IEnumerable<TupleBase> values, int[] map) {
       return new HashSet<TupleBase>(values.Select(v => TupleBase.Create<TupNone>(MapValues(v.Values, map))));
     }
+
+    ///=========================================================================
+    ///  implementation
+    ///  
 
     static int[] MakeRenameMap(Dictionary<string,int> head, Dictionary<string, int> ohead) {
       var pnew = ohead.FirstOrDefault(p => !head.ContainsKey(p.Key));
@@ -213,6 +245,11 @@ namespace AndlEra {
       return map;
     }
 
+    // Find the set of names in common
+    static string[] MakeJoinHeading(string[] head1, string[] head2) {
+      return head1.Where(s1 => head2.Contains(s1)).ToArray();
+    }
+
     // Create a map from head1 to head2 for names that match
     static int[] MakeMap(string[] head1, string[] head2) {
       var map = new int[head1.Length];
@@ -222,25 +259,20 @@ namespace AndlEra {
       return map;
     }
 
-    // Find the set of names in common
-    static string[] MakeJoinHeading(string[] head1, string[] head2) {
-      return head1.Where(s1 => head2.Contains(s1)).ToArray();
-    }
 
-
-    static internal object[] MapValues(IList<object>values, IList<int> map) {
+    static object[] MapValues(IList<object>values, IList<int> map) {
       return Enumerable.Range(0, map.Count)
         .Select(x => values[map[x]])
         .ToArray();
     }
 
-    static internal object[] MapValues(IList<object> values, IList<int> map, object newvalue) {
+    static object[] MapValues(IList<object> values, IList<int> map, object newvalue) {
       return Enumerable.Range(0, map.Count)
         .Select(x => map[x] == -1 ? newvalue : values[map[x]])
         .ToArray();
     }
 
-    static internal object[] MapValues(TupleBase t1, IList<int> map1, TupleBase t2, IList<int> map2) {
+    static object[] MapValues(TupleBase t1, IList<int> map1, TupleBase t2, IList<int> map2) {
       Logger.Assert(map1.Count == map2.Count);
       return Enumerable.Range(0, map1.Count)
         .Select(x => map1[x] >= 0 ? t1.Values[map1[x]] : t2.Values[map2[x]])
@@ -249,68 +281,4 @@ namespace AndlEra {
 
   }
 
-  ///===========================================================================
-  /// <summary>
-  /// The two empty relations DUM and DEE
-  /// </summary>
-  public static class NoneData {
-    // Empty relation empty header is DUM
-    public static RelNone Zero = RelNone.Create<RelNone>(new List<TupNone> { });
-    // Full relation empty header is DEE
-    public static RelNone One = RelNone.Create<RelNone>(new List<TupNone> { new TupNone() });
-  }
-
-  /// <summary>
-  /// Tuple with degree of zero
-  /// </summary>
-  public class RelNone : RelationBase<TupNone> { }
-
-  public class TupNone : TupleBase {
-    public readonly static string[] Heading = { };
-
-    public static TupNone Create() {
-      return Create<TupNone>(new object[] { });
-    }
-  }
-  ///===========================================================================
-  /// <summary>
-  /// A relation that is a sequence of numbers
-  /// </summary>
-  public class TupSequence : TupleBase {
-    public readonly static string[] Heading = { "N" };
-    public int N { get { return (int)Values[0]; } }
-
-    public static TupSequence Create(int N) {
-      return Create<TupSequence>(new object[] { N });
-    }
-  }
-
-  public class RelSequence : RelationBase<TupSequence> {
-    public static RelSequence Create(int count) {
-      return Create<RelSequence>(Enumerable.Range(0, count).Select(n => TupSequence.Create(n)));
-    }
-  }
-
-  ///===========================================================================
-  /// <summary>
-  /// A relation that is an array of text strings
-  /// </summary>
-  public class TupText : TupleBase {
-    public readonly static string[] Heading = { "Seq", "Line" };
-
-    public int Seq { get { return (int)Values[0]; } }
-    public string Line { get { return (string)Values[1]; } }
-
-    public static TupText Create(int Seq, string Line) {
-      return Create<TupText>(new object[] { Seq, Line });
-    }
-  }
-
-  public class RelText : RelationBase<TupText> {
-    public static RelText Create(IList<string> text) {
-      return Create<RelText>(Enumerable.Range(0, text.Count)
-        .Select(n => TupText
-        .Create(n, text[n])));
-    }
-  }
 }
