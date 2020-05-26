@@ -22,25 +22,51 @@ using System.Text;
     Table, Row, User,
   }
 
+  ///===========================================================================
   /// <summary>
   /// Field (aka column/attribute) based on common types 
   /// </summary>
   public struct CommonField {
     public string Name;
     public CommonType CType;
+    public CommonField[] Fields;
 
-    public CommonField(string name, CommonType ctype) {
+    public bool HasHeading { get { return CType == CommonType.Row || CType == CommonType.Table || CType == CommonType.User; } }
+
+    public CommonField(string name, CommonType ctype, CommonField[] fields = null) {
       Name = name;
       CType = ctype;
+      Fields = fields;
     }
 
     public CommonField(string name, Type type) {
       Name = name;
       CType = CommonConverter.TypeToCommon(type);
+      Fields = null;
     }
 
+
     public override string ToString() {
-      return $"{Name}:{CType}";
+      return (Fields == null) ? $"{Name}:{CType}"
+        : $"{Name}:{CType}{{{Fields.Join(",")}}}";
+    }
+
+    public string Format(object v) {
+      if (CType == CommonType.Row || CType == CommonType.User) {
+        return Name + ":{" + FormatRow((CommonRow)v, Fields) + "}";
+      }
+      if (CType == CommonType.Table) {
+        var rows = (CommonRow[])v;
+        var f = Fields;
+        return Name + ":{{" + rows.Select(r => FormatRow(r, f)).Join("},{") + "}}";
+      }
+      return Name + ":" + v.ToString();
+    }
+
+    static string FormatRow(CommonRow row, CommonField[] fields) {
+      return Enumerable.Range(0, fields.Length)
+        .Select(x => fields[x].Format(row[x]))
+        .Join(",");
     }
 
     // parse a heading to extract the fields
@@ -53,6 +79,7 @@ using System.Text;
     }
   }
 
+  ///===========================================================================
   /// <summary>
   /// Heading represents a set of common fields
   /// </summary>
@@ -126,10 +153,21 @@ using System.Text;
       return CommonHeading.Create(fields);
     }
 
-    // create a heading as the this minus other
+    // create a heading as this minus other
     public CommonHeading Minus(CommonHeading other) {
       var fields = Fields.Where(f => !other.Fields.Any(o => f.Name == o.Name));
       return CommonHeading.Create(fields);
+    }
+    // create a heading plus one field
+    public CommonHeading Append(CommonField field) {
+      return CommonHeading.Create(Fields.Append(field));
+    }
+    public CommonHeading Append(IEnumerable<CommonField> fields) {
+      return CommonHeading.Create(Fields.Concat(fields));
+    }
+    // create a heading minus one field
+    public CommonHeading Remove(CommonField field) {
+      return CommonHeading.Create(Fields.Where(f => f.Name != field.Name));
     }
     // Create a map from other to this
     public int[] CreateMap(CommonHeading other) {
@@ -152,6 +190,7 @@ using System.Text;
     }
   }
 
+  ///===========================================================================
   /// <summary>
   /// Table is name plus heading
   /// </summary>
@@ -178,6 +217,7 @@ using System.Text;
 
   }
 
+  ///===========================================================================
   /// <summary>
   /// Carrier for data values
   /// </summary>
@@ -203,6 +243,7 @@ using System.Text;
     }
   }
 
+  ///===========================================================================
   /// <summary>
   /// Conversion tables
   /// </summary>

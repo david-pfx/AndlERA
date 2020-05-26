@@ -15,8 +15,11 @@ namespace AndlEra {
     Full, Compose, Semijoin, Antijoin,
   }
 
-  enum MonadicOp {
-    Rename, Group, Ungroup, Wrap, Unwrap,
+  enum GroupingOp {
+    Group, Wrap,
+  }
+  enum UngroupingOp {
+    Ungroup, Unwrap,
   }
 
   // tuple type used for all pipeline nodes
@@ -49,30 +52,42 @@ namespace AndlEra {
     IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
 
     public string Format() {
-      return this.Select(t => t.Format(Heading.ToNames())).Join("\n");
+      return this.Select(t => t.Format(Heading)).Join("\n");
     }
 
-    public static RelationNode Import(SourceKind kind, string connector, string name, string heading = null) {
-      return new ImportNode(kind, connector, name, heading);
+    public static RelationNode Import(SourceKind kind, string connector, string name, string nodeheading = null) {
+      return new ImportNode(kind, connector, name, nodeheading);
     }
 
     //--------------------------------------------------------------------------
     // RA Nodes
 
-    public RelationNode Project(string argheading) {
-      return new ProjectNode(this, argheading);
+    public RelationNode Project(string nodeheading) {
+      return new ProjectNode(this, nodeheading);
     }
-    public RelationNode Rename(string argheading) {
-      return new RenameNode(this, MonadicOp.Rename, argheading);
+    public RelationNode Rename(string nodeheading) {
+      return new RenameNode(this, nodeheading);
     }
-    public RelationNode Select(string heading, TupSelect tupsel) {
-      return new SelectNode(this, heading, tupsel);
+    public RelationNode Group(string nodeheading) {
+      return new GroupNode(this, GroupingOp.Group, nodeheading);
     }
-    public RelationNode Extend(string heading, TupExtend tupext) {
-      return new ExtendNode(this, heading, tupext);
+    public RelationNode Wrap(string nodeheading) {
+      return new GroupNode(this, GroupingOp.Wrap, nodeheading);
     }
-    public RelationNode Aggregate(string heading, TupAggregate tupagg) {
-      return new AggregateNode(this, heading, tupagg);
+    public RelationNode Ungroup(string nodeheading) {
+      return new UngroupNode(this, UngroupingOp.Ungroup, nodeheading);
+    }
+    public RelationNode Unwrap(string nodeheading) {
+      return new UngroupNode(this, UngroupingOp.Unwrap, nodeheading);
+    }
+    public RelationNode Select(string nodeheading, TupSelect tupsel) {
+      return new SelectNode(this, nodeheading, tupsel);
+    }
+    public RelationNode Extend(string nodeheading, TupExtend tupext) {
+      return new ExtendNode(this, nodeheading, tupext);
+    }
+    public RelationNode Aggregate(string nodeheading, TupAggregate tupagg) {
+      return new AggregateNode(this, nodeheading, tupagg);
     }
     public RelationNode Union(RelationNode other) {
       return new SetOpNode(this, SetOp.Union, other);
@@ -107,8 +122,8 @@ namespace AndlEra {
 
     public override IEnumerator<TupMin> GetEnumerator() => _source.GetEnumerator();
 
-    public ImportNode(SourceKind kind, string connector, string name, string heading = null) {
-      _source = new RelationStream<TupMin>(kind, connector, name, heading);
+    public ImportNode(SourceKind kind, string connector, string name, string nodeheading = null) {
+      _source = new RelationStream<TupMin>(kind, connector, name, nodeheading);
       Heading = _source.Heading;
     }
   }
@@ -122,9 +137,9 @@ namespace AndlEra {
     RelationNode _source;
     int[] _map;
 
-    public ProjectNode(RelationNode source, string argheading) {
+    public ProjectNode(RelationNode source, string nodeheading) {
       _source = source;
-      Heading = _source.Heading.Adapt(argheading);
+      Heading = _source.Heading.Adapt(nodeheading);
       _map = Heading.CreateMap(_source.Heading);
       if (Heading.Degree >= _source.Heading.Degree) throw Error.Fatal("too many attributes for project");
       if (_map.Any(x => x < 0)) throw Error.Fatal("headings do not match");
@@ -148,33 +163,116 @@ namespace AndlEra {
   /// </summary>
   class RenameNode : RelationNode {
     RelationNode _source;
-    private MonadicOp _monop;
-    private CommonHeading _argheading;
+    private CommonHeading _nodeheading;
     private int[] _map;
 
-    public RenameNode(RelationNode source, MonadicOp monop, string argheading) {
+    public RenameNode(RelationNode source, string nodeheading) {
       _source = source;
-      _monop = monop;
-      _argheading = _source.Heading.Adapt(argheading);
-      _map = _argheading.CreateMap(_source.Heading);
+      _nodeheading = _source.Heading.Adapt(nodeheading);
+      _map = _nodeheading.CreateMap(_source.Heading);
       if (!(_map.Length == 2 && _map[0] >= 0 && _map[1] < 0)) throw Error.Fatal("invalid heading");
-      Heading = _source.Heading.Rename(_argheading);
+      Heading = _source.Heading.Rename(_nodeheading);
+    }
+
+    public override IEnumerator<TupMin> GetEnumerator() => _source.GetEnumerator();
+  }
+
+  ///===========================================================================
+  /// <summary>
+  /// Implement wrap/group node 
+  /// Heading is names...->name
+  /// </summary>
+  class GroupNode : RelationNode {
+    RelationNode _source;
+    private GroupingOp _op;
+    private CommonHeading _nodeheading;
+    private int[] _tmap, _map, _kmap;
+
+    public GroupNode(RelationNode source, GroupingOp op, string nodeheading) {
+      _source = source;
+      _op = op;
+      _nodeheading = _source.Heading.Adapt(nodeheading);
+      // inner tuple(s) for TVA or RVA
+      var tupheading = _nodeheading.Remove(_nodeheading.Fields.Last());
+      _tmap = tupheading.CreateMap(_source.Heading);
+      // outer fields used as key for index
+      var keyheading = _source.Heading.Minus(tupheading);
+      _kmap = keyheading.CreateMap(_source.Heading);
+      // final result with new field appended
+      Heading = keyheading.Append(new CommonField(_nodeheading.Fields.Last().Name,
+        (_op == GroupingOp.Group) ? CommonType.Table : CommonType.Row, tupheading.Fields));
+      _map = Heading.CreateMap(keyheading);
+      if (!(_tmap.All(x => x >= 0) && _kmap.All(x => x >= 0) && _map.Last() < 0)) throw Error.Fatal("invalid heading");
     }
 
     public override IEnumerator<TupMin> GetEnumerator() {
-      return (_monop == MonadicOp.Ungroup) ? GetUngroupEnumerator()
-        : (_monop == MonadicOp.Unwrap) ? GetUnwrapEnumerator()
-        : _source.GetEnumerator();
+      return (_op == GroupingOp.Group) ? GetGroupEnumerator()
+        : GetWrapEnumerator();
     }
 
-    IEnumerator<TupMin> GetUngroupEnumerator() {
-      foreach (var tuple in _source) {
-        var values = tuple.Values;
-        //values[_map[1]] = ???
-        yield return tuple;
+    IEnumerator<TupMin> GetGroupEnumerator() {
+      var index = RelOps.BuildIndex(_source, _kmap);
+      foreach (var kvp in index) {
+        var rva = kvp.Value.Select(t => new CommonRow(_tmap.Select(x => t[x]).ToArray())).ToArray();
+        //var rva = kvp.Value.Select(t => RelOps.CreateByMap<TupMin>(t, _tmap)).ToArray();
+        yield return RelOps.CreateByMap<TupMin>(kvp.Key, _map, rva);
       }
     }
-    IEnumerator<TupMin> GetUnwrapEnumerator() => throw new NotImplementedException();
+    IEnumerator<TupMin> GetWrapEnumerator() {
+      foreach (var tuple in _source) {
+        var tva = new CommonRow(_tmap.Select(x => tuple[x]).ToArray());
+        //var tva = RelOps.CreateByMap<TupMin>(tuple, _tmap);
+        yield return RelOps.CreateByMap<TupMin>(tuple, _map, tva);
+      }
+    }
+  }
+
+  ///===========================================================================
+  /// <summary>
+  /// Implement unwrap/ungroup node 
+  /// Heading is name of TVA/RVA
+  /// </summary>
+  class UngroupNode : RelationNode {
+    RelationNode _source;
+    private UngroupingOp _op;
+    private CommonHeading _nodeheading;
+    private int[] _nodemap, _map1, _map2;
+
+    public UngroupNode(RelationNode source, UngroupingOp op, string nodeheading) {
+      _source = source;
+      _op = op;
+      _nodeheading = _source.Heading.Adapt(nodeheading);
+      _nodemap = _nodeheading.CreateMap(_source.Heading);
+      if (!(_nodemap.Length == 1 && _nodemap[0] >= 0)) throw Error.Fatal("invalid heading");
+      // on output replace one field by the TVA/RVA
+      Heading = _source.Heading.Remove(_nodeheading[0]).Append(_nodeheading[0].Fields);
+      // 
+      var tupheading = CommonHeading.Create(_nodeheading[0].Fields);
+      _map1 = Heading.CreateMap(_source.Heading);
+      _map2 = Heading.CreateMap(tupheading);
+    }
+
+    public override IEnumerator<TupMin> GetEnumerator() {
+      return (_op == UngroupingOp.Ungroup) ? GetUngroupEnumerator()
+        : GetUnwrapEnumerator();
+    }
+
+    // enumerate relation ungrouping
+    IEnumerator<TupMin> GetUngroupEnumerator() {
+      foreach (var tuple in _source) {
+        var rva = (CommonRow[])tuple[_nodemap[0]];
+        foreach (var row in rva)
+          yield return RelOps.CreateByMap<TupMin>(tuple.Values, _map1, row.Values, _map2);
+      }
+    }
+
+    // enumerate tuple unwrapping
+    IEnumerator<TupMin> GetUnwrapEnumerator() {
+      foreach (var tuple in _source) {
+        var row = (CommonRow)tuple[_nodemap[0]];
+        yield return RelOps.CreateByMap<TupMin>(tuple.Values, _map1, row.Values, _map2);
+      }
+    }
 
   }
 
@@ -189,11 +287,11 @@ namespace AndlEra {
     CommonHeading _selheading;
     int[] _selmap;
 
-    public SelectNode(RelationNode source, string heading, TupSelect tupsel) {
+    public SelectNode(RelationNode source, string nodeheading, TupSelect tupsel) {
       _source = source;
       Heading = _source.Heading;
       _selfunc = tupsel.Select;
-      _selheading = Heading.Adapt(heading);
+      _selheading = Heading.Adapt(nodeheading);
       _selmap = _selheading.CreateMap(Heading);
       if (_selmap.Any(x => x < 0)) throw Error.Fatal("invalid map, must all match");
     }
@@ -215,16 +313,16 @@ namespace AndlEra {
   class ExtendNode : RelationNode {
     RelationNode _source;
     Func<TupleBase, object> _extfunc;
-    CommonHeading _heading;
+    CommonHeading _nodeheading;
     CommonHeading _argheading;
     int[] _argmap;
 
-    public ExtendNode(RelationNode source, string heading, TupExtend tupsel) {
+    public ExtendNode(RelationNode source, string nodeheading, TupExtend tupsel) {
       _source = source;
-      _heading = _source.Heading.Adapt(heading);
+      _nodeheading = _source.Heading.Adapt(nodeheading);
       _extfunc = tupsel.Extend;
-      Heading = CommonHeading.Create(_source.Heading.Fields.Union(_heading.Fields));
-      _argheading = CommonHeading.Create(_heading.Fields.Take(_heading.Fields.Length - 1));
+      Heading = CommonHeading.Create(_source.Heading.Fields.Union(_nodeheading.Fields));
+      _argheading = CommonHeading.Create(_nodeheading.Fields.Take(_nodeheading.Fields.Length - 1));
       _argmap = _argheading.CreateMap(_source.Heading);
       if (_argmap.Any(x => x < 0)) throw Error.Fatal("invalid map, must all match");
     }
@@ -258,9 +356,9 @@ namespace AndlEra {
     private int[] _jmap1;
     private int[] _jmap2;
 
-    public AggregateNode(RelationNode source, string heading, TupAggregate tupagg) {
+    public AggregateNode(RelationNode source, string nodeheading, TupAggregate tupagg) {
       _source = source;
-      _heading = _source.Heading.Adapt(heading);
+      _heading = _source.Heading.Adapt(nodeheading);
       _aggfunc = tupagg.Aggregate;
 
       Heading = _source.Heading.Rename(_heading);
@@ -400,7 +498,7 @@ namespace AndlEra {
       foreach (var tuple in _leftarg) {
         var key = RelOps.CreateByMap<TupMin>(tuple, _jmapleft);
         if (!isanti == set.Contains(key))
-            yield return (tuple);
+          yield return (tuple);
       }
     }
   }

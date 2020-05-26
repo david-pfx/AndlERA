@@ -173,7 +173,7 @@ namespace AndlEra {
     ///  
 
     // create a tuple from a tuple and a map
-    static internal T CreateByMap<T>(TupleBase tuple, IList<int> map) 
+    static internal T CreateByMap<T>(TupleBase tuple, IList<int> map)
     where T : TupleBase, new() {
       return TupleBase.Create<T>(Enumerable
         .Range(0, map.Count)
@@ -193,18 +193,24 @@ namespace AndlEra {
     // create a tuple from two tuples and two map2
     static internal T CreateByMap<T>(TupleBase t1, IList<int> map1, TupleBase t2, IList<int> map2)
     where T : TupleBase, new() {
-      Logger.Assert(map1.Count == map2.Count);
+
+      return CreateByMap<T>(t1.Values, map1, t2.Values, map2);
+    }
+
+    static internal T CreateByMap<T>(IList<object> values1, IList<int> map1, IList<object> values2, IList<int> map2)
+    where T : TupleBase, new() {
+      Logger.Assert(values2 == null || map1.Count == map2.Count);
       return TupleBase.Create<T>(Enumerable
         .Range(0, map1.Count)
-        .Select(x => map1[x] >= 0 ? t1.Values[map1[x]] : t2.Values[map2[x]])
+        .Select(x => map1[x] >= 0 ? values1[map1[x]] : values2[map2[x]])
         .ToArray());
     }
 
     // build an index of tuples (because that's where Equals lives)
-    static internal Dictionary<TupleBase, IList<TupleBase>> BuildIndex(IEnumerable<TupleBase> values, int[] map) {
+    static internal Dictionary<TupleBase, IList<TupleBase>> BuildIndex(IEnumerable<TupleBase> values, int[] keymap) {
       var index = new Dictionary<TupleBase, IList<TupleBase>>();
       foreach (var tuple in values) {
-        var newkey = TupleBase.Create<TupNone>(MapValues(tuple.Values, map));
+        var newkey = TupleBase.Create<TupNone>(MapValues(tuple.Values, keymap));
         if (index.ContainsKey(newkey))
           index[newkey].Add(tuple);
         else index[newkey] = new List<TupleBase> { tuple };

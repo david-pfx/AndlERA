@@ -1,6 +1,7 @@
 ﻿// Non-scalar base types
 //
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -18,6 +19,7 @@ namespace AndlEra {
     internal int HashCode { get; set; }
 
     public object this[int i] { get { return Values[i]; } }
+    public int Count { get { return Values.Length; } }
 
     // override used by hash collections
     public override int GetHashCode() {
@@ -40,6 +42,12 @@ namespace AndlEra {
     public string Format(string[] heading) {
       return Enumerable.Range(0, Values.Length)
         .Select(x => heading[x] + ": " + Values[x].ToString())
+        .Join(", ");
+    }
+
+    public string Format(CommonHeading heading) {
+      return Enumerable.Range(0, Values.Length)
+        .Select(x => heading[x].Format(Values[x]))
         .Join(", ");
     }
 

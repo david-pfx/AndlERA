@@ -22,6 +22,16 @@ namespace AndlEra {
       var pi = RelationNode.Import(SourceKind.Csv, ".", "P", "PNo:text,PName:text,Color:text,Weight:number,City:text");
       var spi = RelationNode.Import(SourceKind.Csv, ".", "SP", "SNo:text,PNo:text,Qty:integer");
 
+      var pgrp = spi
+        .Group("PNo,Qty,PQ");
+        //.Wrap("PNo,Qty,PQ");
+      WriteLine("Group\n" + pgrp.Format());
+
+      var pung = pgrp
+        .Ungroup("PQ");
+        //.Unwrap("PQ");
+      WriteLine("Ungroup\n" + pung.Format());
+
       var pagg = pi
         .Project("Color,Weight")
         .Aggregate("Weight,TotWeight", new TupAggregate((v, a) => (decimal)v + (decimal)a));
