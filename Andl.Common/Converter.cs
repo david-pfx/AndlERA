@@ -32,6 +32,7 @@ using System.Text;
     public CommonField[] Fields;
 
     public bool HasHeading { get { return CType == CommonType.Row || CType == CommonType.Table || CType == CommonType.User; } }
+    public static CommonField Empty = new CommonField();
 
     public CommonField(string name, CommonType ctype, CommonField[] fields = null) {
       Name = name;
@@ -135,9 +136,8 @@ using System.Text;
     }
 
     // rename a field from old to new
-    public CommonHeading Rename(CommonHeading heading) {
-      Logger.Assert(heading.Degree == 2);
-      var fields = Fields.Select(f => (f.Name == heading[0].Name) ? new CommonField(heading[1].Name, f.CType) : f);
+    public CommonHeading Rename(CommonField field1, CommonField field2) {
+      var fields = Fields.Select(f => (f.Name == field1.Name) ? new CommonField(field2.Name, f.CType) : f);
       return CommonHeading.Create(fields);
     }
 
@@ -238,8 +238,12 @@ using System.Text;
       Values = new object[length];
     }
 
-    public CommonRow(params object[] values) {
-      Values = values;
+    //public CommonRow(params object[] values) {
+    //  Values = values;
+    //}
+
+    public CommonRow(IEnumerable<object> values) {
+      Values = values.ToArray();
     }
   }
 

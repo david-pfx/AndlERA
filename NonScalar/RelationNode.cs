@@ -40,16 +40,27 @@ namespace AndlEra {
     public TupAggregate(Func<object, object, object> aggfunc) => Aggregate = aggfunc;
   }
 
+  public class TupWhile : TupleBase {
+    public Func<RelationNode, IEnumerable<TupleBase>> While { get; set; }
+    public TupWhile(Func<RelationNode, IEnumerable<TupleBase>> whilefunc) => While = whilefunc;
+  }
+
   /// <summary>
   /// Pipeline nodes that look like relation values.
   /// 
   /// Nodes carry a heading and a tuple enumerator.
   /// </summary>
-  public abstract class RelationNode : IEnumerable<TupMin> {
+  public abstract class RelationNode : IEnumerable<TupleBase> {
     public CommonHeading Heading { get; protected set; }
+    public int Degree { get { return Heading.Degree; } }
+    public int Cardinality { get { return this.Count(); } }
 
-    public abstract IEnumerator<TupMin> GetEnumerator();
+    public abstract IEnumerator<TupleBase> GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
+
+    public override string ToString() {
+      return this.Join(";");
+    }
 
     public string Format() {
       return this.Select(t => t.Format(Heading)).Join("\n");
@@ -110,8 +121,27 @@ namespace AndlEra {
     public RelationNode Antijoin(RelationNode other) {
       return new JoinOpNode(this, JoinOp.Antijoin, other);
     }
+    public RelationNode While(TupWhile tupwhile) {
+      return new WhileNode(this, tupwhile);
+    }
 
   }
+
+  ///===========================================================================
+  /// <summary>
+  /// 
+  /// </summary>
+  class WrapperNode : RelationNode {
+    protected IEnumerable<TupleBase> _source;
+
+    public override IEnumerator<TupleBase> GetEnumerator() => _source.GetEnumerator();
+
+    public WrapperNode(CommonHeading heading, IEnumerable<TupleBase> source) {
+      _source = source;
+      Heading = heading;
+    }
+  }
+
 
   ///===========================================================================
   /// <summary>
@@ -120,7 +150,7 @@ namespace AndlEra {
   class ImportNode : RelationNode {
     protected RelationStream<TupMin> _source;
 
-    public override IEnumerator<TupMin> GetEnumerator() => _source.GetEnumerator();
+    public override IEnumerator<TupleBase> GetEnumerator() => _source.GetEnumerator();
 
     public ImportNode(SourceKind kind, string connector, string name, string nodeheading = null) {
       _source = new RelationStream<TupMin>(kind, connector, name, nodeheading);
@@ -145,8 +175,8 @@ namespace AndlEra {
       if (_map.Any(x => x < 0)) throw Error.Fatal("headings do not match");
     }
 
-    public override IEnumerator<TupMin> GetEnumerator() {
-      var hash = new HashSet<TupMin>();
+    public override IEnumerator<TupleBase> GetEnumerator() {
+      var hash = new HashSet<TupleBase>();
       foreach (var tuple in _source) {
         var newtuple = RelOps.CreateByMap<TupMin>(tuple, _map);
         if (hash.Contains(newtuple)) continue;
@@ -171,10 +201,10 @@ namespace AndlEra {
       _nodeheading = _source.Heading.Adapt(nodeheading);
       _map = _nodeheading.CreateMap(_source.Heading);
       if (!(_map.Length == 2 && _map[0] >= 0 && _map[1] < 0)) throw Error.Fatal("invalid heading");
-      Heading = _source.Heading.Rename(_nodeheading);
+      Heading = _source.Heading.Rename(_nodeheading[0], _nodeheading[1]);
     }
 
-    public override IEnumerator<TupMin> GetEnumerator() => _source.GetEnumerator();
+    public override IEnumerator<TupleBase> GetEnumerator() => _source.GetEnumerator();
   }
 
   ///===========================================================================
@@ -205,7 +235,7 @@ namespace AndlEra {
       if (!(_tmap.All(x => x >= 0) && _kmap.All(x => x >= 0) && _map.Last() < 0)) throw Error.Fatal("invalid heading");
     }
 
-    public override IEnumerator<TupMin> GetEnumerator() {
+    public override IEnumerator<TupleBase> GetEnumerator() {
       return (_op == GroupingOp.Group) ? GetGroupEnumerator()
         : GetWrapEnumerator();
     }
@@ -213,14 +243,14 @@ namespace AndlEra {
     IEnumerator<TupMin> GetGroupEnumerator() {
       var index = RelOps.BuildIndex(_source, _kmap);
       foreach (var kvp in index) {
-        var rva = kvp.Value.Select(t => new CommonRow(_tmap.Select(x => t[x]).ToArray())).ToArray();
+        var rva = kvp.Value.Select(t => new CommonRow(_tmap.Select(x => t[x]))).ToArray();
         //var rva = kvp.Value.Select(t => RelOps.CreateByMap<TupMin>(t, _tmap)).ToArray();
         yield return RelOps.CreateByMap<TupMin>(kvp.Key, _map, rva);
       }
     }
     IEnumerator<TupMin> GetWrapEnumerator() {
       foreach (var tuple in _source) {
-        var tva = new CommonRow(_tmap.Select(x => tuple[x]).ToArray());
+        var tva = new CommonRow(_tmap.Select(x => tuple[x]));
         //var tva = RelOps.CreateByMap<TupMin>(tuple, _tmap);
         yield return RelOps.CreateByMap<TupMin>(tuple, _map, tva);
       }
@@ -252,7 +282,7 @@ namespace AndlEra {
       _map2 = Heading.CreateMap(tupheading);
     }
 
-    public override IEnumerator<TupMin> GetEnumerator() {
+    public override IEnumerator<TupleBase> GetEnumerator() {
       return (_op == UngroupingOp.Ungroup) ? GetUngroupEnumerator()
         : GetUnwrapEnumerator();
     }
@@ -296,7 +326,7 @@ namespace AndlEra {
       if (_selmap.Any(x => x < 0)) throw Error.Fatal("invalid map, must all match");
     }
 
-    public override IEnumerator<TupMin> GetEnumerator() {
+    public override IEnumerator<TupleBase> GetEnumerator() {
       foreach (var tuple in _source) {
         var newtuple = RelOps.CreateByMap<TupMin>(tuple, _selmap);
         if (_selfunc(newtuple)) yield return newtuple;
@@ -314,6 +344,7 @@ namespace AndlEra {
     RelationNode _source;
     Func<TupleBase, object> _extfunc;
     CommonHeading _nodeheading;
+    private int[] _outmap;
     CommonHeading _argheading;
     int[] _argmap;
 
@@ -321,22 +352,24 @@ namespace AndlEra {
       _source = source;
       _nodeheading = _source.Heading.Adapt(nodeheading);
       _extfunc = tupsel.Extend;
+
       Heading = CommonHeading.Create(_source.Heading.Fields.Union(_nodeheading.Fields));
+      // get the argument fields
       _argheading = CommonHeading.Create(_nodeheading.Fields.Take(_nodeheading.Fields.Length - 1));
       _argmap = _argheading.CreateMap(_source.Heading);
-      if (_argmap.Any(x => x < 0)) throw Error.Fatal("invalid map, must all match");
+      // last field can extend or replace, remove name but retain place
+      var outh = Heading.Rename(_nodeheading.Fields.Last(), CommonField.Empty);
+      _outmap = Heading.CreateMap(outh);
+      if (_argmap.Any(x => x < 0)) throw Error.Fatal("invalid heading, field mismatch");
+      if (_outmap.Count(x => x < 0) != 1) throw Error.Fatal("invalid heading, return field mismatch"); // any use?
     }
 
-    public override IEnumerator<TupMin> GetEnumerator() {
+    public override IEnumerator<TupleBase> GetEnumerator() {
       foreach (var tuple in _source) {
         // pick out the argument values, pass them to the function, get return
         var argtuple = RelOps.CreateByMap<TupMin>(tuple, _argmap);
         var result = _extfunc(argtuple);
-
-        // append return to original tuple as final result
-        var newvalues = tuple.Values.Concat(new object[] { result }).ToArray();
-        var newtuple = TupleBase.Create<TupMin>(newvalues);
-        yield return newtuple;
+        yield return RelOps.CreateByMap<TupMin>(tuple, _outmap, result);
       }
     }
   }
@@ -345,23 +378,24 @@ namespace AndlEra {
   /// <summary>
   /// Aggregate function node
   /// Heading has 2 attributes
-  /// Function has 2 arguments matching, return matches last
+  /// Function has 2 arguments (value and accumulator) of matching type, return matches last
+  /// Optional initial value, if null first time uses first value
   /// </summary>
   class AggregateNode : RelationNode {
     RelationNode _source;
-    Func<object, object, object> _aggfunc;
     CommonHeading _heading;
-    private int[] _vmap;
+    Func<object, object, object> _aggfunc;
+    private object _initial;
     private CommonHeading _jhead;
-    private int[] _jmap1;
-    private int[] _jmap2;
+    private int[] _vmap, _jmap1, _jmap2;
 
-    public AggregateNode(RelationNode source, string nodeheading, TupAggregate tupagg) {
+    public AggregateNode(RelationNode source, string nodeheading, TupAggregate tupagg, object initial = null) {
       _source = source;
       _heading = _source.Heading.Adapt(nodeheading);
       _aggfunc = tupagg.Aggregate;
+      _initial = initial;
 
-      Heading = _source.Heading.Rename(_heading);
+      Heading = _source.Heading.Rename(_heading[0], _heading[1]);
       _vmap = _heading.CreateMap(_source.Heading);
       _jhead = _source.Heading.Minus(_heading);
       _jmap1 = _jhead.CreateMap(_source.Heading);
@@ -369,13 +403,14 @@ namespace AndlEra {
       if (!(_heading.Degree == 2 && _jmap2.Length == Heading.Degree)) throw Error.Fatal("invalid heading");
     }
 
-    public override IEnumerator<TupMin> GetEnumerator() {
+    public override IEnumerator<TupleBase> GetEnumerator() {
       var dict = new Dictionary<TupMin, object>();
 
       foreach (var tuple in _source) {
         var tupkey = RelOps.CreateByMap<TupMin>(tuple, _jmap1);
         var value = tuple.Values[_vmap[0]];
-        dict[tupkey] = (dict.ContainsKey(tupkey)) ? _aggfunc(value, dict[tupkey]) : value;
+        dict[tupkey] = (dict.ContainsKey(tupkey)) ? _aggfunc(value, dict[tupkey]) 
+          : (_initial != null) ? _aggfunc(value, _initial) : value;
       }
       foreach (var kv in dict) {
         var newtuple = RelOps.CreateByMap<TupMin>(kv.Key, _jmap2, kv.Value);
@@ -405,8 +440,8 @@ namespace AndlEra {
         || _othermap.Any(x => x < 0)) throw Error.Fatal("invalid heading, must be the same");
     }
 
-    public override IEnumerator<TupMin> GetEnumerator() {
-      var hash = new HashSet<TupMin>();
+    public override IEnumerator<TupleBase> GetEnumerator() {
+      var hash = new HashSet<TupleBase>();
       switch (_setop) {
       case SetOp.Union:
         foreach (var tuple in _left) {
@@ -469,15 +504,15 @@ namespace AndlEra {
       _tmapright = Heading.CreateMap(_rightarg.Heading);
     }
 
-    public override IEnumerator<TupMin> GetEnumerator() {
+    public override IEnumerator<TupleBase> GetEnumerator() {
       return (_joinop == JoinOp.Full || _joinop == JoinOp.Compose) ? GetFull()
         : GetSemi(_joinop == JoinOp.Antijoin);
     }
 
     // enumerator for full join and compose (only the output is different)
-    IEnumerator<TupMin> GetFull() {
+    IEnumerator<TupleBase> GetFull() {
       var index = RelOps.BuildIndex(_rightarg, _jmapright);
-      var hash = new HashSet<TupMin>();
+      var hash = new HashSet<TupleBase>();
       foreach (var tuple in _leftarg) {
         var key = RelOps.CreateByMap<TupMin>(tuple, _jmapleft);
         if (index.ContainsKey(key)) {
@@ -492,7 +527,7 @@ namespace AndlEra {
     }
 
     // enumerator for semijoin and antijoin (only the logic test is different)
-    IEnumerator<TupMin> GetSemi(bool isanti) {
+    IEnumerator<TupleBase> GetSemi(bool isanti) {
 
       var set = RelOps.BuildSet(_rightarg, _jmapright);
       foreach (var tuple in _leftarg) {
@@ -501,5 +536,58 @@ namespace AndlEra {
           yield return (tuple);
       }
     }
+
+    // possible alternative???
+    IEnumerable<T> GetSemi<T>(bool isanti, IEnumerable<T> leftarg, IEnumerable<T> rightarg, int[] jmapleft, int[] jmapright)
+    where T : TupleBase,new() {
+
+      var set = RelOps.BuildSet(rightarg, jmapright);
+      foreach (var tuple in leftarg) {
+        var key = RelOps.CreateByMap<T>(tuple, jmapleft);
+        if (!isanti == set.Contains(key))
+          yield return (tuple);
+      }
+    }
+
   }
+
+  ///===========================================================================
+  /// <summary>
+  /// implement while fixed point recursion
+  /// heading is inferred from argument
+  /// </summary>
+  class WhileNode : RelationNode {
+    RelationNode _source;
+    Func<RelationNode, IEnumerable<TupleBase>> _whifunc;
+
+    public WhileNode(RelationNode source, TupWhile tupwhi) {
+      _source = source;
+      _whifunc = tupwhi.While;
+      Heading = _source.Heading;
+    }
+
+    public override IEnumerator<TupleBase> GetEnumerator() {
+      var wrapper = new WrapperNode(Heading, While<TupleBase>(Heading, _source, _whifunc));
+      return wrapper.GetEnumerator();
+    }
+
+    static IEnumerable<T> While<T>(CommonHeading heading, IEnumerable<T> body, Func<RelationNode, IEnumerable<T>> func)
+    where T : TupleBase {
+
+      var stack = new Stack<T>(body);
+      var hash = new HashSet<T>();
+      while (stack.Count > 0) {
+        var top = stack.Pop();
+        if (!hash.Contains(top)) {
+          hash.Add(top);
+          foreach (var t in func(new WrapperNode(heading,  Enumerable.Repeat(top, 1))))
+            stack.Push(t);
+        }
+      }
+      return hash;
+    }
+
+  }
+
+
 }

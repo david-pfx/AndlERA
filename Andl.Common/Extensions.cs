@@ -29,9 +29,9 @@ namespace Andl.Common {
       return String.Join(delim, values.Select(v => v.ToString()));
     }
 
-    public static string Join(this object[] values, string delim) {
-      return values.Aggregate("", (a, o) => (a == "" ? "" : a + delim) + o.ToString());
-    }
+    //public static string Join(this object[] values, string delim) {
+    //  return values.Aggregate("", (a, o) => (a == "" ? "" : a + delim) + o.ToString());
+    //}
 
     // truncate a string if too long
     public static string Shorten(this string argtext, int len) {

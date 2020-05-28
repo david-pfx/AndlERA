@@ -19,12 +19,15 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Work", "Work", "{3B0CB768-1F69-40FE-AF45-B4E6C66D379E}"
 	ProjectSection(SolutionItems) = preProject
 		Work\Chinook.sqlite = Work\Chinook.sqlite
+		Work\MMQ.csv = Work\MMQ.csv
 		Work\P.csv = Work\P.csv
 		Work\S.csv = Work\S.csv
 		Work\S8.csv = Work\S8.csv
 		Work\SP.csv = Work\SP.csv
 		Work\testfile.txt = Work\testfile.txt
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestSuite", "TestSuite\TestSuite.csproj", "{EC333058-2CC3-45F7-BB6A-031A70E34833}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,6 +51,10 @@ Global
 		{C3F85F31-05FA-4746-8683-C8884DC7C07B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C3F85F31-05FA-4746-8683-C8884DC7C07B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C3F85F31-05FA-4746-8683-C8884DC7C07B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC333058-2CC3-45F7-BB6A-031A70E34833}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC333058-2CC3-45F7-BB6A-031A70E34833}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC333058-2CC3-45F7-BB6A-031A70E34833}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC333058-2CC3-45F7-BB6A-031A70E34833}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

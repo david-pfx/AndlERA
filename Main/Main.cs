@@ -21,6 +21,22 @@ namespace AndlEra {
       var s8i = RelationNode.Import(SourceKind.Csv, ".", "S8", "SNo:text,SName:text,Status:integer,City:text");
       var pi = RelationNode.Import(SourceKind.Csv, ".", "P", "PNo:text,PName:text,Color:text,Weight:number,City:text");
       var spi = RelationNode.Import(SourceKind.Csv, ".", "SP", "SNo:text,PNo:text,Qty:integer");
+      var mmqi = RelationNode.Import(SourceKind.Csv, ".", "MMQ", "MajorPNo:text,MinorPno:text,Qty:number");
+
+      var se = pi.Extend("Weight,WeightKg", new TupExtend(t => (decimal)t[0] * 0.454m));
+      WriteLine("Extend\n" + se.Format());
+
+      var se2 = pi.Extend("Weight,Weight", new TupExtend(t => (decimal)t[0] * 0.454m));
+      WriteLine("Replace\n" + se.Format());
+
+      WriteLine("While");
+      var seed = mmqi.Extend("Qty,AggQty", new TupExtend(t => t[0]));
+      var zmq = mmqi.Rename("MajorPNo,zmatch");
+      var exp = seed.While(new TupWhile(tw => tw
+        .Rename("MinorPno,zmatch")
+        .Compose(zmq)
+        .Extend("Qty,AggQty,AggQty", new TupExtend(t => (decimal)t[0] * (decimal)t[1]))));
+      WriteLine(exp.Format());
 
       var pgrp = spi
         .Group("PNo,Qty,PQ");
@@ -42,9 +58,6 @@ namespace AndlEra {
       //var sj = si.Semijoin(spi);
       var sj = si.Antijoin(spi);
       WriteLine("Join\n" + sj.Format());
-
-      var se = pi.Extend("Weight,WeightKg", new TupExtend(t => (decimal)t[0] * 0.454m));
-      WriteLine("Extend\n" + se.Format());
 
       var sr = si.Rename("City,SCITY");
       WriteLine("Rename\n" + sr.Format());
