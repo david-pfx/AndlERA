@@ -76,6 +76,9 @@ namespace AndlEra {
     public RelationNode Project(string nodeheading) {
       return new ProjectNode(this, nodeheading);
     }
+    public RelationNode Remove(string nodeheading) {
+      return new ProjectNode(this, nodeheading, true);
+    }
     public RelationNode Rename(string nodeheading) {
       return new RenameNode(this, nodeheading);
     }
@@ -167,9 +170,11 @@ namespace AndlEra {
     RelationNode _source;
     int[] _map;
 
-    public ProjectNode(RelationNode source, string nodeheading) {
+    public ProjectNode(RelationNode source, string nodeheading, bool isremove = false) {
       _source = source;
-      Heading = _source.Heading.Adapt(nodeheading);
+      var _nodeheading = _source.Heading.Adapt(nodeheading);
+
+      Heading = (isremove) ? _source.Heading.Minus(_nodeheading) : _nodeheading;
       _map = Heading.CreateMap(_source.Heading);
       if (Heading.Degree >= _source.Heading.Degree) throw Error.Fatal("too many attributes for project");
       if (_map.Any(x => x < 0)) throw Error.Fatal("headings do not match");
@@ -306,6 +311,7 @@ namespace AndlEra {
 
   }
 
+  ///===========================================================================
   /// <summary>
   /// Select function node
   /// Heading must be subset of other
@@ -319,9 +325,10 @@ namespace AndlEra {
 
     public SelectNode(RelationNode source, string nodeheading, TupSelect tupsel) {
       _source = source;
-      Heading = _source.Heading;
+      _selheading = _source.Heading.Adapt(nodeheading);
       _selfunc = tupsel.Select;
-      _selheading = Heading.Adapt(nodeheading);
+
+      Heading = _source.Heading;
       _selmap = _selheading.CreateMap(Heading);
       if (_selmap.Any(x => x < 0)) throw Error.Fatal("invalid map, must all match");
     }
@@ -329,7 +336,7 @@ namespace AndlEra {
     public override IEnumerator<TupleBase> GetEnumerator() {
       foreach (var tuple in _source) {
         var newtuple = RelOps.CreateByMap<TupMin>(tuple, _selmap);
-        if (_selfunc(newtuple)) yield return newtuple;
+        if (_selfunc(newtuple)) yield return tuple;
       }
     }
   }
@@ -517,10 +524,11 @@ namespace AndlEra {
         var key = RelOps.CreateByMap<TupMin>(tuple, _jmapleft);
         if (index.ContainsKey(key)) {
           foreach (var tother in index[key]) {
-            var newtuple = RelOps.CreateByMap<TupMin>(tuple, _jmapright);
-            if (hash.Contains(newtuple)) continue;
-            hash.Add(newtuple);
-            yield return (newtuple);
+            var newtuple = RelOps.CreateByMap<TupMin>(tuple, _tmapleft, tother, _tmapright);
+            if (!hash.Contains(newtuple)) {
+              hash.Add(newtuple);
+              yield return (newtuple);
+            }
           }
         }
       }
