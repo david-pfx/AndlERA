@@ -38,13 +38,6 @@ namespace AndlEra {
       return Values.Join(",");
     }
 
-    // Format tuple with heading (which this base does not know)
-    public string Format(string[] heading) {
-      return Enumerable.Range(0, Values.Length)
-        .Select(x => heading[x] + ": " + Values[x].ToString())
-        .Join(", ");
-    }
-
     public string Format(CommonHeading heading) {
       return Enumerable.Range(0, Values.Length)
         .Select(x => heading[x].Format(Values[x]))
@@ -72,11 +65,11 @@ namespace AndlEra {
     }
 
     // reflection hack to get heading value from tuple
-    internal static string[] GetHeading(Type ttype) {
+    internal static CommonHeading GetHeading(Type ttype) {
       var prop = ttype.GetField("Heading");
-      var heading = (string[])prop.GetValue(null);
+      var heading = (string)prop.GetValue(null);
       if (heading == null) throw Error.NullArg("Heading must not be null");
-      return heading;
+      return CommonHeading.Create(heading);   // TODO: add types
     }
 
     //--- impl

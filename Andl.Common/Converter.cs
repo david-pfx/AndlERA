@@ -82,11 +82,14 @@ using System.Text;
     }
 
     // parse a heading to extract the fields
+    // TODO: trap errors
     public static CommonField[] ToFields(string heading) {
       var items = heading.Split(',');
       return items.Select(i => {
         var subitems = i.Split(':');
-        return new CommonField(subitems[0], (CommonType)Enum.Parse(typeof(CommonType), subitems[1], true));
+        var ctype = (subitems.Length < 2) ? CommonType.Text
+          : (CommonType)Enum.Parse(typeof(CommonType), subitems[1], true);
+      return new CommonField(subitems[0], ctype);
       }).ToArray();
     }
   }
@@ -112,6 +115,11 @@ using System.Text;
     public bool IsEqual(CommonHeading other) {
       return other != null && Fields.SequenceEqual(other.Fields);
       //return other != null && Degree == other.Degree && Fields.SequenceEqual(other.Fields);
+    }
+
+    // Compares structural equality
+    public bool IsCompatible(CommonHeading other) {
+      return other != null && Degree == other.Degree && Fields.All(f => other.Fields.Contains(f));
     }
 
     public static CommonHeading Create(IEnumerable<CommonField> fields) {
