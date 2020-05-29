@@ -19,7 +19,7 @@ namespace AndlEra {
     internal int HashCode { get; set; }
 
     public object this[int i] { get { return Values[i]; } }
-    public int Count { get { return Values.Length; } }
+    public int Degree { get { return Values.Length; } }
 
     // override used by hash collections
     public override int GetHashCode() {

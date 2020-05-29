@@ -21,7 +21,7 @@ namespace AndlEra {
       var s8i = RelationNode.Import(SourceKind.Csv, ".", "S8", "SNo:text,SName:text,Status:integer,City:text");
       var pi = RelationNode.Import(SourceKind.Csv, ".", "P", "PNo:text,PName:text,Color:text,Weight:number,City:text");
       var spi = RelationNode.Import(SourceKind.Csv, ".", "SP", "SNo:text,PNo:text,Qty:integer");
-      var mmqi = RelationNode.Import(SourceKind.Csv, ".", "MMQ", "MajorPNo:text,MinorPno:text,Qty:number");
+      var mmqi = RelationNode.Import(SourceKind.Csv, ".", "MMQ", "MajorPNo:text,MinorPNo:text,Qty:number");
 
       var se = pi.Extend("Weight,WeightKg", new TupExtend(t => (decimal)t[0] * 0.454m));
       WriteLine("Extend\n" + se.Format());
@@ -30,13 +30,21 @@ namespace AndlEra {
       WriteLine("Replace\n" + se.Format());
 
       WriteLine("While");
-      var seed = mmqi.Extend("Qty,AggQty", new TupExtend(t => t[0]));
-      var zmq = mmqi.Rename("MajorPNo,zmatch");
-      var exp = seed.While(new TupWhile(tw => tw
-        .Rename("MinorPno,zmatch")
-        .Compose(zmq)
-        .Extend("Qty,AggQty,AggQty", new TupExtend(t => (decimal)t[0] * (decimal)t[1]))));
-      WriteLine(exp.Format());
+      //var mmseed = mmqi.Rename("Qty,ExpQty");
+      //var mmzmq = mmqi.Rename("MajorPNo,zmatch");
+      var mmexp = mmqi
+        .Rename("Qty,ExpQty")
+        .While(new TupWhile(tw => tw
+          .Rename("MinorPNo,zmatch")
+          .Compose(mmqi.Rename("MajorPNo,zmatch"))
+          .Extend("Qty,ExpQty,ExpQty", new TupExtend(t => (decimal)t[0] * (decimal)t[1]))
+          .Remove("Qty")
+      ));
+      WriteLine(mmexp.Format());
+      WriteLine("Aggregated");
+      var mmagg = mmexp
+        .Aggregate("ExpQty,TotQty", new TupAggregate((v, a) => (decimal)v + (decimal)a));
+      WriteLine(mmagg.Format());
 
       var pgrp = spi
         .Group("PNo,Qty,PQ");
@@ -108,7 +116,7 @@ namespace AndlEra {
       var seed = MMQData.MMQ.Extend<TupMMQA>(t => t.Qty);    // "Major", "Minor", "Qty", "AggQty"
       var zmq = MMQData.MMQ.Rename<TupzMQ>();    // "zmatch", "Minor", "Qty"
       var exp = seed.While(t => t
-        .Rename<TupMzA>()             // "Major", "zmatch", "AggQty"
+        .Rename<TupMzA>()             // "Major", "zmatch", "ExpQty"
         .Join<TupzMQ, TupMMQA>(zmq)
         .Transform<TupMMQA>(tt => TupMMQA.Create(tt.Major, tt.Minor, 0, tt.AggQty * tt.Qty)));
       WriteLine(exp.Format());

@@ -41,8 +41,8 @@ namespace AndlEra {
   }
 
   public class TupWhile : TupleBase {
-    public Func<RelationNode, IEnumerable<TupleBase>> While { get; set; }
-    public TupWhile(Func<RelationNode, IEnumerable<TupleBase>> whilefunc) => While = whilefunc;
+    public Func<RelationNode, RelationNode> While { get; set; }
+    public TupWhile(Func<RelationNode, RelationNode> whilefunc) => While = whilefunc;
   }
 
   /// <summary>
@@ -132,7 +132,7 @@ namespace AndlEra {
 
   ///===========================================================================
   /// <summary>
-  /// 
+  /// Implement a wrapper around a heading and enumerable
   /// </summary>
   class WrapperNode : RelationNode {
     protected IEnumerable<TupleBase> _source;
@@ -186,6 +186,7 @@ namespace AndlEra {
         var newtuple = RelOps.CreateByMap<TupMin>(tuple, _map);
         if (hash.Contains(newtuple)) continue;
         hash.Add(newtuple);
+        Logger.Assert(newtuple.Degree == Heading.Degree);
         yield return newtuple;
       }
     }
@@ -249,15 +250,17 @@ namespace AndlEra {
       var index = RelOps.BuildIndex(_source, _kmap);
       foreach (var kvp in index) {
         var rva = kvp.Value.Select(t => new CommonRow(_tmap.Select(x => t[x]))).ToArray();
-        //var rva = kvp.Value.Select(t => RelOps.CreateByMap<TupMin>(t, _tmap)).ToArray();
-        yield return RelOps.CreateByMap<TupMin>(kvp.Key, _map, rva);
+        var newtuple = RelOps.CreateByMap<TupMin>(kvp.Key, _map, rva);
+        Logger.Assert(newtuple.Degree == Heading.Degree);
+        yield return newtuple;
       }
     }
     IEnumerator<TupMin> GetWrapEnumerator() {
       foreach (var tuple in _source) {
         var tva = new CommonRow(_tmap.Select(x => tuple[x]));
-        //var tva = RelOps.CreateByMap<TupMin>(tuple, _tmap);
-        yield return RelOps.CreateByMap<TupMin>(tuple, _map, tva);
+        var newtuple = RelOps.CreateByMap<TupMin>(tuple, _map, tva);
+        Logger.Assert(newtuple.Degree == Heading.Degree);
+        yield return newtuple;
       }
     }
   }
@@ -296,8 +299,11 @@ namespace AndlEra {
     IEnumerator<TupMin> GetUngroupEnumerator() {
       foreach (var tuple in _source) {
         var rva = (CommonRow[])tuple[_nodemap[0]];
-        foreach (var row in rva)
-          yield return RelOps.CreateByMap<TupMin>(tuple.Values, _map1, row.Values, _map2);
+        foreach (var row in rva) {
+          var newtuple = RelOps.CreateByMap<TupMin>(tuple.Values, _map1, row.Values, _map2);
+          Logger.Assert(newtuple.Degree == Heading.Degree);
+          yield return newtuple;
+        }
       }
     }
 
@@ -305,7 +311,9 @@ namespace AndlEra {
     IEnumerator<TupMin> GetUnwrapEnumerator() {
       foreach (var tuple in _source) {
         var row = (CommonRow)tuple[_nodemap[0]];
-        yield return RelOps.CreateByMap<TupMin>(tuple.Values, _map1, row.Values, _map2);
+        var newtuple = RelOps.CreateByMap<TupMin>(tuple.Values, _map1, row.Values, _map2);
+        Logger.Assert(newtuple.Degree == Heading.Degree);
+        yield return newtuple;
       }
     }
 
@@ -336,6 +344,7 @@ namespace AndlEra {
     public override IEnumerator<TupleBase> GetEnumerator() {
       foreach (var tuple in _source) {
         var newtuple = RelOps.CreateByMap<TupMin>(tuple, _selmap);
+        Logger.Assert(tuple.Degree == Heading.Degree);
         if (_selfunc(newtuple)) yield return tuple;
       }
     }
@@ -376,7 +385,9 @@ namespace AndlEra {
         // pick out the argument values, pass them to the function, get return
         var argtuple = RelOps.CreateByMap<TupMin>(tuple, _argmap);
         var result = _extfunc(argtuple);
-        yield return RelOps.CreateByMap<TupMin>(tuple, _outmap, result);
+        var newtuple = RelOps.CreateByMap<TupMin>(tuple, _outmap, result);
+        Logger.Assert(newtuple.Degree == Heading.Degree);
+        yield return newtuple;
       }
     }
   }
@@ -421,6 +432,7 @@ namespace AndlEra {
       }
       foreach (var kv in dict) {
         var newtuple = RelOps.CreateByMap<TupMin>(kv.Key, _jmap2, kv.Value);
+        Logger.Assert(newtuple.Degree == Heading.Degree);
         yield return newtuple;
       }
     }
@@ -453,10 +465,12 @@ namespace AndlEra {
       case SetOp.Union:
         foreach (var tuple in _left) {
           hash.Add(tuple);
+          Logger.Assert(tuple.Degree == Heading.Degree);
           yield return tuple;
         }
         foreach (var tuple in _right) {
           var newtuple = RelOps.CreateByMap<TupMin>(tuple, _othermap);
+          Logger.Assert(tuple.Degree == Heading.Degree);
           if (!hash.Contains(newtuple)) yield return newtuple;
         }
         break;
@@ -466,6 +480,7 @@ namespace AndlEra {
           hash.Add(newtuple);
         }
         foreach (var tuple in _left) {
+          Logger.Assert(tuple.Degree == Heading.Degree);
           if (!hash.Contains(tuple)) yield return tuple;
         }
         break;
@@ -475,6 +490,7 @@ namespace AndlEra {
         }
         foreach (var tuple in _right) {
           var newtuple = RelOps.CreateByMap<TupMin>(tuple, _othermap);
+          Logger.Assert(tuple.Degree == Heading.Degree);
           if (hash.Contains(newtuple)) yield return newtuple;
         }
         break;
@@ -527,6 +543,7 @@ namespace AndlEra {
             var newtuple = RelOps.CreateByMap<TupMin>(tuple, _tmapleft, tother, _tmapright);
             if (!hash.Contains(newtuple)) {
               hash.Add(newtuple);
+              Logger.Assert(newtuple.Degree == Heading.Degree);
               yield return (newtuple);
             }
           }
@@ -540,8 +557,10 @@ namespace AndlEra {
       var set = RelOps.BuildSet(_rightarg, _jmapright);
       foreach (var tuple in _leftarg) {
         var key = RelOps.CreateByMap<TupMin>(tuple, _jmapleft);
-        if (!isanti == set.Contains(key))
+        if (!isanti == set.Contains(key)) {
+          Logger.Assert(tuple.Degree == Heading.Degree);
           yield return (tuple);
+        }
       }
     }
 
@@ -552,8 +571,10 @@ namespace AndlEra {
       var set = RelOps.BuildSet(rightarg, jmapright);
       foreach (var tuple in leftarg) {
         var key = RelOps.CreateByMap<T>(tuple, jmapleft);
-        if (!isanti == set.Contains(key))
+        if (!isanti == set.Contains(key)) {
+          Logger.Assert(tuple.Degree == Heading.Degree);
           yield return (tuple);
+        }
       }
     }
 
@@ -566,7 +587,7 @@ namespace AndlEra {
   /// </summary>
   class WhileNode : RelationNode {
     RelationNode _source;
-    Func<RelationNode, IEnumerable<TupleBase>> _whifunc;
+    Func<RelationNode, RelationNode> _whifunc;
 
     public WhileNode(RelationNode source, TupWhile tupwhi) {
       _source = source;
@@ -575,27 +596,30 @@ namespace AndlEra {
     }
 
     public override IEnumerator<TupleBase> GetEnumerator() {
-      var wrapper = new WrapperNode(Heading, While<TupleBase>(Heading, _source, _whifunc));
+      var wrapper = new WrapperNode(Heading, While(Heading, _source, _whifunc));
       return wrapper.GetEnumerator();
     }
 
-    static IEnumerable<T> While<T>(CommonHeading heading, IEnumerable<T> body, Func<RelationNode, IEnumerable<T>> func)
-    where T : TupleBase {
+    static IEnumerable<TupleBase> While(CommonHeading heading, IEnumerable<TupleBase> body, Func<RelationNode, RelationNode> func) {
 
-      var stack = new Stack<T>(body);
-      var hash = new HashSet<T>();
+      var stack = new Stack<TupleBase>(body);
+      var hash = new HashSet<TupleBase>();
       while (stack.Count > 0) {
         var top = stack.Pop();
         if (!hash.Contains(top)) {
           hash.Add(top);
-          foreach (var t in func(new WrapperNode(heading,  Enumerable.Repeat(top, 1))))
-            stack.Push(t);
+          var result = func(new WrapperNode(heading, Enumerable.Repeat(top, 1)));
+          var eq = result.Heading.IsEqual(heading);
+          var map = heading.CreateMap(result.Heading);
+          if (result.Heading.Degree != heading.Degree 
+            || map.Any(x => x < 0)) throw Error.Fatal($"heading mismatch: {result.Heading} {heading}");
+          // convert compatible if needed
+          foreach (var t in result) {
+            stack.Push(eq ? t : RelOps.CreateByMap<TupMin>(t, map));
+          }
         }
       }
       return hash;
     }
-
   }
-
-
 }

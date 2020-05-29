@@ -180,5 +180,17 @@ namespace TestSuite {
       Assert.AreEqual(1, wtc.Count(t => t.ToString().Contains("P2,P5")));
       Assert.AreEqual(3, wtc.Count(t => t.ToString().Contains("P6")));
     }
+    [TestMethod]
+    public void Aggregate() {
+      var P = RelationNode.Import(SourceKind.Csv, Testdata, "P", "PNo:text,PName:text,Color:text,Weight:number,City:text");
+
+      var pagg = P
+        .Project("Color,Weight")
+        .Aggregate("Weight,TotWeight", new TupAggregate((v, a) => (decimal)v + (decimal)a));
+      Assert.AreEqual(2, pagg.Degree);
+      Assert.AreEqual("Color,TotWeight", pagg.Heading.ToNames().Join(","));
+      Assert.AreEqual(3, pagg.Cardinality);
+      Assert.AreEqual("Red,45.0;Green,17.0;Blue,29.0", pagg.Join(";"));
+    }
   }
 }

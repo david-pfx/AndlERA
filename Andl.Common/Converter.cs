@@ -34,22 +34,33 @@ using System.Text;
     public bool HasHeading { get { return CType == CommonType.Row || CType == CommonType.Table || CType == CommonType.User; } }
     public static CommonField Empty = new CommonField();
 
+    //-- overrides
+    public override string ToString() {
+      return (Fields == null) ? $"{Name}:{CType}"
+        : $"{Name}:{CType}{{{Fields.Join(",")}}}";
+    }
+
+    public override bool Equals(object obj) {
+      if (!(obj is CommonField)) return false;
+      CommonField other = (CommonField)obj;
+      if (!(Name == other.Name && CType == other.CType && HasHeading == other.HasHeading)) return false;
+      return !HasHeading || Fields.SequenceEqual(other.Fields);
+    }
+
+    public override int GetHashCode() => Name.GetHashCode();
+
+    //-- ctors
     public CommonField(string name, CommonType ctype, CommonField[] fields = null) {
       Name = name;
       CType = ctype;
       Fields = fields;
+      Logger.Assert(HasHeading == (Fields != null));
     }
 
     public CommonField(string name, Type type) {
       Name = name;
       CType = CommonConverter.TypeToCommon(type);
       Fields = null;
-    }
-
-
-    public override string ToString() {
-      return (Fields == null) ? $"{Name}:{CType}"
-        : $"{Name}:{CType}{{{Fields.Join(",")}}}";
     }
 
     public string Format(object v) {
@@ -93,6 +104,16 @@ using System.Text;
       set { Fields[index] = value; }
     }
 
+    public override string ToString() {
+      return $"{Fields.Join(",")}";
+    }
+
+    // Compares equality but does not implement Equals()
+    public bool IsEqual(CommonHeading other) {
+      return other != null && Fields.SequenceEqual(other.Fields);
+      //return other != null && Degree == other.Degree && Fields.SequenceEqual(other.Fields);
+    }
+
     public static CommonHeading Create(IEnumerable<CommonField> fields) {
       return new CommonHeading {
         Fields = fields.ToArray(),
@@ -110,17 +131,6 @@ using System.Text;
     public CommonType[] ToTypes() {
       return Fields.Select(f => f.CType).ToArray();
     }
-
-    public override string ToString() {
-      return $"{Fields.Join(",")}";
-    }
-
-    //public override bool Equals(object obj) {
-    //  var other = obj as CommonHeading;
-    //  if (other == null) return false;
-    //  return other.Degree == Degree
-    //    && Fields.e
-    //}
 
     // create a new heading but using types from current where matching
     public CommonHeading Adapt(string newheading) {
