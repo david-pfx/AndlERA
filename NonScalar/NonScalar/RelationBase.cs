@@ -14,7 +14,7 @@ namespace AndlEra {
   /// </summary>
   public class RelationBase<Ttup> : IEnumerable<Ttup>
   where Ttup : TupleBase, new() {
-    public static string[] Heading { get; protected set; }
+    public static CommonHeading Heading { get; protected set; }
     public int Count { get { return _body.Count; } }
     public bool IsEmpty { get { return _body.Count == 0; } }
     public bool Exists { get { return _body.Count > 0; } }
@@ -205,9 +205,10 @@ namespace AndlEra {
       return RelationBase<T>.Create<RelationBase<T>>(newbody);
     }
 
-    public RelationBase<Ttup> While(Func<RelationBase<Ttup>, RelationBase<Ttup>> func) {
+    public RelationBase<Ttup> While<Trel>(Func<Trel, RelationBase<Ttup>> func) 
+    where Trel : RelationBase<Ttup>, new() {
 
-      var newbody = RelOps.While<Ttup>(this, func);
+      var newbody = RelOps.While<Ttup,Trel>(this, func);
       return RelationBase<Ttup>.Create<RelationBase<Ttup>>(newbody);
     }
   }
@@ -231,11 +232,25 @@ namespace AndlEra {
       Value = new RelationBase<Ttup>();
     }
 
-    public static RelVar<Ttup> Create(RelationBase<Ttup> value) {
-      return new RelVar<Ttup> {
-        Value = value,
-      };
+    public RelVar(RelationBase<Ttup> value) {
+      Value = value;
     }
+
+    public RelVar(RelationNode value) {
+      var h = RelationBase<Ttup>.Heading;
+      var equal = value.Heading.IsEqual(h);
+      var compat = equal || value.Heading.IsCompatible(h);
+      if (!compat) throw Error.Fatal($"headings are not compatible: <{value.Heading}> and <{h}>");
+      var map = h.CreateMap(value.Heading);
+      Value = null; // TODO
+      //Value = RelationBase<Ttup>.Create<Ttup>(value.Select(t => RelOps.CreateByMap<Ttup>(t, map)));
+    }
+
+    //public static RelVar<Ttup> Create(RelationBase<Ttup> value) {
+    //  return new RelVar<Ttup> {
+    //    Value = value,
+    //  };
+    //}
 
     public void Assign(RelationBase<Ttup> value) {
       Value = value;

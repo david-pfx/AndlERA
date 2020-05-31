@@ -117,7 +117,7 @@ namespace SupplierData {
   /// Generated tuple type for S (suppliers)
   /// </summary>
   public class TupS : TupleBase {
-    public readonly static string[] Heading = { "SNo", "SName", "Status", "City" };
+    public readonly static string Heading = "SNo,SName,Status,City";
 
     public string SNo { get { return (string)Values[0]; } }
     public string SName { get { return (string)Values[1]; } }
@@ -136,7 +136,7 @@ namespace SupplierData {
   public class RelP : RelationBase<TupP> { }
 
   public class TupP : TupleBase {
-    public readonly static string[] Heading = { "PNo", "PName", "Color", "Weight", "City" };
+    public readonly static string Heading = "PNo,PName,Color,Weight,City";
 
     public string PNo { get { return (string)Values[0]; } }
     public string PName { get { return (string)Values[1]; } }
@@ -159,7 +159,7 @@ namespace SupplierData {
   /// Generated tuple type for SP (supplies)
   /// </summary>
   public class TupSP : TupleBase {
-    public readonly static string[] Heading = { "SNo", "PNo", "Qty" };
+    public readonly static string Heading =  "SNo,PNo,Qty";
 
     public string Sno { get { return (string)Values[0]; } }
     public string Pno { get { return (string)Values[1]; } }
@@ -179,7 +179,7 @@ namespace SupplierData {
   /// Generated tuple type for J (jobs)
   /// </summary>
   public class TupJ : TupleBase {
-    public readonly static string[] Heading = { "JNo", "JName", "City " };
+    public readonly static string Heading = "JNo,JName,City";
 
     public string JNo { get { return (string)Values[0]; } }
     public string JName { get { return (string)Values[1]; } }
@@ -200,7 +200,7 @@ namespace SupplierData {
   /// Generated tuple type for SPJ (job supplies)
   /// </summary>
   public class TupSPJ : TupleBase {
-    public readonly static string[] Heading = { "SNo", "PNo", "JNo", "Qty" };
+    public readonly static string Heading = "SNo,PNo,JNo,Qty";
     
     public string SNo { get { return (string)Values[0]; } }
     public string PNo { get { return (string)Values[1]; } }
