@@ -22,7 +22,7 @@ namespace SupplierData {
   /// Sample supplier data
   /// </summary>
   public static class Supplier {
-    public static RelS S = RelS.Create<RelS>(
+    public static RelationBase<TupS> S = RelS.Create(
       new List<TupS> {
         TupS.Create( "S1", "Smith", 20, "London" ),
         TupS.Create( "S2", "Jones", 10, "Paris" ),
@@ -31,7 +31,7 @@ namespace SupplierData {
         TupS.Create( "S5", "Adams", 30, "Athens" ),
       });
 
-    public static RelS S8 = RelS.Create<RelS>(
+    public static RelationBase<TupS> S8 = RelS.Create(
       new List<TupS> {
         TupS.Create( "S1", "Smith", 20, "London" ),
         TupS.Create( "S2", "Jones", 10, "Paris" ),
@@ -43,7 +43,7 @@ namespace SupplierData {
         TupS.Create( "S9", "Sullivan", 50, "Sydney" ),
       });
 
-    public static RelP P = RelP.Create<RelP>(
+    public static RelationBase<TupP> P = RelP.Create(
       new List<TupP> {
         TupP.Create( "P1", "Nut",   "Red",   12.0m,"London" ),
         TupP.Create( "P2", "Bolt",  "Green", 17.0m,"Paris"  ),
@@ -53,7 +53,7 @@ namespace SupplierData {
         TupP.Create( "P6", "Cog",   "Red",   19.0m,"London" ),
       });
 
-    public static RelSP SP = RelSP.Create<RelSP>(
+    public static RelationBase<TupSP> SP = RelSP.Create(
       new List<TupSP> {
         TupSP.Create( "S1", "P1", 300 ),
         TupSP.Create( "S1", "P2", 200 ),
@@ -68,7 +68,7 @@ namespace SupplierData {
         TupSP.Create( "S4", "P4", 300 ),
         TupSP.Create( "S4", "P5", 400 ),
       });
-    public static RelJ J = RelJ.Create<RelJ>(
+    public static RelationBase<TupJ> J = RelJ.Create(
       new List<TupJ> {
         TupJ.Create("J1","Sorter","Paris"),
         TupJ.Create("J2","Display","Rome"),
@@ -79,7 +79,7 @@ namespace SupplierData {
         TupJ.Create("J7","Tape","London"),
       });
 
-    public static RelSPJ SPJ = RelSPJ.Create<RelSPJ>(
+    public static RelationBase<TupSPJ> SPJ = RelSPJ.Create(
       new List<TupSPJ> {
         TupSPJ.Create( "S1", "P1", "J1", 200),
         TupSPJ.Create( "S1", "P1", "J4", 700),
@@ -117,7 +117,7 @@ namespace SupplierData {
   /// Generated tuple type for S (suppliers)
   /// </summary>
   public class TupS : TupleBase {
-    public readonly static string[] Heading = { "SNo", "SName", "Status", "City" };
+    public readonly static string Heading = "SNo,SName,Status,City";
 
     public string SNo { get { return (string)Values[0]; } }
     public string SName { get { return (string)Values[1]; } }
@@ -136,7 +136,7 @@ namespace SupplierData {
   public class RelP : RelationBase<TupP> { }
 
   public class TupP : TupleBase {
-    public readonly static string[] Heading = { "PNo", "PName", "Color", "Weight", "City" };
+    public readonly static string Heading = "PNo,PName,Color,Weight,City";
 
     public string PNo { get { return (string)Values[0]; } }
     public string PName { get { return (string)Values[1]; } }
@@ -159,7 +159,7 @@ namespace SupplierData {
   /// Generated tuple type for SP (supplies)
   /// </summary>
   public class TupSP : TupleBase {
-    public readonly static string[] Heading = { "SNo", "PNo", "Qty" };
+    public readonly static string Heading =  "SNo,PNo,Qty";
 
     public string Sno { get { return (string)Values[0]; } }
     public string Pno { get { return (string)Values[1]; } }
@@ -179,7 +179,7 @@ namespace SupplierData {
   /// Generated tuple type for J (jobs)
   /// </summary>
   public class TupJ : TupleBase {
-    public readonly static string[] Heading = { "JNo", "JName", "City " };
+    public readonly static string Heading = "JNo,JName,City";
 
     public string JNo { get { return (string)Values[0]; } }
     public string JName { get { return (string)Values[1]; } }
@@ -200,7 +200,7 @@ namespace SupplierData {
   /// Generated tuple type for SPJ (job supplies)
   /// </summary>
   public class TupSPJ : TupleBase {
-    public readonly static string[] Heading = { "SNo", "PNo", "JNo", "Qty" };
+    public readonly static string Heading = "SNo,PNo,JNo,Qty";
     
     public string SNo { get { return (string)Values[0]; } }
     public string PNo { get { return (string)Values[1]; } }

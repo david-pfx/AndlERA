@@ -14,7 +14,7 @@ namespace AndlEra {
   /// </summary>
   public class RelationBase<Ttup> : IEnumerable<Ttup>
   where Ttup : TupleBase, new() {
-    public static string[] Heading { get; protected set; }
+    public static CommonHeading Heading { get; protected set; }
     public int Count { get { return _body.Count; } }
     public bool IsEmpty { get { return _body.Count == 0; } }
     public bool Exists { get { return _body.Count > 0; } }
@@ -74,21 +74,19 @@ namespace AndlEra {
     }
 
     // create new relation value from body as set
-    public static Trel Create<Trel>(ISet<Ttup> tuples)
-    where Trel : RelationBase<Ttup>, new() {
+    public static RelationBase<Ttup> Create(ISet<Ttup> tuples) {
 
       var body = new HashSet<Ttup>(tuples);
-      return new Trel() {
+      return new RelationBase<Ttup>() {
         _body = body,
         _hashcode = CalcHashCode(body),
       };
     }
 
     // create new relation value from body as enumerable
-    public static Trel Create<Trel>(IEnumerable<Ttup> tuples)
-    where Trel : RelationBase<Ttup>, new() {
+    public static RelationBase<Ttup> Create(IEnumerable<Ttup> tuples) {
 
-      return Create<Trel>(new HashSet<Ttup>(tuples));
+      return Create(new HashSet<Ttup>(tuples));
     }
 
     ///===========================================================================
@@ -126,7 +124,7 @@ namespace AndlEra {
     
     // generate a new relation with a selection of tuples
     public RelationBase<Ttup> Select(Func<Ttup, bool> predicate) {
-      return Create<RelationBase<Ttup>>(this.Where(t => predicate(t)));
+      return Create(this.Where(t => predicate(t)));
     }
 
     // generate a new relation with one attribute renamed
@@ -134,7 +132,7 @@ namespace AndlEra {
     where T : TupleBase, new() {
 
       var newbody = RelOps.Rename<Ttup, T>(this);
-      return RelationBase<T>.Create<RelationBase<T>>(newbody);
+      return RelationBase<T>.Create(newbody);
     }
 
     // generate a new relation that is a projection
@@ -142,21 +140,21 @@ namespace AndlEra {
     where T : TupleBase, new() {
 
       var newbody = RelOps.Project<Ttup, T>(this);
-      return RelationBase<T>.Create<RelationBase<T>>(newbody);
+      return RelationBase<T>.Create(newbody);
     }
 
     public RelationBase<T> Extend<T>(Func<Ttup, object> func)
     where T : TupleBase, new() {
 
       var newbody = RelOps.Extend<Ttup, T>(this, func);
-      return RelationBase<T>.Create<RelationBase<T>>(newbody);
+      return RelationBase<T>.Create(newbody);
     }
 
     public RelationBase<T> Transform<T>(Func<Ttup, T> func)
     where T : TupleBase, new() {
 
       var newbody = RelOps.Transform<Ttup, T>(this, func);
-      return RelationBase<T>.Create<RelationBase<T>>(newbody);
+      return RelationBase<T>.Create(newbody);
     }
 
     public RelationBase<T> Aggregate<T,T1>(Func<Ttup, T1, T1> func)
@@ -164,28 +162,28 @@ namespace AndlEra {
     where T1 : new() {
 
       var newbody = RelOps.Aggregate<Ttup,T,T1>(this, func);
-      return RelationBase<T>.Create<RelationBase<T>>(newbody);
+      return RelationBase<T>.Create(newbody);
     }
 
     // generate a new relation that is a set union
     public RelationBase<Ttup> Union(RelationBase<Ttup> other) {
 
       var newbody = RelOps.Union<Ttup>(this, other);
-      return Create<RelationBase<Ttup>>(newbody);
+      return Create(newbody);
     }
 
     // generate a new relation that is a set minus
     public RelationBase<Ttup> Minus(RelationBase<Ttup> other) {
 
       var newbody = RelOps.Minus<Ttup>(this, other);
-      return Create<RelationBase<Ttup>>(newbody);
+      return Create(newbody);
     }
 
     // generate a new relation that is a set intersection
     public RelationBase<Ttup> Intersect(RelationBase<Ttup> other) {
 
       var newbody = RelOps.Intersect<Ttup>(this, other);
-      return Create<RelationBase<Ttup>>(newbody);
+      return Create(newbody);
     }
 
     // generate a new relation that is a natural join
@@ -194,7 +192,7 @@ namespace AndlEra {
     where T1 : TupleBase, new() {
 
       var newbody = RelOps.Join<T, Ttup, T1>(this, other);
-      return RelationBase<T>.Create<RelationBase<T>>(newbody);
+      return RelationBase<T>.Create(newbody);
     }
 
     public RelationBase<T> AntiJoin<T1, T>(RelationBase<T1> other)
@@ -202,13 +200,13 @@ namespace AndlEra {
     where T1 : TupleBase, new() {
 
       var newbody = RelOps.AntiJoin<T, Ttup, T1>(this, other);
-      return RelationBase<T>.Create<RelationBase<T>>(newbody);
+      return RelationBase<T>.Create(newbody);
     }
 
     public RelationBase<Ttup> While(Func<RelationBase<Ttup>, RelationBase<Ttup>> func) {
 
       var newbody = RelOps.While<Ttup>(this, func);
-      return RelationBase<Ttup>.Create<RelationBase<Ttup>>(newbody);
+      return RelationBase<Ttup>.Create(newbody);
     }
   }
 
@@ -231,11 +229,25 @@ namespace AndlEra {
       Value = new RelationBase<Ttup>();
     }
 
-    public static RelVar<Ttup> Create(RelationBase<Ttup> value) {
-      return new RelVar<Ttup> {
-        Value = value,
-      };
+    public RelVar(RelationBase<Ttup> value) {
+      Value = value;
     }
+
+    public RelVar(RelationNode value) {
+      var h = RelationBase<Ttup>.Heading;
+      var equal = value.Heading.IsEqual(h);
+      var compat = equal || value.Heading.IsCompatible(h);
+      if (!compat) throw Error.Fatal($"headings are not compatible: <{value.Heading}> and <{h}>");
+      var map = h.CreateMap(value.Heading);
+      Value = null; // TODO
+      //Value = RelationBase<Ttup>.Create<Ttup>(value.Select(t => RelOps.CreateByMap<Ttup>(t, map)));
+    }
+
+    //public static RelVar<Ttup> Create(RelationBase<Ttup> value) {
+    //  return new RelVar<Ttup> {
+    //    Value = value,
+    //  };
+    //}
 
     public void Assign(RelationBase<Ttup> value) {
       Value = value;
@@ -244,19 +256,19 @@ namespace AndlEra {
     public void Insert(RelationBase<Ttup> value) {
 
       var newbody = RelOps.Union(Value, value);
-      Value = RelationBase<Ttup>.Create<RelationBase<Ttup>>(newbody);
+      Value = RelationBase<Ttup>.Create(newbody);
     }
 
     public void Update(Func<Ttup,bool> selfunc, Func<Ttup,Ttup> upfunc) {
 
       var newbody = Value.Select(t => selfunc(t) ? upfunc(t) : t);
-      Value = RelationBase<Ttup>.Create<RelationBase<Ttup>>(newbody);
+      Value = RelationBase<Ttup>.Create(newbody);
     }
 
     public void Delete(Func<Ttup,bool> selfunc) {
 
       var newbody = Value.Where(t => !selfunc(t));
-      Value = RelationBase<Ttup>.Create<RelationBase<Ttup>>(newbody);
+      Value = RelationBase<Ttup>.Create(newbody);
     }
 
 
