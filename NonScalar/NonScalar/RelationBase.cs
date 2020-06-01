@@ -19,7 +19,7 @@ namespace AndlEra {
     public bool IsEmpty { get { return _body.Count == 0; } }
     public bool Exists { get { return _body.Count > 0; } }
 
-    HashSet<Ttup> _body { get; set; }
+    protected HashSet<Ttup> _body { get; set; }
     int _hashcode;
 
     public override int GetHashCode() {
@@ -65,11 +65,14 @@ namespace AndlEra {
     }
 
     //--- ctor
+
+    // set up heading here in case relation is never instantiated
     static RelationBase() {
       Heading = TupleBase.GetHeading(typeof(Ttup));
     }
 
     public RelationBase() {
+      Heading = TupleBase.GetHeading(typeof(Ttup));
       _body = new HashSet<Ttup>();
     }
 
@@ -91,7 +94,7 @@ namespace AndlEra {
       return Create<Trel>(new HashSet<Ttup>(tuples));
     }
 
-    ///===========================================================================
+    ///-------------------------------------------------------------------------
     /// Functions that return a scalar value
     /// 
     // return singleton tuple: error if none, random if more than one
@@ -118,14 +121,14 @@ namespace AndlEra {
       return !this.Any(b => other.Contains(b));
     }
 
-    ///===========================================================================
+    ///-------------------------------------------------------------------------
     /// functions that return a relation 
     /// Note that functions return the new value, so thay can
     /// be used as a fluent interface (left to right)
     /// 
-    
+
     // generate a new relation with a selection of tuples
-    public RelationBase<Ttup> Select(Func<Ttup, bool> predicate) {
+    public RelationBase<Ttup> Restrict(Func<Ttup, bool> predicate) {
       return Create<RelationBase<Ttup>>(this.Where(t => predicate(t)));
     }
 
@@ -214,67 +217,20 @@ namespace AndlEra {
   }
 
   ///===========================================================================
-  /// relational stores
-  /// 
-
-  public class RelVar<Ttup>
-  where Ttup : TupleBase, new() {
-
-    public RelationBase<Ttup> Value { get; private set; }
-
-    public static implicit operator RelationBase<Ttup>(RelVar<Ttup> v) => v.Value;
-
-    public override string ToString() => Value.ToString();
-
-    public string Format() => Value.Format();
-
-    public RelVar() {
-      Value = new RelationBase<Ttup>();
+  /// <summary>
+  /// Untyped relation base
+  /// Probably buggy: trouble with initialising heading
+  /// </summary>
+  public class RelationBase : RelationBase<TupMin> {
+    public RelationBase() {
+      Heading = CommonHeading.Empty;
+      _body = new HashSet<TupMin>();
     }
 
-    public RelVar(RelationBase<Ttup> value) {
-      Value = value;
-    }
-
-    public RelVar(RelationNode value) {
-      var h = RelationBase<Ttup>.Heading;
-      var equal = value.Heading.IsEqual(h);
-      var compat = equal || value.Heading.IsCompatible(h);
-      if (!compat) throw Error.Fatal($"headings are not compatible: <{value.Heading}> and <{h}>");
-      var map = h.CreateMap(value.Heading);
-      Value = null; // TODO
-      //Value = RelationBase<Ttup>.Create<Ttup>(value.Select(t => RelOps.CreateByMap<Ttup>(t, map)));
-    }
-
-    //public static RelVar<Ttup> Create(RelationBase<Ttup> value) {
-    //  return new RelVar<Ttup> {
-    //    Value = value,
-    //  };
+    //public RelationBase(RelationNode node) {
+    //  Heading = node.Heading;
+    //  _body = node.ToHashSet<TupleBase>();
     //}
-
-    public void Assign(RelationBase<Ttup> value) {
-      Value = value;
-    }
-
-    public void Insert(RelationBase<Ttup> value) {
-
-      var newbody = RelOps.Union(Value, value);
-      Value = RelationBase<Ttup>.Create<RelationBase<Ttup>>(newbody);
-    }
-
-    public void Update(Func<Ttup,bool> selfunc, Func<Ttup,Ttup> upfunc) {
-
-      var newbody = Value.Select(t => selfunc(t) ? upfunc(t) : t);
-      Value = RelationBase<Ttup>.Create<RelationBase<Ttup>>(newbody);
-    }
-
-    public void Delete(Func<Ttup,bool> selfunc) {
-
-      var newbody = Value.Where(t => !selfunc(t));
-      Value = RelationBase<Ttup>.Create<RelationBase<Ttup>>(newbody);
-    }
-
-
 
   }
 

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 
 using Andl.Common;
+using SupplierData;
 
 namespace AndlEra {
   // set operations
@@ -22,27 +23,33 @@ namespace AndlEra {
     Ungroup, Unwrap,
   }
 
-  // tuple type used for all pipeline nodes
+  // Minimal tuple type with null heading
+  // Used by pipeline nodes to create tuples where 
+  // the heading is not provided but is inferred from the source
   public class TupMin : TupleBase { }
 
-  public class TupSelect : TupleBase {
-    public Func<TupleBase, bool> Select { get; set; }
-    public TupSelect(Func<TupleBase, bool> select) => Select = select;
+  public class TupRestrict : TupleBase {
+    public Func<TupleBase, bool> Restrict { get; set; }
+    
+    public static TupRestrict F(Func<TupleBase, bool> restrict) => new TupRestrict { Restrict = restrict };
   }
 
   public class TupExtend : TupleBase {
     public Func<TupleBase, object> Extend { get; set; }
-    public TupExtend(Func<TupleBase, object> extfunc) => Extend = extfunc;
+   
+    public static TupExtend F(Func<TupleBase, object> extfunc) => new TupExtend { Extend = extfunc };
   }
 
   public class TupAggregate : TupleBase {
     public Func<object, object, object> Aggregate { get; set; }
-    public TupAggregate(Func<object, object, object> aggfunc) => Aggregate = aggfunc;
+    
+    public static TupAggregate F(Func<object, object, object> aggfunc) => new TupAggregate { Aggregate = aggfunc };
   }
 
   public class TupWhile : TupleBase {
     public Func<RelationNode, RelationNode> While { get; set; }
-    public TupWhile(Func<RelationNode, RelationNode> whilefunc) => While = whilefunc;
+    
+    public static TupWhile F(Func<RelationNode, RelationNode> whilefunc) => new TupWhile { While = whilefunc };
   }
 
   /// <summary>
@@ -94,8 +101,8 @@ namespace AndlEra {
     public RelationNode Unwrap(string nodeheading) {
       return new UngroupNode(this, UngroupingOp.Unwrap, nodeheading);
     }
-    public RelationNode Select(string nodeheading, TupSelect tupsel) {
-      return new SelectNode(this, nodeheading, tupsel);
+    public RelationNode Restrict(string nodeheading, TupRestrict tupsel) {
+      return new RestrictNode(this, nodeheading, tupsel);
     }
     public RelationNode Extend(string nodeheading, TupExtend tupext) {
       return new ExtendNode(this, nodeheading, tupext);
@@ -246,7 +253,7 @@ namespace AndlEra {
         : GetWrapEnumerator();
     }
 
-    IEnumerator<TupMin> GetGroupEnumerator() {
+    IEnumerator<TupleBase> GetGroupEnumerator() {
       var index = RelOps.BuildIndex(_source, _kmap);
       foreach (var kvp in index) {
         var rva = kvp.Value.Select(t => new CommonRow(_tmap.Select(x => t[x]))).ToArray();
@@ -321,31 +328,31 @@ namespace AndlEra {
 
   ///===========================================================================
   /// <summary>
-  /// Select function node
-  /// Heading must be subset of other
+  /// Restrict function node
+  /// Heading must be same as other
   /// Function has arguments matching heading, return bool
   /// </summary>
-  class SelectNode : RelationNode {
+  class RestrictNode : RelationNode {
     RelationNode _source;
-    Func<TupleBase, bool> _selfunc;
-    CommonHeading _selheading;
-    int[] _selmap;
+    Func<TupleBase, bool> _restfunc;
+    CommonHeading _restheading;
+    int[] _restmap;
 
-    public SelectNode(RelationNode source, string nodeheading, TupSelect tupsel) {
+    public RestrictNode(RelationNode source, string nodeheading, TupRestrict tupsel) {
       _source = source;
-      _selheading = _source.Heading.Adapt(nodeheading);
-      _selfunc = tupsel.Select;
+      _restheading = _source.Heading.Adapt(nodeheading);
+      _restfunc = tupsel.Restrict;
 
       Heading = _source.Heading;
-      _selmap = _selheading.CreateMap(Heading);
-      if (_selmap.Any(x => x < 0)) throw Error.Fatal("invalid map, must all match");
+      _restmap = _restheading.CreateMap(Heading);
+      if (_restmap.Any(x => x < 0)) throw Error.Fatal("invalid heading, must all match");
     }
 
     public override IEnumerator<TupleBase> GetEnumerator() {
       foreach (var tuple in _source) {
-        var newtuple = RelOps.CreateByMap<TupMin>(tuple, _selmap);
+        var newtuple = RelOps.CreateByMap<TupMin>(tuple, _restmap);
         Logger.Assert(tuple.Degree == Heading.Degree);
-        if (_selfunc(newtuple)) yield return tuple;
+        if (_restfunc(newtuple)) yield return tuple;
       }
     }
   }
@@ -422,7 +429,7 @@ namespace AndlEra {
     }
 
     public override IEnumerator<TupleBase> GetEnumerator() {
-      var dict = new Dictionary<TupMin, object>();
+      var dict = new Dictionary<TupleBase, object>();
 
       foreach (var tuple in _source) {
         var tupkey = RelOps.CreateByMap<TupMin>(tuple, _jmap1);

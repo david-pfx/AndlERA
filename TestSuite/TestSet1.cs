@@ -37,7 +37,7 @@ namespace TestSuite {
       Assert.AreEqual(4, siren.Degree);
       Assert.AreEqual(5, siren.Cardinality);
 
-      var siext = si.Extend("STATUS,PlusA", new TupExtend(t => (string)t[0] + "A"));
+      var siext = si.Extend("STATUS,PlusA", TupExtend.F(t => (string)t[0] + "A"));
       Assert.AreEqual("S#,SNAME,STATUS,CITY,PlusA", siext.Heading.ToNames().Join(","));
       Assert.AreEqual(5, siext.Degree);
       Assert.AreEqual(5, siext.Cardinality);
@@ -45,7 +45,7 @@ namespace TestSuite {
       Assert.AreEqual(1, siext.Count(t => t.ToString().Contains("S3,Blake,30,Paris,30A")));
       Assert.AreEqual("S3,Blake,30,Paris,30A", siext.Where(t => t.ToString().Contains("S3")).Join(";"));
 
-      var sirep = si.Extend("STATUS,STATUS", new TupExtend(t => (string)t[0] + "B"));
+      var sirep = si.Extend("STATUS,STATUS", TupExtend.F(t => (string)t[0] + "B"));
       Assert.AreEqual("S#,SNAME,STATUS,CITY", sirep.Heading.ToNames().Join(","));
       Assert.AreEqual(4, sirep.Degree);
       Assert.AreEqual(5, sirep.Cardinality);
@@ -53,7 +53,7 @@ namespace TestSuite {
       Assert.AreEqual("S3,Blake,30B,Paris", sirep.Where(t => t.ToString().Contains("S3")).Join(";"));
       Assert.AreEqual(1, sirep.Count(t => t.ToString().Contains("S3,Blake,30B,Paris")));
 
-      var sisel = si.Select("CITY", new TupSelect(t => (string)t[0] == "Paris"));
+      var sisel = si.Restrict("CITY", TupRestrict.F(t => (string)t[0] == "Paris"));
       Assert.AreEqual("S#,SNAME,STATUS,CITY", sisel.Heading.ToNames().Join(","));
       Assert.AreEqual(4, sisel.Degree);
       Assert.AreEqual(2, sisel.Cardinality);
@@ -168,8 +168,8 @@ namespace TestSuite {
       var MMQ = RelationNode.Import(SourceKind.Csv, Testdata, "MMQ");
       var MM = MMQ.Remove("QTY");
 
-      // note: need to preserve order of heading, easy to get it wrong
-      var wtc = MM.While(new TupWhile(t => t
+      // BUG: need to preserve order of heading, easy to get it wrong 
+      var wtc = MM.While(TupWhile.F(t => t
         .Rename("MINOR_P#,zzz")
         .Compose(MM
           .Rename("MAJOR_P#,zzz"))));
@@ -186,7 +186,7 @@ namespace TestSuite {
 
       var pagg = P
         .Project("Color,Weight")
-        .Aggregate("Weight,TotWeight", new TupAggregate((v, a) => (decimal)v + (decimal)a));
+        .Aggregate("Weight,TotWeight", TupAggregate.F((v, a) => (decimal)v + (decimal)a));
       Assert.AreEqual(2, pagg.Degree);
       Assert.AreEqual("Color,TotWeight", pagg.Heading.ToNames().Join(","));
       Assert.AreEqual(3, pagg.Cardinality);

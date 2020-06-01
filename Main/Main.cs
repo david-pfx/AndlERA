@@ -29,41 +29,24 @@ namespace AndlEra {
       var spi = RelationNode.Import(SourceKind.Csv, ".", "SP", "SNo:text,PNo:text,Qty:integer");
       var mmqi = RelationNode.Import(SourceKind.Csv, ".", "MMQ", "MajorPNo:text,MinorPNo:text,Qty:number");
 
+      Show("Restrict", si
+        .Restrict("City", TupRestrict.F(t => (string)t[0] == "Paris"))
+        .Format());
+
+      Show("Project", si
+        .Project("City")
+        .Format());
+
+      Show("Rename", si
+        .Rename("City,SCITY")
+        .Format());
+
       Show("Extend", 
-        pi.Extend("Weight,WeightKg", new TupExtend(t => (decimal)t[0] * 0.454m))
+        pi.Extend("Weight,WeightKg", TupExtend.F(t => (decimal)t[0] * 0.454m))
           .Format());
 
       Show("Replace",
-        pi.Extend("Weight,Weight", new TupExtend(t => (decimal)t[0] * 0.454m))
-        .Format());
-
-      var mmexp = mmqi
-        .Rename("Qty,ExpQty")
-        .While(new TupWhile(tw => tw
-          .Rename("MinorPNo,zmatch")
-          .Compose(mmqi.Rename("MajorPNo,zmatch"))
-          .Extend("Qty,ExpQty,ExpQty", new TupExtend(t => (decimal)t[0] * (decimal)t[1]))
-          .Remove("Qty")
-      ));
-      Show("While", mmexp.Format());
-      Show("Aggregated", mmexp
-        .Aggregate("ExpQty,TotQty", new TupAggregate((v, a) => (decimal)v + (decimal)a))
-        .Format());
-
-      var pgrp = spi
-        .Group("PNo,Qty,PQ");
-        //.Wrap("PNo,Qty,PQ");
-      Show("Group", pgrp 
-        .Format());
-
-      Show("Ungroup", pgrp
-        .Ungroup("PQ")
-        //.Unwrap("PQ")
-        .Format());
-
-      Show("Agg", pi
-        .Project("Color,Weight")
-        .Aggregate("Weight,TotWeight", new TupAggregate((v, a) => (decimal)v + (decimal)a))
+        pi.Extend("Weight,Weight", TupExtend.F(t => (decimal)t[0] * 0.454m))
         .Format());
 
       Show("Join", si
@@ -73,23 +56,39 @@ namespace AndlEra {
         .Antijoin(spi)
         .Format());
 
-      Show("Rename", si
-        .Rename("City,SCITY")
-        .Format());
-
       Show("Union", si
         //.Union(sn8);
         //.Minus(sn8);
         .Intersect(s8i)
         .Format());
 
-      Show("Select", si
-        .Select("City", new TupSelect(t => (string)t[0] == "Paris"))
+      var pgrp = spi
+        .Group("PNo,Qty,PQ");
+      Show("Group", pgrp 
         .Format());
 
-      Show("Project", si
-        .Project("City")
+      Show("Ungroup", pgrp
+        .Ungroup("PQ")
         .Format());
+
+      Show("Agg", pi
+        .Project("Color,Weight")
+        .Aggregate("Weight,TotWeight", TupAggregate.F((v, a) => (decimal)v + (decimal)a))
+        .Format());
+
+      var mmexp = mmqi
+        .Rename("Qty,ExpQty")
+        .While(TupWhile.F(tw => tw
+          .Rename("MinorPNo,zmatch")
+          .Compose(mmqi.Rename("MajorPNo,zmatch"))
+          .Extend("Qty,ExpQty,ExpQty", TupExtend.F(t => (decimal)t[0] * (decimal)t[1]))
+          .Remove("Qty")));
+      Show("While", mmexp.Format());
+      Show("Aggregated", mmexp
+        .Aggregate("ExpQty,TotQty", TupAggregate.F((v, a) => (decimal)v + (decimal)a))
+        .Format());
+
+
     }
 
     // basic samples, operators return relations
@@ -99,7 +98,7 @@ namespace AndlEra {
 
       var v1 = new RelVar<TupS>(Supplier.S);
       var v2 = new RelVar<Tup1>(v1.Value
-        .Select(t => t.Status == 30)
+        .Restrict(t => t.Status == 30)
         .Rename<TupSX>()    // "SNo", "SName", "Status", "Supplier City"
         .Project<Tup1>());    // "Supplier City"
       Show("v2", v2.Value.Format());
@@ -110,7 +109,7 @@ namespace AndlEra {
 
       Show("Join", Supplier.P
         .Rename<TupPcolour>()                 //  "PNo", "PName", "Colour", "Weight", "City"
-        .Select(t => t.Colour == "Red")
+        .Restrict(t => t.Colour == "Red")
         .Project<TupPPno>()                   // "PNo", "PName"
         .Join<TupSP, TupPjoin>(Supplier.SP)   // "PNo", "PName", "SNo", "Qty"
         .Format());
@@ -127,7 +126,7 @@ namespace AndlEra {
         .Transform<TupMMQA>(tt => TupMMQA.Create(tt.Major, tt.Minor, 0, tt.AggQty * tt.Qty)));
       Show("While", exp.Format());
       Show("P1 -> P5", exp
-        .Select(t => t.Major == "P1" && t.Minor == "P5")
+        .Restrict(t => t.Major == "P1" && t.Minor == "P5")
         .Aggregate<TupMMT, int>((t, a) => a + t.AggQty)
         .Format());
 
