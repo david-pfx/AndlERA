@@ -27,9 +27,19 @@ namespace AndlEra {
 
     public static implicit operator RelationBase<Ttup>(RelVar<Ttup> v) => v.Value;
 
+    public override bool Equals(object obj) {
+      var other = obj as RelVar;
+      if (other == null) return false;
+      return other.Heading.IsEqual(Heading) && other.Value.Equals(Value);
+    }
+
+    public override int GetHashCode() => Value.GetHashCode();
     public override string ToString() => Value.ToString();
 
-    public string Format() => Value.Format();
+    // format using relvar heading, not inner class
+    public string Format() {
+      return Value.Select(t => t.Format(Heading)).Join("\n");
+    }
 
     public RelVar() {
       Value = Rel.Create(new Ttup[0]);
@@ -41,12 +51,12 @@ namespace AndlEra {
       Heading = RelationBase<Ttup>.Heading;
     }
 
-    public RelVar(RelationNode value) {
+    public RelVar(RelNode value) {
       Heading = RelationBase<Ttup>.Heading;
       Init(value);
     }
 
-    protected void Init(RelationNode value) {
+    protected void Init(RelNode value) {
       var equal = value.Heading.IsEqual(Heading);
       var compat = equal || value.Heading.IsCompatible(Heading);
       if (!compat) throw Error.Fatal($"headings are not compatible: <{value.Heading}> and <{Heading}>");
@@ -82,9 +92,9 @@ namespace AndlEra {
   /// <summary>
   /// Untyped relvar
   /// </summary>
-  public class RelVar : RelVar<TupMin> {
+  public class RelVar : RelVar<Tup> {
     public RelVar() {
-      Value = Rel.Create(new TupMin[0]);
+      Value = Rel.Create(new Tup[0]);
       Heading = CommonHeading.Empty;
     }
 
@@ -93,9 +103,35 @@ namespace AndlEra {
     //  Heading = RelationBase<Ttup>.Heading;
     //}
 
-    public RelVar(RelationNode value) {
+    public RelVar(RelNode value) {
       Heading = value.Heading;
       Init(value);
+    }
+
+    public void Insert(RelNode node) {
+
+      Value = Rel.Create(RelOps.Union<Tup>(Value, node.Cast<Tup>()));
+    }
+
+    // update tuples that satisfy predicate
+    public void Update(string heading, Func<Tup, bool> selfunc, object newvalue) {
+
+      // map for selection tuple
+      var head1 = CommonHeading.Create(heading);
+      var map1 = head1.CreateMap(Heading);
+      // map for replace tuple
+      var head2 = Heading.Remove(head1.Fields.Last()).Append(CommonField.Empty);
+      var map2 =  head2.CreateMap(Heading);
+      Value = Rel.Create(Value.Select(t => selfunc(RelOps.CreateByMap<Tup>(t, map1)) 
+        ? RelOps.CreateByMap<Tup>(t, map2, newvalue) : t));
+    }
+
+    // remove tuples that satisfy predicate
+    public void Delete(string heading, Func<Tup, bool> selfunc) {
+
+      var head = CommonHeading.Create(heading);
+      var map = head.CreateMap(Heading);
+      Value = Rel.Create(Value.Where(t => !selfunc(RelOps.CreateByMap<Tup>(t, map))));
     }
 
   }

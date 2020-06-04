@@ -12,7 +12,7 @@ namespace AndlEra {
   /// <summary>
   /// Base type for tuples
   /// </summary>
-  public abstract class TupleBase {
+  public abstract class TupleBase : IEnumerable<object> {
     // Ordered set of values, accessible to create in relation
     protected internal object[] Values { get; internal set; }
     // Calculated hash code, never changes, accessible to create in relation
@@ -20,6 +20,9 @@ namespace AndlEra {
 
     public object this[int i] { get { return Values[i]; } }
     public int Degree { get { return Values.Length; } }
+
+    IEnumerator<object> IEnumerable<object>.GetEnumerator() => ((IEnumerable<object>)Values).GetEnumerator();
+    public IEnumerator GetEnumerator() => Values.GetEnumerator();
 
     // override used by hash collections
     public override int GetHashCode() {
@@ -35,7 +38,7 @@ namespace AndlEra {
       return true;
     }
     public override string ToString() {
-      return Values.Join(",");
+      return Values.Join(",");  // TODO:deal with TVA and RVA
     }
 
     public string Format(CommonHeading heading) {
@@ -48,7 +51,7 @@ namespace AndlEra {
       Values = new object[0];
     }
 
-    public static T Create<T>(object[] values)
+    public static T Create<T>(params object[] values)
     where T : TupleBase, new() {
       return new T() {
         Values = values,
@@ -65,18 +68,22 @@ namespace AndlEra {
     }
 
     // reflection hack to get heading value from tuple
+    // TODO: is this the best way to handle heading not found?
     internal static CommonHeading GetHeading(Type ttype) {
       var prop = ttype.GetField("Heading");
+      if (prop == null) return CommonHeading.Empty;
       var heading = (string)prop.GetValue(null);
-      if (heading == null) throw Error.NullArg("Heading must not be null");
+      if (heading == null) return CommonHeading.Empty;
       return CommonHeading.Create(heading);   // TODO: add types
     }
 
     //--- impl
+    
+    // hashcode is constant, independent of value order
     internal static int CalcHashCode(object[] values) {
-      int code = 1;
+      int code = 261;
       foreach (object value in values)
-        code = (code << 1) ^ value.GetHashCode();
+        code = code ^ value.GetHashCode();
       return code;
     }
   }

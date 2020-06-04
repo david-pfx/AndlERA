@@ -36,10 +36,12 @@ namespace AndlEra {
     public IEnumerator<Ttup> GetEnumerator() => ((IEnumerable<Ttup>)_body).GetEnumerator();
 
     // --- impl
+
+    // hashcode is constant, indepedent of tuple order
     internal static int CalcHashCode(HashSet<Ttup> body) {
-      int code = 1;
+      int code = 261;
       foreach (Ttup b in body)
-        code = (code << 1) ^ b.GetHashCode();
+        code = code ^ b.GetHashCode();
       return code;
     }
 
@@ -47,10 +49,12 @@ namespace AndlEra {
       return this.Select(t => t.Format(Heading)).Join("\n");
     }
 
+    // override equals based on type and content 
+    // same type means same heading
     public override bool Equals(object obj) {
-      if (!(obj is RelationBase<Ttup>)) return false;
-      var other = ((RelationBase<Ttup>)obj);
-      if (other._body.Count != _body.Count) return false;
+      var other = obj as RelationBase<Ttup>;
+      if (obj == null) return false;
+      if (!(other._body.Count == _body.Count && other.GetHashCode() == GetHashCode())) return false;
       foreach (var b in _body)
         if (!other._body.Contains(b)) return false;
       return true;
@@ -221,10 +225,10 @@ namespace AndlEra {
   /// Untyped relation base
   /// Probably buggy: trouble with initialising heading
   /// </summary>
-  public class RelationBase : RelationBase<TupMin> {
+  public class RelationBase : RelationBase<Tup> {
     public RelationBase() {
       Heading = CommonHeading.Empty;
-      _body = new HashSet<TupMin>();
+      _body = new HashSet<Tup>();
     }
 
     //public RelationBase(RelationNode node) {

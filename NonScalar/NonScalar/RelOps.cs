@@ -176,25 +176,31 @@ namespace AndlEra {
     // create a tuple from a tuple and a map
     static internal T CreateByMap<T>(TupleBase tuple, IList<int> map)
     where T : TupleBase, new() {
+
+      Logger.Assert(map.Count(x => x < 0) == 0);
       return TupleBase.Create<T>(Enumerable
         .Range(0, map.Count)
         .Select(x => tuple.Values[map[x]])
         .ToArray());
     }
 
-    // create a tuple from a tuple and a map and a value
+    // create a tuple from a tuple and a map and a value to replace the -1
     static internal T CreateByMap<T>(TupleBase tuple, IList<int> map, object newvalue)
     where T : TupleBase, new() {
+
+      Logger.Assert(map.Count(x => x < 0) == 1);
       return TupleBase.Create<T>(Enumerable
         .Range(0, map.Count)
         .Select(x => map[x] == -1 ? newvalue : tuple.Values[map[x]])
         .ToArray());
     }
 
-    // create a tuple from two tuples and two map2
+    // create a tuple from two tuples and two maps, second to fill in gaps
     static internal T CreateByMap<T>(TupleBase t1, IList<int> map1, TupleBase t2, IList<int> map2)
     where T : TupleBase, new() {
 
+      Logger.Assert(map1.Count == map2.Count);
+      Logger.Assert(map1.Count(x => x < 0) >= 1);
       return CreateByMap<T>(t1.Values, map1, t2.Values, map2);
     }
 
@@ -220,7 +226,7 @@ namespace AndlEra {
     }
 
     static internal HashSet<TupleBase> BuildSet(IEnumerable<TupleBase> values, int[] map) {
-      return new HashSet<TupleBase>(values.Select(v => RelOps.CreateByMap<TupMin>(v, map)));
+      return new HashSet<TupleBase>(values.Select(v => RelOps.CreateByMap<Tup>(v, map)));
     }
   }
 }

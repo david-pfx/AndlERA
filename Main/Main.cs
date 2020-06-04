@@ -10,8 +10,15 @@ namespace AndlEra {
   class Program {
     static void Main(string[] args) {
       WriteLine("Andl Era");
-      SampleWithTypes();
-      SampleWithHeading();
+      WriteLine(SampleWithHeading() && SampleWithTypes());
+    }
+
+    static void Show(string msg, RelNode node) {
+      Show(msg, node.Format());
+    }
+
+    static void Show(string msg, RelVar rvar) {
+      Show(msg, rvar.Format());
     }
 
     static void Show(string msg, object value) {
@@ -21,78 +28,96 @@ namespace AndlEra {
     }
 
     // basic samples, operators return relations
-    static void SampleWithHeading() {
+    static bool SampleWithHeading() {
 
-      var si = RelationNode.Import(SourceKind.Csv, ".", "S", "SNo:text,SName:text,Status:integer,City:text");
-      var s8i = RelationNode.Import(SourceKind.Csv, ".", "S8", "SNo:text,SName:text,Status:integer,City:text");
-      var pi = RelationNode.Import(SourceKind.Csv, ".", "P", "PNo:text,PName:text,Color:text,Weight:number,City:text");
-      var spi = RelationNode.Import(SourceKind.Csv, ".", "SP", "SNo:text,PNo:text,Qty:integer");
-      var mmqi = RelationNode.Import(SourceKind.Csv, ".", "MMQ", "MajorPNo:text,MinorPNo:text,Qty:number");
+      var si = RelNode.Import(SourceKind.Csv, ".", "S", "SNo:text,SName:text,Status:integer,City:text");
+      var s8i = RelNode.Import(SourceKind.Csv, ".", "S8", "SNo:text,SName:text,Status:integer,City:text");
+      var pi = RelNode.Import(SourceKind.Csv, ".", "P", "PNo:text,PName:text,Color:text,Weight:number,City:text");
+      var spi = RelNode.Import(SourceKind.Csv, ".", "SP", "SNo:text,PNo:text,Qty:integer");
+      var mmqi = RelNode.Import(SourceKind.Csv, ".", "MMQ", "MajorPNo:text,MinorPNo:text,Qty:number");
+
+      var v1 = new RelVar(si);
+      Show("RelVar", v1);
+      v1.Insert(RelNode.Data("SNo:text,SName:text,Status:integer,City:text", 
+        Tup.Data("S6", "White", 25, "Paris"),
+        Tup.Data("S7", "Black", 15, "London")));
+
+      Show("Insert P6 P7", v1);
+
+      v1.Update("Status,City", v => (int)v[0] >= 25, "Sydney");
+      Show("Move to Sydney", v1);
+
+      v1.Delete("City", v => (string)v[0] == "Sydney");
+      Show("Delete Sydneysiders", v1);
+      //return false;
 
       Show("Restrict", si
-        .Restrict("City", TupRestrict.F(t => (string)t[0] == "Paris"))
-        .Format());
+        .Restrict("City", TupRestrict.F(v => (string)v[0] == "Paris"))
+        );
 
       Show("Project", si
         .Project("City")
-        .Format());
+        );
 
       Show("Rename", si
         .Rename("City,SCITY")
-        .Format());
+        );
 
       Show("Extend", 
-        pi.Extend("Weight,WeightKg", TupExtend.F(t => (decimal)t[0] * 0.454m))
-          .Format());
+        pi.Extend("Weight,WeightKg", TupExtend.F(v => (decimal)v[0] * 0.454m))
+          );
 
       Show("Replace",
-        pi.Extend("Weight,Weight", TupExtend.F(t => (decimal)t[0] * 0.454m))
-        .Format());
+        pi.Extend("Weight,Weight", TupExtend.F(v => (decimal)v[0] * 0.454m))
+        );
 
       Show("Join", si
         //Join(spi);
         //Compose(spi);
         //Semijoin(spi);
         .Antijoin(spi)
-        .Format());
+        );
 
       Show("Union", si
         //.Union(sn8);
         //.Minus(sn8);
         .Intersect(s8i)
-        .Format());
+        );
 
       var pgrp = spi
-        .Group("PNo,Qty,PQ");
-      Show("Group", pgrp 
-        .Format());
+        //.Group("PNo,Qty,PQ");
+        .Wrap("PNo,Qty,PQ");
+      Show("Group", pgrp);
+      WriteLine(pgrp);
+      return false;
 
       Show("Ungroup", pgrp
-        .Ungroup("PQ")
-        .Format());
+        //.Ungroup("PQ"));
+        .Unwrap("PQ"));
+      return false;
 
       Show("Agg", pi
         .Project("Color,Weight")
         .Aggregate("Weight,TotWeight", TupAggregate.F((v, a) => (decimal)v + (decimal)a))
-        .Format());
+        );
 
       var mmexp = mmqi
         .Rename("Qty,ExpQty")
         .While(TupWhile.F(tw => tw
           .Rename("MinorPNo,zmatch")
           .Compose(mmqi.Rename("MajorPNo,zmatch"))
-          .Extend("Qty,ExpQty,ExpQty", TupExtend.F(t => (decimal)t[0] * (decimal)t[1]))
+          .Extend("Qty,ExpQty,ExpQty", TupExtend.F(v => (decimal)v[0] * (decimal)v[1]))
           .Remove("Qty")));
-      Show("While", mmexp.Format());
+      Show("While", mmexp);
       Show("Aggregated", mmexp
         .Aggregate("ExpQty,TotQty", TupAggregate.F((v, a) => (decimal)v + (decimal)a))
-        .Format());
-
+        );
+      return true;
 
     }
 
     // basic samples, operators return relations
-    static void SampleWithTypes() {
+    static bool SampleWithTypes() {
       Show("Seq", RelSequence.Create(5));
       Show("SP", Supplier.SP);
 
@@ -101,22 +126,22 @@ namespace AndlEra {
         .Restrict(t => t.Status == 30)
         .Rename<TupSX>()    // "SNo", "SName", "Status", "Supplier City"
         .Project<Tup1>());    // "Supplier City"
-      Show("v2", v2.Value.Format());
+      Show("v2", v2.Value);
 
       Show("Extend", Supplier.S
         .Extend<TupSX>(t => "XXX")    // "SNo", "SName", "Status", "Supplier City"
-        .Format());
+        );
 
       Show("Join", Supplier.P
         .Rename<TupPcolour>()                 //  "PNo", "PName", "Colour", "Weight", "City"
         .Restrict(t => t.Colour == "Red")
         .Project<TupPPno>()                   // "PNo", "PName"
         .Join<TupSP, TupPjoin>(Supplier.SP)   // "PNo", "PName", "SNo", "Qty"
-        .Format());
+        );
 
       Show("Aggregation", Supplier.SP
         .Aggregate<TupAgg,int>((t,a) => a + t.Qty)  //  "PNo", "TotQty"
-        .Format());
+        );
 
       var seed = MMQData.MMQ.Extend<TupMMQA>(t => t.Qty);    // "Major", "Minor", "Qty", "AggQty"
       var zmq = MMQData.MMQ.Rename<TupzMQ>();    // "zmatch", "Minor", "Qty"
@@ -124,11 +149,10 @@ namespace AndlEra {
         .Rename<TupMzA>()             // "Major", "zmatch", "ExpQty"
         .Join<TupzMQ, TupMMQA>(zmq)
         .Transform<TupMMQA>(tt => TupMMQA.Create(tt.Major, tt.Minor, 0, tt.AggQty * tt.Qty)));
-      Show("While", exp.Format());
+      Show("While", exp);
       Show("P1 -> P5", exp
         .Restrict(t => t.Major == "P1" && t.Minor == "P5")
-        .Aggregate<TupMMT, int>((t, a) => a + t.AggQty)
-        .Format());
+        .Aggregate<TupMMT, int>((t, a) => a + t.AggQty));
 
       v1.Insert(
         RelS.Create<RelS>(
@@ -137,13 +161,14 @@ namespace AndlEra {
             TupS.Create( "S7", "Black", 15, "London" ),
           })
         );
-      Show("Insert P6 P7", v1.Format());
+      Show("Insert P6 P7", v1);
 
       v1.Update(t => t.City == "Paris", t => TupS.Create(t.SNo, t.SName, t.Status, "Sydney"));
-      Show("Move to Sydney", v1.Format());
+      Show("Move to Sydney", v1);
 
       v1.Delete(t => t.City == "Sydney");
-      Show("Delete Sydneysiders", v1.Format());
+      Show("Delete Sydneysiders", v1);
+      return true;
     }
   }
 

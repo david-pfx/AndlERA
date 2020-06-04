@@ -11,26 +11,59 @@ namespace TestSuite {
     const string Testdata = @".\Data";
 
     [TestMethod]
+    public void Basic() {
+
+      var heading = "SNo:text,SName:text,Status:integer,City:text";
+      var t1 = Tup.Data("S6", "White", 25, "Sydney");
+      Assert.AreEqual(4, t1.Degree);
+      Assert.IsTrue(t1.ToString().Contains("White"));
+      Assert.AreEqual(1, t1.Count(v => v.ToString().Contains("White")));
+      Assert.AreEqual(2, t1.Count(v => v.ToString().Contains("S")));
+      Assert.AreEqual(t1, t1);
+
+      var t1a = Tup.Data("S6", "White", 25, "Sydney");
+      var t2 = Tup.Data("S7", "Black", 15, "London");
+      Assert.AreEqual(t1, t1a);
+      Assert.AreNotEqual(t1, t2);
+
+      var sd = RelNode.Data(heading,
+        Tup.Data("S6", "White", 25, "Sydney"),
+        Tup.Data("S7", "Black", 15, "London"));
+      Assert.AreEqual(4, sd.Degree);
+      Assert.AreEqual(2, sd.Cardinality);
+      Assert.AreEqual(1, sd.Count(t => t.ToString().Contains("Black")));
+      Assert.AreEqual(2, sd.Count(t => t.ToString().Contains("S")));
+      Assert.AreEqual(sd, sd);
+
+      var sda = RelNode.Data(heading, t2, t1);
+      Assert.AreEqual(sd.ToRelVar(), sda.ToRelVar());
+      //Assert.AreEqual(sd.ToRelVar(), sda.ToRelVar());
+
+    }
+
+    [TestMethod]
     public void Import() {
-      var si = RelationNode.Import(SourceKind.Csv, Testdata, "S");
+      var si = RelNode.Import(SourceKind.Csv, Testdata, "S");
       Assert.AreEqual("S#,SNAME,STATUS,CITY", si.Heading.ToNames().Join(","));
 
-      var s8i = RelationNode.Import(SourceKind.Csv, Testdata, "S8", "SNo:text,SName:text,Status:integer,City:text");
+      var s8i = RelNode.Import(SourceKind.Csv, Testdata, "S8", "SNo:text,SName:text,Status:integer,City:text");
       Assert.AreEqual("SNo,SName,Status,City", s8i.Heading.ToNames().Join(","));
 
-      var pi = RelationNode.Import(SourceKind.Csv, Testdata, "P", "PNo:text,PName:text,Color:text,Weight:number,City:text");
+      var pi = RelNode.Import(SourceKind.Csv, Testdata, "P", "PNo:text,PName:text,Color:text,Weight:number,City:text");
       Assert.AreEqual(2, pi.Count(t => t.ToString().Contains("Blue")));
 
-      var spi = RelationNode.Import(SourceKind.Csv, Testdata, "SP", "SNo:text,PNo:text,Qty:integer");
+      var spi = RelNode.Import(SourceKind.Csv, Testdata, "SP", "SNo:text,PNo:text,Qty:integer");
+      Assert.AreEqual(3, spi.Degree);
       Assert.AreEqual(12, spi.Cardinality);
 
-      var mmqi = RelationNode.Import(SourceKind.Csv, Testdata, "MMQ", "MajorPNo:text,MinorPno:text,Qty:number");
+      var mmqi = RelNode.Import(SourceKind.Csv, Testdata, "MMQ", "MajorPNo:text,MinorPno:text,Qty:number");
       Assert.AreEqual(3, mmqi.Degree);
+
     }
 
     [TestMethod]
     public void Monadic() {
-      var si = RelationNode.Import(SourceKind.Csv, Testdata, "S");
+      var si = RelNode.Import(SourceKind.Csv, Testdata, "S");
 
       var siren = si.Rename("CITY,XXXCITY");
       Assert.AreEqual("S#,SNAME,STATUS,XXXCITY", siren.Heading.ToNames().Join(","));
@@ -82,9 +115,9 @@ namespace TestSuite {
 
     [TestMethod]
     public void Join() {
-      var S = RelationNode.Import(SourceKind.Csv, Testdata, "S");
-      var P = RelationNode.Import(SourceKind.Csv, Testdata, "P");
-      var SP = RelationNode.Import(SourceKind.Csv, Testdata, "SP");
+      var S = RelNode.Import(SourceKind.Csv, Testdata, "S");
+      var P = RelNode.Import(SourceKind.Csv, Testdata, "P");
+      var SP = RelNode.Import(SourceKind.Csv, Testdata, "SP");
 
       var jfull = P.Join(SP);
       Assert.AreEqual(7, jfull.Degree);
@@ -133,8 +166,8 @@ namespace TestSuite {
 
     [TestMethod]
     public void Set() {
-      var S = RelationNode.Import(SourceKind.Csv, Testdata, "S");
-      var S8 = RelationNode.Import(SourceKind.Csv, Testdata, "S8");
+      var S = RelNode.Import(SourceKind.Csv, Testdata, "S");
+      var S8 = RelNode.Import(SourceKind.Csv, Testdata, "S8");
 
       var juni = S.Union(S8);
       Assert.AreEqual(4, juni.Degree);
@@ -163,9 +196,23 @@ namespace TestSuite {
       Assert.AreEqual(0, jint.Count(t => t.ToString().Contains("Athens")));
       Assert.AreEqual(0, jint.Count(t => t.ToString().Contains("Sydney")));
     }
+
+    [TestMethod]
+    public void Aggregate() {
+      var P = RelNode.Import(SourceKind.Csv, Testdata, "P", "PNo:text,PName:text,Color:text,Weight:number,City:text");
+
+      var pagg = P
+        .Project("Color,Weight")
+        .Aggregate("Weight,TotWeight", TupAggregate.F((v, a) => (decimal)v + (decimal)a));
+      Assert.AreEqual(2, pagg.Degree);
+      Assert.AreEqual("Color,TotWeight", pagg.Heading.ToNames().Join(","));
+      Assert.AreEqual(3, pagg.Cardinality);
+      Assert.AreEqual("Red,45.0;Green,17.0;Blue,29.0", pagg.Join(";"));
+    }
+
     [TestMethod]
     public void While() {
-      var MMQ = RelationNode.Import(SourceKind.Csv, Testdata, "MMQ");
+      var MMQ = RelNode.Import(SourceKind.Csv, Testdata, "MMQ");
       var MM = MMQ.Remove("QTY");
 
       // BUG: need to preserve order of heading, easy to get it wrong 
@@ -180,17 +227,41 @@ namespace TestSuite {
       Assert.AreEqual(1, wtc.Count(t => t.ToString().Contains("P2,P5")));
       Assert.AreEqual(3, wtc.Count(t => t.ToString().Contains("P6")));
     }
-    [TestMethod]
-    public void Aggregate() {
-      var P = RelationNode.Import(SourceKind.Csv, Testdata, "P", "PNo:text,PName:text,Color:text,Weight:number,City:text");
 
-      var pagg = P
-        .Project("Color,Weight")
-        .Aggregate("Weight,TotWeight", TupAggregate.F((v, a) => (decimal)v + (decimal)a));
-      Assert.AreEqual(2, pagg.Degree);
-      Assert.AreEqual("Color,TotWeight", pagg.Heading.ToNames().Join(","));
-      Assert.AreEqual(3, pagg.Cardinality);
-      Assert.AreEqual("Red,45.0;Green,17.0;Blue,29.0", pagg.Join(";"));
+    [TestMethod]
+    public void GroupWrap() {
+      var SP = RelNode.Import(SourceKind.Csv, Testdata, "SP");
+
+      var spgrp = SP.Group("P#,QTY,PQ");
+      Assert.AreEqual(2, spgrp.Degree);
+      Assert.AreEqual(4, spgrp.Cardinality);
+      Assert.AreEqual(2, spgrp.Count(t => t.ToString().Contains("P1")));
+      Assert.AreEqual(4, spgrp.Count(t => t.ToString().Contains("P2")));
+      Assert.AreEqual(1, spgrp.Count(t => t.ToString().Contains("P3")));
+      Assert.AreEqual(2, spgrp.Count(t => t.ToString().Contains("P4")));
+      Assert.AreEqual(2, spgrp.Count(t => t.ToString().Contains("P5")));
+      Assert.AreEqual(1, spgrp.Count(t => t.ToString().Contains("P6")));
+
+      var spugrp = spgrp.Ungroup("PQ");
+      Assert.AreEqual(3, spugrp.Degree);
+      Assert.AreEqual(12, spugrp.Cardinality);
+      Assert.AreEqual(SP.ToRelVar(), spugrp.ToRelVar());
+
+      var spwrp = SP.Wrap("P#,QTY,PQ");
+      Assert.AreEqual(2, spwrp.Degree);
+      Assert.AreEqual(12, spwrp.Cardinality);
+      Assert.AreEqual(2, spwrp.Count(t => t.ToString().Contains("P1")));
+      Assert.AreEqual(4, spwrp.Count(t => t.ToString().Contains("P2")));
+      Assert.AreEqual(1, spwrp.Count(t => t.ToString().Contains("P3")));
+      Assert.AreEqual(2, spwrp.Count(t => t.ToString().Contains("P4")));
+      Assert.AreEqual(2, spwrp.Count(t => t.ToString().Contains("P5")));
+      Assert.AreEqual(1, spwrp.Count(t => t.ToString().Contains("P6")));
+
+      var spuwrp = spwrp.Unwrap("PQ");
+      Assert.AreEqual(3, spuwrp.Degree);
+      Assert.AreEqual(12, spuwrp.Cardinality);
+      Assert.AreEqual(SP.ToRelVar(), spuwrp.ToRelVar());
     }
+
   }
 }

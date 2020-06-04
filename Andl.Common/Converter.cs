@@ -249,16 +249,12 @@ using System.Text;
     }
 
     public override string ToString() {
-      return Values.Join(",");
+      return CommonConverter.ValueToString(this);
     }
 
     public CommonRow(int length) {
       Values = new object[length];
     }
-
-    //public CommonRow(params object[] values) {
-    //  Values = values;
-    //}
 
     public CommonRow(IEnumerable<object> values) {
       Values = values.ToArray();
@@ -355,5 +351,18 @@ using System.Text;
       return null;
     }
 
+    public static string ValueToString(object value) {
+      if (value is object[]) 
+        return ((object[])value)
+          .Select(v => ValueToString(v))
+          .Join(",");
+      if (value is CommonRow[]) 
+        return "{" + ((CommonRow[])value)
+          .Select(v => ValueToString(v))
+          .Join(";") + "}";
+      if (value is CommonRow) 
+        return "{" + ValueToString(((CommonRow)value).Values) + "}";
+      return value.ToString();
+    }
   }
 }
