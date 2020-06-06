@@ -13,18 +13,23 @@ namespace AndlEra {
       WriteLine(SampleWithHeading() && SampleWithTypes());
     }
 
-    static void Show(string msg, RelNode node) {
-      Show(msg, node.Format());
+    static void Show(string msg, params RelNode[] node) {
+      Show(msg, node.Select(n => n.Format()));
     }
 
-    static void Show(string msg, RelVar rvar) {
-      Show(msg, rvar.Format());
+    static void Show(string msg, params RelVar[] rvar) {
+      Show(msg, rvar.Select(n => n.Format()));
     }
 
-    static void Show(string msg, object value) {
+    static void Show(string msg, params object[] value) {
+      Show(msg, value.Select(n => n.ToString()));
+    }
+    static void Show(string msg, IEnumerable<string> values) {
       WriteLine(msg);
-      WriteLine(value.ToString());
-      WriteLine("----------");
+      foreach (var value in values) {
+        WriteLine(value);
+        WriteLine("----------");
+      }
     }
 
     // basic samples, operators return relations
@@ -52,16 +57,13 @@ namespace AndlEra {
       //return false;
 
       Show("Restrict", si
-        .Restrict("City", TupRestrict.F(v => (string)v[0] == "Paris"))
-        );
+        .Restrict("City", TupRestrict.F(v => (string)v[0] == "Paris")));
 
       Show("Project", si
-        .Project("City")
-        );
+        .Project("City"));
 
       Show("Rename", si
-        .Rename("City,SCITY")
-        );
+        .Rename("SNo,S#","SName,NAME","City,SCITY"));
 
       Show("Extend", 
         pi.Extend("Weight,WeightKg", TupExtend.F(v => (decimal)v[0] * 0.454m))
@@ -71,30 +73,25 @@ namespace AndlEra {
         pi.Extend("Weight,Weight", TupExtend.F(v => (decimal)v[0] * 0.454m))
         );
 
-      Show("Join", si
-        //Join(spi);
-        //Compose(spi);
-        //Semijoin(spi);
-        .Antijoin(spi)
+      Show("Joins", 
+        si.Join(spi),
+        si.Compose(spi),
+        si.Semijoin(spi),
+        si.Antijoin(spi));
+
+      Show("Union", 
+        si.Union(s8i),
+        si.Minus(s8i),
+        si.Intersect(s8i)
         );
 
-      Show("Union", si
-        //.Union(sn8);
-        //.Minus(sn8);
-        .Intersect(s8i)
-        );
+      Show("Group",
+        spi.Group("PNo,Qty,PQ"),
+        spi.Group("PNo,Qty,PQ").Ungroup("PQ"));
 
-      var pgrp = spi
-        //.Group("PNo,Qty,PQ");
-        .Wrap("PNo,Qty,PQ");
-      Show("Group", pgrp);
-      WriteLine(pgrp);
-      return false;
-
-      Show("Ungroup", pgrp
-        //.Ungroup("PQ"));
-        .Unwrap("PQ"));
-      return false;
+      Show("Wrap", 
+        spi.Wrap("PNo,Qty,PQ"),
+        spi.Wrap("PNo,Qty,PQ").Unwrap("PQ"));
 
       Show("Agg", pi
         .Project("Color,Weight")
@@ -198,7 +195,7 @@ namespace AndlEra {
     public readonly static string Heading = "PNo,TotQty";
   }
 
-  public class RelMMQA : RelationBase<TupMMQA> { }
+  public class RelMMQA : RelValue<TupMMQA> { }
   public class TupMMQA : TupMMQ {
     new public readonly static string Heading = "Major,Minor,Qty,AggQty";
     public int AggQty { get { return (int)Values[3]; } }

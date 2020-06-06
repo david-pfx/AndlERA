@@ -70,7 +70,7 @@ namespace AndlEra {
 
     //--- ctor
 
-    // set up heading here in case relation is never instantiated
+    // set up heading here when relation not instantiated but used as class
     static RelationBase() {
       Heading = TupleBase.GetHeading(typeof(Ttup));
     }
@@ -98,144 +98,14 @@ namespace AndlEra {
       return Create<Trel>(new HashSet<Ttup>(tuples));
     }
 
-    ///-------------------------------------------------------------------------
-    /// Functions that return a scalar value
-    /// 
-    // return singleton tuple: error if none, random if more than one
-    public Ttup Single() {
-      return this.First();
+    protected void Init<TRel>(HashSet<Ttup> body) {
+      _body = new HashSet<Ttup>();
+      _hashcode = CalcHashCode(_body);
     }
 
-    public bool Contains(Ttup tuple) {
-      return this.Contains(tuple);
-    }
-
-    // this relation is a subset of other
-    public bool IsSubset(RelationBase<Ttup> other) {
-      return this.All(b => other.Contains(b));
-    }
-
-    // this relation is a superset of other
-    public bool IsSuperset(RelationBase<Ttup> other) {
-      return other.All(b => this.Contains(b));
-    }
-
-    // this relation has no tuples in common with other
-    public bool IsDisjoint(RelationBase<Ttup> other) {
-      return !this.Any(b => other.Contains(b));
-    }
-
-    ///-------------------------------------------------------------------------
-    /// functions that return a relation 
-    /// Note that functions return the new value, so thay can
-    /// be used as a fluent interface (left to right)
-    /// 
-
-    // generate a new relation with a selection of tuples
-    public RelationBase<Ttup> Restrict(Func<Ttup, bool> predicate) {
-      return Create<RelationBase<Ttup>>(this.Where(t => predicate(t)));
-    }
-
-    // generate a new relation with one attribute renamed
-    public RelationBase<T> Rename<T>()
-    where T : TupleBase, new() {
-
-      var newbody = RelOps.Rename<Ttup, T>(this);
-      return RelationBase<T>.Create<RelationBase<T>>(newbody);
-    }
-
-    // generate a new relation that is a projection
-    public RelationBase<T> Project<T>()
-    where T : TupleBase, new() {
-
-      var newbody = RelOps.Project<Ttup, T>(this);
-      return RelationBase<T>.Create<RelationBase<T>>(newbody);
-    }
-
-    public RelationBase<T> Extend<T>(Func<Ttup, object> func)
-    where T : TupleBase, new() {
-
-      var newbody = RelOps.Extend<Ttup, T>(this, func);
-      return RelationBase<T>.Create<RelationBase<T>>(newbody);
-    }
-
-    public RelationBase<T> Transform<T>(Func<Ttup, T> func)
-    where T : TupleBase, new() {
-
-      var newbody = RelOps.Transform<Ttup, T>(this, func);
-      return RelationBase<T>.Create<RelationBase<T>>(newbody);
-    }
-
-    public RelationBase<T> Aggregate<T,T1>(Func<Ttup, T1, T1> func)
-    where T : TupleBase, new()
-    where T1 : new() {
-
-      var newbody = RelOps.Aggregate<Ttup,T,T1>(this, func);
-      return RelationBase<T>.Create<RelationBase<T>>(newbody);
-    }
-
-    // generate a new relation that is a set union
-    public RelationBase<Ttup> Union(RelationBase<Ttup> other) {
-
-      var newbody = RelOps.Union<Ttup>(this, other);
-      return Create<RelationBase<Ttup>>(newbody);
-    }
-
-    // generate a new relation that is a set minus
-    public RelationBase<Ttup> Minus(RelationBase<Ttup> other) {
-
-      var newbody = RelOps.Minus<Ttup>(this, other);
-      return Create<RelationBase<Ttup>>(newbody);
-    }
-
-    // generate a new relation that is a set intersection
-    public RelationBase<Ttup> Intersect(RelationBase<Ttup> other) {
-
-      var newbody = RelOps.Intersect<Ttup>(this, other);
-      return Create<RelationBase<Ttup>>(newbody);
-    }
-
-    // generate a new relation that is a natural join
-    public RelationBase<T> Join<T1, T>(RelationBase<T1> other)
-    where T : TupleBase, new()
-    where T1 : TupleBase, new() {
-
-      var newbody = RelOps.Join<T, Ttup, T1>(this, other);
-      return RelationBase<T>.Create<RelationBase<T>>(newbody);
-    }
-
-    public RelationBase<T> AntiJoin<T1, T>(RelationBase<T1> other)
-    where T : TupleBase, new()
-    where T1 : TupleBase, new() {
-
-      var newbody = RelOps.AntiJoin<T, Ttup, T1>(this, other);
-      return RelationBase<T>.Create<RelationBase<T>>(newbody);
-    }
-
-    public RelationBase<Ttup> While<Trel>(Func<Trel, RelationBase<Ttup>> func) 
-    where Trel : RelationBase<Ttup>, new() {
-
-      var newbody = RelOps.While<Ttup,Trel>(this, func);
-      return RelationBase<Ttup>.Create<RelationBase<Ttup>>(newbody);
-    }
+    //protected RelationBase(HashSet<Ttup> body) {
+    //  Heading = TupleBase.GetHeading(typeof(Ttup));
+    //  _body = body;
+    //  _hashcode = CalcHashCode(_body);
   }
-
-  ///===========================================================================
-  /// <summary>
-  /// Untyped relation base
-  /// Probably buggy: trouble with initialising heading
-  /// </summary>
-  public class RelationBase : RelationBase<Tup> {
-    public RelationBase() {
-      Heading = CommonHeading.Empty;
-      _body = new HashSet<Tup>();
-    }
-
-    //public RelationBase(RelationNode node) {
-    //  Heading = node.Heading;
-    //  _body = node.ToHashSet<TupleBase>();
-    //}
-
-  }
-
 }

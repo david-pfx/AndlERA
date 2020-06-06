@@ -9,7 +9,7 @@ namespace AndlEra {
   /// <summary>
   /// 
   /// </summary>
-  public class RelPoint : RelationBase<TupPoint> { }
+  public class RelPoint : RelValue<TupPoint> { }
 
   public class TupPoint : TupleBase {
     public readonly static string Heading = "X,Y";
@@ -22,7 +22,7 @@ namespace AndlEra {
     }
   }
 
-  public class RelMMQ : RelationBase<TupMMQ> { }
+  public class RelMMQ : RelValue<TupMMQ> { }
   public class TupMMQ :TupleBase {
     public readonly static string Heading = "Major,Minor,Qty";
     public string Major { get { return (string)Values[0]; } }

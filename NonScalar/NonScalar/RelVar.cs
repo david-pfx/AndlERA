@@ -16,16 +16,16 @@ namespace AndlEra {
   where Ttup : TupleBase, new() {
 
     // internal class to hold value as relation
-    public class Rel : RelationBase<Ttup> {
-      public static Rel Create(IEnumerable<Ttup> tuples) {
-        return RelationBase<Ttup>.Create<Rel>(tuples);
+    public class Rel : RelValue<Ttup> {
+      public static new Rel Create(IEnumerable<Ttup> tuples) {
+        return RelValue<Ttup>.Create<Rel>(tuples);
       }
     }
 
     public Rel Value { get; protected set; }
     public CommonHeading Heading { get; protected set; }
 
-    public static implicit operator RelationBase<Ttup>(RelVar<Ttup> v) => v.Value;
+    public static implicit operator RelValue<Ttup>(RelVar<Ttup> v) => v.Value;
 
     public override bool Equals(object obj) {
       var other = obj as RelVar;
@@ -46,7 +46,7 @@ namespace AndlEra {
       Heading = RelationBase<Ttup>.Heading;
     }
 
-    public RelVar(RelationBase<Ttup> tuples) {
+    public RelVar(RelValue<Ttup> tuples) {
       Value = Rel.Create(tuples);
       Heading = RelationBase<Ttup>.Heading;
     }
@@ -65,12 +65,12 @@ namespace AndlEra {
     }
 
     // relational assignment
-    public void Assign(RelationBase<Ttup> value) {
+    public void Assign(RelValue<Ttup> value) {
       Value = Rel.Create(value);
     }
 
     // insert tuples, discard duplicates
-    public void Insert(RelationBase<Ttup> value) {
+    public void Insert(RelValue<Ttup> value) {
 
       Value = Rel.Create(RelOps.Union(Value, value));
     }

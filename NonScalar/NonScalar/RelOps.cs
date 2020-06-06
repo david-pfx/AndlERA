@@ -18,7 +18,7 @@ namespace AndlEra {
     where T : TupleBase, new()
     where T1 : TupleBase, new() {
 
-      var map = RelationBase<T>.Heading.CreateMapRename(RelationBase<T1>.Heading, true);
+      var map = RelValue<T>.Heading.CreateMapRename(RelValue<T1>.Heading, true);
       Logger.Assert(map.All(x => x >= 0), "rename heading has missing attribute");
       return new HashSet<T>(body1.Select(t => RelOps.CreateByMap<T>(t, map)));
     }
@@ -27,7 +27,7 @@ namespace AndlEra {
     where T : TupleBase, new()
     where T1 : TupleBase, new() {
 
-      var map = RelationBase<T>.Heading.CreateMap(RelationBase<T1>.Heading);
+      var map = RelValue<T>.Heading.CreateMap(RelValue<T1>.Heading);
       Logger.Assert(map.All(x => x >= 0), "project heading has missing attribute");
       return new HashSet<T>(body1.Select(t => RelOps.CreateByMap<T>(t, map)));
     }
@@ -37,7 +37,7 @@ namespace AndlEra {
     where T : TupleBase, new()
     where T1 : TupleBase, new() {
 
-      var map = RelationBase<T>.Heading.CreateMap(RelationBase<T1>.Heading);
+      var map = RelValue<T>.Heading.CreateMap(RelValue<T1>.Heading);
       return new HashSet<T>(body1.Select(t => RelOps.CreateByMap<T>(t, map, func(t))));
     }
 
@@ -54,9 +54,9 @@ namespace AndlEra {
       where T1 : TupleBase, new()
       where T2 : new() {
 
-      var jhead = RelationBase<T>.Heading.Intersect(RelationBase<T1>.Heading);
-      var jmap = jhead.CreateMap(RelationBase<T1>.Heading);
-      var map = RelationBase<T>.Heading.CreateMap(jhead);
+      var jhead = RelValue<T>.Heading.Intersect(RelValue<T1>.Heading);
+      var jmap = jhead.CreateMap(RelValue<T1>.Heading);
+      var map = RelValue<T>.Heading.CreateMap(jhead);
       var dict = new Dictionary<TupleBase, T2>();
 
       foreach (var t in body1) {
@@ -99,11 +99,11 @@ namespace AndlEra {
     where T1:TupleBase,new()
     where T2:TupleBase,new() {
 
-      var map1 = RelationBase<T>.Heading.CreateMap(RelationBase<T1>.Heading);
-      var map2 = RelationBase<T>.Heading.CreateMap(RelationBase<T2>.Heading);
-      var jhead = RelationBase<T1>.Heading.Intersect(RelationBase<T2>.Heading);
-      var jmap1 = jhead.CreateMap(RelationBase<T1>.Heading);
-      var jmap2 = jhead.CreateMap(RelationBase<T2>.Heading);
+      var map1 = RelValue<T>.Heading.CreateMap(RelValue<T1>.Heading);
+      var map2 = RelValue<T>.Heading.CreateMap(RelValue<T2>.Heading);
+      var jhead = RelValue<T1>.Heading.Intersect(RelValue<T2>.Heading);
+      var jmap1 = jhead.CreateMap(RelValue<T1>.Heading);
+      var jmap2 = jhead.CreateMap(RelValue<T2>.Heading);
 
       if (map2.All(x => x == -1)) return SemiJoin<T,T1,T2>(body1, body2, map1, jmap1, jmap2);
 
@@ -127,12 +127,12 @@ namespace AndlEra {
     where T1 : TupleBase, new()
     where T2 : TupleBase, new() {
 
-      var map1 = RelationBase<T>.Heading.CreateMap(RelationBase<T1>.Heading);
-      var map2 = RelationBase<T>.Heading.CreateMap(RelationBase<T2>.Heading);
+      var map1 = RelValue<T>.Heading.CreateMap(RelValue<T1>.Heading);
+      var map2 = RelValue<T>.Heading.CreateMap(RelValue<T2>.Heading);
       Logger.Assert(map2.All(x => x == -1), "antijoin cannot use right side attributes");
-      var jhead = RelationBase<T1>.Heading.Intersect(RelationBase<T2>.Heading);
-      var jmap1 = jhead.CreateMap(RelationBase<T1>.Heading);
-      var jmap2 = jhead.CreateMap(RelationBase<T2>.Heading);
+      var jhead = RelValue<T1>.Heading.Intersect(RelValue<T2>.Heading);
+      var jmap1 = jhead.CreateMap(RelValue<T1>.Heading);
+      var jmap2 = jhead.CreateMap(RelValue<T2>.Heading);
 
       return SemiJoin<T, T1, T2>(body1, body2, map1, jmap1, jmap2, false);
     }
@@ -151,9 +151,9 @@ namespace AndlEra {
     }
 
     // fixed point recursion
-    internal static HashSet<T> While<T,Trel>(IEnumerable<T> body, Func<Trel, RelationBase<T>> func)
+    internal static HashSet<T> While<T,Trel>(IEnumerable<T> body, Func<Trel, RelValue<T>> func)
       where T : TupleBase, new()
-      where Trel : RelationBase<T>, new() {
+      where Trel : RelValue<T>, new() {
 
       var stack = new Stack<T>(body);
       var newbody = new HashSet<T>();
@@ -161,7 +161,7 @@ namespace AndlEra {
           var top = stack.Pop();
           if (!newbody.Contains(top)) {
             newbody.Add(top);
-            var rel = RelationBase<T>.Create<Trel>(Enumerable.Repeat(top, 1));
+            var rel = RelValue<T>.Create<Trel>(Enumerable.Repeat(top, 1));
             foreach (var t in func(rel))
               stack.Push(t);
           }

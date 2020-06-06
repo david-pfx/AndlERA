@@ -70,6 +70,11 @@ namespace TestSuite {
       Assert.AreEqual(4, siren.Degree);
       Assert.AreEqual(5, siren.Cardinality);
 
+      var sirenn = si.Rename("CITY,XXXCITY", "SNAME,XXXNAME");
+      Assert.AreEqual("S#,XXXNAME,STATUS,XXXCITY", sirenn.Heading.ToNames().Join(","));
+      Assert.AreEqual(4, sirenn.Degree);
+      Assert.AreEqual(5, sirenn.Cardinality);
+
       var siext = si.Extend("STATUS,PlusA", TupExtend.F(t => (string)t[0] + "A"));
       Assert.AreEqual("S#,SNAME,STATUS,CITY,PlusA", siext.Heading.ToNames().Join(","));
       Assert.AreEqual(5, siext.Degree);

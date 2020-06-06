@@ -105,8 +105,11 @@ namespace AndlEra {
     public RelNode Remove(string nodeheading) {
       return new ProjectNode(this, nodeheading, true);
     }
-    public RelNode Rename(string nodeheading) {
-      return new RenameNode(this, nodeheading);
+    public RelNode Rename(params string[] nodeheadings) {
+      RelNode r = new RenameNode(this, nodeheadings[0]);
+      for (var i = 1; i < nodeheadings.Length; ++i)
+        r = new RenameNode(r, nodeheadings[i]);
+      return r;
     }
     public RelNode Group(string nodeheading) {
       return new GroupNode(this, GroupingOp.Group, nodeheading);

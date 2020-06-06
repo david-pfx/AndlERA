@@ -19,7 +19,7 @@ namespace AndlEra {
   /// <summary>
   /// Tuple with degree of zero
   /// </summary>
-  public class RelNone : RelationBase<TupNone> { }
+  public class RelNone : RelValue<TupNone> { }
 
   public class TupNone : TupleBase {
     public readonly static string Heading = "";
@@ -41,7 +41,7 @@ namespace AndlEra {
     }
   }
 
-  public class RelSequence : RelationBase<TupSequence> {
+  public class RelSequence : RelValue<TupSequence> {
     public static RelSequence Create(int count) {
       return RelSequence.Create<RelSequence>(Enumerable.Range(0, count).Select(n => TupSequence.Create(n)));
     }
@@ -62,7 +62,7 @@ namespace AndlEra {
     }
   }
 
-  public class RelText : RelationBase<TupText> {
+  public class RelText : RelValue<TupText> {
     public static RelText Create(IList<string> text) {
       return RelText.Create<RelText>(Enumerable.Range(0, text.Count)
         .Select(n => TupText

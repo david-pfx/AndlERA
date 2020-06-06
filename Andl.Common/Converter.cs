@@ -82,8 +82,8 @@ using System.Text;
     }
 
     // parse a heading to extract the fields
-    // TODO: trap errors
     public static CommonField[] ToFields(string heading) {
+      Logger.Assert(heading != null);
       var items = heading.Split(',');
       return items.Select(i => {
         var subitems = i.Split(':');
