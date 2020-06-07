@@ -21,7 +21,7 @@ namespace AndlEra {
   /// </summary>
   public class RelNone : RelValue<TupNone> { }
 
-  public class TupNone : TupleBase {
+  public class TupNone : TupBase {
     public readonly static string Heading = "";
 
     public static TupNone Create() {
@@ -32,7 +32,7 @@ namespace AndlEra {
   /// <summary>
   /// A relation that is a sequence of numbers
   /// </summary>
-  public class TupSequence : TupleBase {
+  public class TupSequence : TupBase {
     public readonly static string Heading = "N";
     public int N { get { return (int)Values[0]; } }
 
@@ -51,7 +51,7 @@ namespace AndlEra {
   /// <summary>
   /// A relation that is an array of text strings
   /// </summary>
-  public class TupText : TupleBase {
+  public class TupText : TupBase {
     public readonly static string Heading = "Seq,Line";
 
     public int Seq { get { return (int)Values[0]; } }

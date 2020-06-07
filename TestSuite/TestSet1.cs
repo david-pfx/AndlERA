@@ -75,7 +75,8 @@ namespace TestSuite {
       Assert.AreEqual(4, sirenn.Degree);
       Assert.AreEqual(5, sirenn.Cardinality);
 
-      var siext = si.Extend("STATUS,PlusA", TupExtend.F(t => (string)t[0] + "A"));
+      var siext = si.Extend("STATUS,PlusA", new FuncValue<string,string>(s => s + "A"));
+//      var siext = si.Extend("STATUS,PlusA", TupExtend.F(t => (string)t[0] + "A"));
       Assert.AreEqual("S#,SNAME,STATUS,CITY,PlusA", siext.Heading.ToNames().Join(","));
       Assert.AreEqual(5, siext.Degree);
       Assert.AreEqual(5, siext.Cardinality);
@@ -83,7 +84,8 @@ namespace TestSuite {
       Assert.AreEqual(1, siext.Count(t => t.ToString().Contains("S3,Blake,30,Paris,30A")));
       Assert.AreEqual("S3,Blake,30,Paris,30A", siext.Where(t => t.ToString().Contains("S3")).Join(";"));
 
-      var sirep = si.Extend("STATUS,STATUS", TupExtend.F(t => (string)t[0] + "B"));
+      var sirep = si.Extend("STATUS,STATUS", new FuncValue<string,string>(t => t + "B"));
+      //var sirep = si.Extend("STATUS,STATUS", TupExtend.F(t => (string)t[0] + "B"));
       Assert.AreEqual("S#,SNAME,STATUS,CITY", sirep.Heading.ToNames().Join(","));
       Assert.AreEqual(4, sirep.Degree);
       Assert.AreEqual(5, sirep.Cardinality);
@@ -91,7 +93,8 @@ namespace TestSuite {
       Assert.AreEqual("S3,Blake,30B,Paris", sirep.Where(t => t.ToString().Contains("S3")).Join(";"));
       Assert.AreEqual(1, sirep.Count(t => t.ToString().Contains("S3,Blake,30B,Paris")));
 
-      var sisel = si.Restrict("CITY", TupRestrict.F(t => (string)t[0] == "Paris"));
+      //var sisel = si.Restrict("CITY", TupRestrict.F(t => (string)t[0] == "Paris"));
+      var sisel = si.Restrict("CITY", new FuncValue<string,bool>(t => t == "Paris"));
       Assert.AreEqual("S#,SNAME,STATUS,CITY", sisel.Heading.ToNames().Join(","));
       Assert.AreEqual(4, sisel.Degree);
       Assert.AreEqual(2, sisel.Cardinality);
@@ -208,7 +211,8 @@ namespace TestSuite {
 
       var pagg = P
         .Project("Color,Weight")
-        .Aggregate("Weight,TotWeight", TupAggregate.F((v, a) => (decimal)v + (decimal)a));
+        .Aggregate("Weight,TotWeight", new FuncValue<decimal,decimal,decimal>((v, a) => v + a));
+        //.Aggregate("Weight,TotWeight", TupAggregate.F((v, a) => (decimal)v + (decimal)a));
       Assert.AreEqual(2, pagg.Degree);
       Assert.AreEqual("Color,TotWeight", pagg.Heading.ToNames().Join(","));
       Assert.AreEqual(3, pagg.Cardinality);
@@ -217,20 +221,45 @@ namespace TestSuite {
 
     [TestMethod]
     public void While() {
-      var MMQ = RelNode.Import(SourceKind.Csv, Testdata, "MMQ");
-      var MM = MMQ.Remove("QTY");
+      var MMQ = RelNode.Import(SourceKind.Csv, Testdata, "MMQ", "MajorPNo:text,MinorPNo:text,Qty:number");
+      var MM = MMQ.Remove("Qty");
 
       // BUG: need to preserve order of heading, easy to get it wrong 
-      var wtc = MM.While(TupWhile.F(t => t
-        .Rename("MINOR_P#,zzz")
-        .Compose(MM
-          .Rename("MAJOR_P#,zzz"))));
+      var wtc = MM.While(new FuncWhile(t => t
+        .Rename("MinorPNo,zmatch")
+        .Compose(MM.Rename("MajorPNo,zmatch"))));
       Assert.AreEqual(2, wtc.Degree);
-      Assert.AreEqual("MAJOR_P#,MINOR_P#", wtc.Heading.ToNames().Join(","));
+      Assert.AreEqual("MajorPNo,MinorPNo", wtc.Heading.ToNames().Join(","));
       Assert.AreEqual(11, wtc.Cardinality);
       Assert.AreEqual(5, wtc.Count(t => t.ToString().Contains("P1")));
       Assert.AreEqual(1, wtc.Count(t => t.ToString().Contains("P2,P5")));
       Assert.AreEqual(3, wtc.Count(t => t.ToString().Contains("P6")));
+
+      var mmexp = MMQ
+        .Rename("Qty,ExpQty")
+        .While(new FuncWhile(tw => tw
+          .Rename("MinorPNo,zmatch")
+          .Compose(MMQ.Rename("MajorPNo,zmatch"))
+          .Extend("Qty,ExpQty,ExpQty", new FuncValue<decimal, decimal, decimal>((v, w) => v * w))
+          .Remove("Qty")));
+
+      Assert.AreEqual(3, mmexp.Degree);
+      Assert.AreEqual("MajorPNo,MinorPNo,ExpQty", mmexp.Heading.ToNames().Join(","));
+      Assert.AreEqual(13, mmexp.Cardinality);
+      Assert.AreEqual(7, mmexp.Count(t => t.ToString().Contains("P1")));
+      Assert.AreEqual(1, mmexp.Count(t => t.ToString().Contains("P2,P5")));
+      Assert.AreEqual(3, mmexp.Count(t => t.ToString().Contains("P6")));
+      Assert.AreEqual(0, mmexp.Count(t => t.ToString().Contains("52")));
+
+      var mmagg = mmexp
+        .Aggregate("ExpQty,TotQty", new FuncValue<decimal, decimal, decimal>((v, a) => v + a));
+      Assert.AreEqual(3, mmagg.Degree);
+      Assert.AreEqual("MajorPNo,MinorPNo,TotQty", mmagg.Heading.ToNames().Join(","));
+      Assert.AreEqual(11, mmagg.Cardinality);
+      Assert.AreEqual(5, mmagg.Count(t => t.ToString().Contains("P1")));
+      Assert.AreEqual(1, mmagg.Count(t => t.ToString().Contains("P2,P5")));
+      Assert.AreEqual(3, mmagg.Count(t => t.ToString().Contains("P6")));
+      Assert.AreEqual(1, mmagg.Count(t => t.ToString().Contains("52")));
     }
 
     [TestMethod]

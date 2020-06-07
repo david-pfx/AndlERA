@@ -12,8 +12,8 @@ namespace AndlEra {
   /// <summary>
   /// Base type for relations
   /// </summary>
-  public class RelationBase<Ttup> : IEnumerable<Ttup>
-  where Ttup : TupleBase, new() {
+  public class RelBase<Ttup> : IEnumerable<Ttup>
+  where Ttup : TupBase, new() {
     public static CommonHeading Heading { get; protected set; }
     public int Count { get { return _body.Count; } }
     public bool IsEmpty { get { return _body.Count == 0; } }
@@ -52,7 +52,7 @@ namespace AndlEra {
     // override equals based on type and content 
     // same type means same heading
     public override bool Equals(object obj) {
-      var other = obj as RelationBase<Ttup>;
+      var other = obj as RelBase<Ttup>;
       if (obj == null) return false;
       if (!(other._body.Count == _body.Count && other.GetHashCode() == GetHashCode())) return false;
       foreach (var b in _body)
@@ -64,25 +64,25 @@ namespace AndlEra {
     public static Ttup NewTuple(object[] values) {
       return new Ttup() {
         Values = values,
-        HashCode = TupleBase.CalcHashCode(values),
+        HashCode = TupBase.CalcHashCode(values),
       };
     }
 
     //--- ctor
 
     // set up heading here when relation not instantiated but used as class
-    static RelationBase() {
-      Heading = TupleBase.GetHeading(typeof(Ttup));
+    static RelBase() {
+      Heading = TupBase.GetHeading(typeof(Ttup));
     }
 
-    public RelationBase() {
-      Heading = TupleBase.GetHeading(typeof(Ttup));
+    public RelBase() {
+      Heading = TupBase.GetHeading(typeof(Ttup));
       _body = new HashSet<Ttup>();
     }
 
     // create new relation value from body as set
     public static Trel Create<Trel>(ISet<Ttup> tuples)
-    where Trel : RelationBase<Ttup>, new() {
+    where Trel : RelBase<Ttup>, new() {
 
       var body = new HashSet<Ttup>(tuples);
       return new Trel() {
@@ -93,7 +93,7 @@ namespace AndlEra {
 
     // create new relation value from body as enumerable
     public static Trel Create<Trel>(IEnumerable<Ttup> tuples)
-    where Trel : RelationBase<Ttup>, new() {
+    where Trel : RelBase<Ttup>, new() {
 
       return Create<Trel>(new HashSet<Ttup>(tuples));
     }

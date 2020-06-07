@@ -13,7 +13,7 @@ namespace AndlEra {
 
   // relvar based on tuple type
   public class RelVar<Ttup>
-  where Ttup : TupleBase, new() {
+  where Ttup : TupBase, new() {
 
     // internal class to hold value as relation
     public class Rel : RelValue<Ttup> {
@@ -43,16 +43,16 @@ namespace AndlEra {
 
     public RelVar() {
       Value = Rel.Create(new Ttup[0]);
-      Heading = RelationBase<Ttup>.Heading;
+      Heading = RelBase<Ttup>.Heading;
     }
 
     public RelVar(RelValue<Ttup> tuples) {
       Value = Rel.Create(tuples);
-      Heading = RelationBase<Ttup>.Heading;
+      Heading = RelBase<Ttup>.Heading;
     }
 
     public RelVar(RelNode value) {
-      Heading = RelationBase<Ttup>.Heading;
+      Heading = RelBase<Ttup>.Heading;
       Init(value);
     }
 

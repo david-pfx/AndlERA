@@ -11,7 +11,7 @@ namespace AndlEra {
   /// External stream source for tuples
   /// </summary>
   public class RelationStream<T> : IEnumerable<T>
-  where T : TupleBase,new() {
+  where T : TupBase,new() {
 
     public string TableName { get { return _stream.Table; } }
 

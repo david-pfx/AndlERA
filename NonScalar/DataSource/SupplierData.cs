@@ -116,7 +116,7 @@ namespace SupplierData {
   /// <summary>
   /// Generated tuple type for S (suppliers)
   /// </summary>
-  public class TupS : TupleBase {
+  public class TupS : TupBase {
     public readonly static string Heading = "SNo,SName,Status,City";
 
     public string SNo { get { return (string)Values[0]; } }
@@ -135,7 +135,7 @@ namespace SupplierData {
   /// </summary>
   public class RelP : RelValue<TupP> { }
 
-  public class TupP : TupleBase {
+  public class TupP : TupBase {
     public readonly static string Heading = "PNo,PName,Color,Weight,City";
 
     public string PNo { get { return (string)Values[0]; } }
@@ -158,7 +158,7 @@ namespace SupplierData {
   /// <summary>
   /// Generated tuple type for SP (supplies)
   /// </summary>
-  public class TupSP : TupleBase {
+  public class TupSP : TupBase {
     public readonly static string Heading =  "SNo,PNo,Qty";
 
     public string Sno { get { return (string)Values[0]; } }
@@ -178,7 +178,7 @@ namespace SupplierData {
   /// <summary>
   /// Generated tuple type for J (jobs)
   /// </summary>
-  public class TupJ : TupleBase {
+  public class TupJ : TupBase {
     public readonly static string Heading = "JNo,JName,City";
 
     public string JNo { get { return (string)Values[0]; } }
@@ -199,7 +199,7 @@ namespace SupplierData {
   /// <summary>
   /// Generated tuple type for SPJ (job supplies)
   /// </summary>
-  public class TupSPJ : TupleBase {
+  public class TupSPJ : TupBase {
     public readonly static string Heading = "SNo,PNo,JNo,Qty";
     
     public string SNo { get { return (string)Values[0]; } }

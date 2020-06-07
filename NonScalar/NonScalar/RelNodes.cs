@@ -27,7 +27,7 @@ namespace AndlEra {
   // Minimal tuple type with null heading
   // Used by pipeline nodes to create tuples where 
   // the heading is not provided but is inferred from the source
-  public class Tup : TupleBase { 
+  public class Tup : TupBase { 
     public static Tup Data(params object[] values) {
       return Create<Tup>(values);
     }
@@ -36,30 +36,65 @@ namespace AndlEra {
     }
   }
 
-  public class TupRestrict : TupleBase {
-    public Func<TupleBase, bool> Restrict { get; set; }
-    
-    public static TupRestrict F(Func<TupleBase, bool> restrict) => new TupRestrict { Restrict = restrict };
+  ///===========================================================================
+  /// <summary>
+  /// Classes defining function values
+  /// </summary>
+  public abstract class FuncValueBase {
+    public abstract object Call(object[] args);
+  }
+  public class FuncValue<T1> : FuncValueBase {
+    Func<T1> _func { get; set; }
+    public override object Call(object[] args) => _func();
+    public FuncValue(Func<T1> extfunc) => _func = extfunc;
+  }
+  public class FuncValue<T1, T2> : FuncValueBase {
+    Func<T1, T2> _func { get; set; }
+    public override object Call(object[] args) => _func((T1)args[0]);
+    public FuncValue(Func<T1, T2> extfunc) => _func = extfunc;
+  }
+  public class FuncValue<T1, T2, T3> : FuncValueBase {
+    Func<T1, T2, T3> _func { get; set; }
+    public override object Call(object[] args) => _func((T1)args[0], (T2)args[1]);
+    public FuncValue(Func<T1, T2, T3> extfunc) => _func = extfunc;
+  }
+  public class FuncValue<T1, T2, T3,T4> : FuncValueBase {
+    Func<T1, T2, T3,T4> _func { get; set; }
+    public override object Call(object[] args) => _func((T1)args[0], (T2)args[1], (T3)args[2]);
+    public FuncValue(Func<T1, T2, T3, T4> extfunc) => _func = extfunc;
+  }
+  public class FuncValue<T1, T2, T3,T4,T5> : FuncValueBase {
+    Func<T1, T2, T3, T4, T5> _func { get; set; }
+    public override object Call(object[] args) => _func((T1)args[0], (T2)args[1], (T3)args[2], (T4)args[3]);
+
+    public FuncValue(Func<T1, T2, T3, T4, T5> extfunc) => _func = extfunc;
   }
 
-  public class TupExtend : TupleBase {
-    public Func<TupleBase, object> Extend { get; set; }
-   
-    public static TupExtend F(Func<TupleBase, object> extfunc) => new TupExtend { Extend = extfunc };
+  ///===========================================================================
+  /// <summary>
+  /// Classes defining function values
+  /// </summary>
+  public abstract class FuncAgg {
+    public abstract object Call(object[] args);
+  }
+  public class FuncAgg<T1> : FuncAgg {
+    Func<T1> _func { get; set; }
+    public override object Call(object[] args) => _func();
+    public FuncAgg(Func<T1> extfunc) => _func = extfunc;
+  }
+  public class FuncAgg<T1, T2> : FuncAgg {
+    Func<T1, T2> _func { get; set; }
+    public override object Call(object[] args) => _func((T1)args[0]);
+    public FuncAgg(Func<T1, T2> extfunc) => _func = extfunc;
   }
 
-  public class TupAggregate : TupleBase {
-    public Func<object, object, object> Aggregate { get; set; }
-    
-    public static TupAggregate F(Func<object, object, object> aggfunc) => new TupAggregate { Aggregate = aggfunc };
+  public class FuncWhile {
+    Func<RelNode, RelNode> _func { get; set; }
+    public FuncWhile(Func<RelNode, RelNode> extfunc) => _func = extfunc;
+    public RelNode Call(RelNode arg) => _func(arg);
   }
 
-  public class TupWhile : TupleBase {
-    public Func<RelNode, RelNode> While { get; set; }
-    
-    public static TupWhile F(Func<RelNode, RelNode> whilefunc) => new TupWhile { While = whilefunc };
-  }
-
+  ///===========================================================================
   /// <summary>
   /// Pipeline nodes that look like relation values.
   /// 
@@ -123,14 +158,14 @@ namespace AndlEra {
     public RelNode Unwrap(string nodeheading) {
       return new UngroupNode(this, UngroupingOp.Unwrap, nodeheading);
     }
-    public RelNode Restrict(string nodeheading, TupRestrict tupsel) {
-      return new RestrictNode(this, nodeheading, tupsel);
+    public RelNode Restrict(string nodeheading, FuncValueBase func) {
+      return new RestrictNode(this, nodeheading, func);
     }
-    public RelNode Extend(string nodeheading, TupExtend tupext) {
-      return new ExtendNode(this, nodeheading, tupext);
+    public RelNode Extend(string nodeheading, FuncValueBase func) {
+      return new ExtendNode(this, nodeheading, func);
     }
-    public RelNode Aggregate(string nodeheading, TupAggregate tupagg) {
-      return new AggregateNode(this, nodeheading, tupagg);
+    public RelNode Aggregate(string nodeheading, FuncValueBase func) {
+      return new AggregateNode(this, nodeheading, func);
     }
     public RelNode Union(RelNode other) {
       return new SetOpNode(this, SetOp.Union, other);
@@ -153,8 +188,8 @@ namespace AndlEra {
     public RelNode Antijoin(RelNode other) {
       return new JoinOpNode(this, JoinOp.Antijoin, other);
     }
-    public RelNode While(TupWhile tupwhile) {
-      return new WhileNode(this, tupwhile);
+    public RelNode While(FuncWhile func) {
+      return new WhileNode(this, func);
     }
   }
 
@@ -163,11 +198,11 @@ namespace AndlEra {
   /// Implement a wrapper around a heading and enumerable
   /// </summary>
   class WrapperNode : RelNode {
-    protected IEnumerable<TupleBase> _source;
+    protected IEnumerable<TupBase> _source;
 
     public override IEnumerator<Tup> GetEnumerator() => _source.Cast<Tup>().GetEnumerator();
 
-    public WrapperNode(CommonHeading heading, IEnumerable<TupleBase> source) {
+    public WrapperNode(CommonHeading heading, IEnumerable<TupBase> source) {
       _source = source;
       Heading = heading;
     }
@@ -209,7 +244,7 @@ namespace AndlEra {
     }
 
     public override IEnumerator<Tup> GetEnumerator() {
-      var hash = new HashSet<TupleBase>();
+      var hash = new HashSet<TupBase>();
       foreach (var tuple in _source) {
         var newtuple = RelOps.CreateByMap<Tup>(tuple, _map);
         if (hash.Contains(newtuple)) continue;
@@ -355,14 +390,14 @@ namespace AndlEra {
   /// </summary>
   class RestrictNode : RelNode {
     RelNode _source;
-    Func<TupleBase, bool> _restfunc;
+    FuncValueBase _restfunc;
     CommonHeading _restheading;
     int[] _restmap;
 
-    public RestrictNode(RelNode source, string nodeheading, TupRestrict tupsel) {
+    public RestrictNode(RelNode source, string nodeheading, FuncValueBase func) {
       _source = source;
       _restheading = _source.Heading.Adapt(nodeheading);
-      _restfunc = tupsel.Restrict;
+      _restfunc = func;
 
       Heading = _source.Heading;
       _restmap = _restheading.CreateMap(Heading);
@@ -373,7 +408,8 @@ namespace AndlEra {
       foreach (var tuple in _source) {
         var newtuple = RelOps.CreateByMap<Tup>(tuple, _restmap);
         Logger.Assert(tuple.Degree == Heading.Degree);
-        if (_restfunc(newtuple)) yield return tuple;
+        if ((bool)_restfunc.Call(newtuple.Values)) yield return tuple;
+        //if (_restfunc(newtuple)) yield return tuple;
       }
     }
   }
@@ -386,16 +422,17 @@ namespace AndlEra {
   /// </summary>
   class ExtendNode : RelNode {
     RelNode _source;
-    Func<TupleBase, object> _extfunc;
+    FuncValueBase _extfunc;
+    //Func<TupBase, object> _extfunc;
     CommonHeading _nodeheading;
     private int[] _outmap;
     CommonHeading _argheading;
     int[] _argmap;
 
-    public ExtendNode(RelNode source, string nodeheading, TupExtend tupsel) {
+    public ExtendNode(RelNode source, string nodeheading, FuncValueBase func) {
       _source = source;
       _nodeheading = _source.Heading.Adapt(nodeheading);
-      _extfunc = tupsel.Extend;
+      _extfunc = func;
 
       Heading = CommonHeading.Create(_source.Heading.Fields.Union(_nodeheading.Fields));
       // get the argument fields
@@ -412,7 +449,7 @@ namespace AndlEra {
       foreach (var tuple in _source) {
         // pick out the argument values, pass them to the function, get return
         var argtuple = RelOps.CreateByMap<Tup>(tuple, _argmap);
-        var result = _extfunc(argtuple);
+        var result = _extfunc.Call(argtuple.Values);
         var newtuple = RelOps.CreateByMap<Tup>(tuple, _outmap, result);
         Logger.Assert(newtuple.Degree == Heading.Degree);
         yield return newtuple;
@@ -430,15 +467,15 @@ namespace AndlEra {
   class AggregateNode : RelNode {
     RelNode _source;
     CommonHeading _heading;
-    Func<object, object, object> _aggfunc;
+    FuncValueBase _func;
     private object _initial;
     private CommonHeading _jhead;
     private int[] _vmap, _jmap1, _jmap2;
 
-    public AggregateNode(RelNode source, string nodeheading, TupAggregate tupagg, object initial = null) {
+    public AggregateNode(RelNode source, string nodeheading, FuncValueBase func, object initial = null) {
       _source = source;
       _heading = _source.Heading.Adapt(nodeheading);
-      _aggfunc = tupagg.Aggregate;
+      _func = func;
       _initial = initial;
 
       Heading = _source.Heading.Rename(_heading[0], _heading[1]);
@@ -450,13 +487,14 @@ namespace AndlEra {
     }
 
     public override IEnumerator<Tup> GetEnumerator() {
-      var dict = new Dictionary<TupleBase, object>();
+      var dict = new Dictionary<TupBase, object>();
 
       foreach (var tuple in _source) {
         var tupkey = RelOps.CreateByMap<Tup>(tuple, _jmap1);
         var value = tuple.Values[_vmap[0]];
-        dict[tupkey] = (dict.ContainsKey(tupkey)) ? _aggfunc(value, dict[tupkey]) 
-          : (_initial != null) ? _aggfunc(value, _initial) : value;
+        dict[tupkey] = (dict.ContainsKey(tupkey)) ? _func.Call(new object[] { value, dict[tupkey] })
+             : (_initial != null) ? _func.Call(new object[] { value, dict[tupkey], _initial })
+             : value;
       }
       foreach (var kv in dict) {
         var newtuple = RelOps.CreateByMap<Tup>(kv.Key, _jmap2, kv.Value);
@@ -488,7 +526,7 @@ namespace AndlEra {
     }
 
     public override IEnumerator<Tup> GetEnumerator() {
-      var hash = new HashSet<TupleBase>();
+      var hash = new HashSet<TupBase>();
       switch (_setop) {
       case SetOp.Union:
         foreach (var tuple in _left) {
@@ -563,7 +601,7 @@ namespace AndlEra {
     // enumerator for full join and compose (only the output is different)
     IEnumerator<Tup> GetFull() {
       var index = RelOps.BuildIndex(_rightarg, _jmapright);
-      var hash = new HashSet<TupleBase>();
+      var hash = new HashSet<TupBase>();
       foreach (var tuple in _leftarg) {
         var key = RelOps.CreateByMap<Tup>(tuple, _jmapleft);
         if (index.ContainsKey(key)) {
@@ -594,7 +632,7 @@ namespace AndlEra {
 
     // possible alternative???
     IEnumerable<T> GetSemi<T>(bool isanti, IEnumerable<T> leftarg, IEnumerable<T> rightarg, int[] jmapleft, int[] jmapright)
-    where T : TupleBase,new() {
+    where T : TupBase,new() {
 
       var set = RelOps.BuildSet(rightarg, jmapright);
       foreach (var tuple in leftarg) {
@@ -615,23 +653,23 @@ namespace AndlEra {
   /// </summary>
   class WhileNode : RelNode {
     RelNode _source;
-    Func<RelNode, RelNode> _whifunc;
+    FuncWhile _whifunc;
 
-    public WhileNode(RelNode source, TupWhile tupwhi) {
+    public WhileNode(RelNode source, FuncWhile func) {
       _source = source;
-      _whifunc = tupwhi.While;
+      _whifunc = func;
       Heading = _source.Heading;
     }
 
     public override IEnumerator<Tup> GetEnumerator() {
-      var wrapper = new WrapperNode(Heading, While(Heading, _source, _whifunc));
+      var wrapper = new WrapperNode(Heading, While(Heading, _source, _whifunc.Call));
       return wrapper.GetEnumerator();
     }
 
-    static IEnumerable<TupleBase> While(CommonHeading heading, IEnumerable<TupleBase> body, Func<RelNode, RelNode> func) {
+    static IEnumerable<TupBase> While(CommonHeading heading, IEnumerable<TupBase> body, Func<RelNode, RelNode> func) {
 
-      var stack = new Stack<TupleBase>(body);
-      var hash = new HashSet<TupleBase>();
+      var stack = new Stack<TupBase>(body);
+      var hash = new HashSet<TupBase>();
       while (stack.Count > 0) {
         var top = stack.Pop();
         if (!hash.Contains(top)) {

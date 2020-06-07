@@ -11,21 +11,21 @@ namespace AndlEra {
   /// <summary>
   /// Base type for relation values
   /// </summary>
-  public class RelValue<Ttup> : RelationBase<Ttup>
-  where Ttup : TupleBase, new() {
+  public class RelValue<Ttup> : RelBase<Ttup>
+  where Ttup : TupBase, new() {
 
     public RelValue() : base() { }
 
     // create new relation value from body as set
     public static RelValue<Ttup> Create(ISet<Ttup> tuples) {
 
-      return RelationBase<Ttup>.Create<RelValue<Ttup>>(tuples);
+      return RelBase<Ttup>.Create<RelValue<Ttup>>(tuples);
     }
 
     // create new relation value from body as enumerable
     public static RelValue<Ttup> Create(IEnumerable<Ttup> tuples) {
 
-      return RelationBase<Ttup>.Create<RelValue<Ttup>>(new HashSet<Ttup>(tuples));
+      return RelBase<Ttup>.Create<RelValue<Ttup>>(new HashSet<Ttup>(tuples));
     }
 
 
@@ -69,7 +69,7 @@ namespace AndlEra {
 
     // generate a new relation with one attribute renamed
     public RelValue<T> Rename<T>()
-    where T : TupleBase, new() {
+    where T : TupBase, new() {
 
       var newbody = RelOps.Rename<Ttup, T>(this);
       return RelValue<T>.Create<RelValue<T>>(newbody);
@@ -77,28 +77,28 @@ namespace AndlEra {
 
     // generate a new relation that is a projection
     public RelValue<T> Project<T>()
-    where T : TupleBase, new() {
+    where T : TupBase, new() {
 
       var newbody = RelOps.Project<Ttup, T>(this);
       return RelValue<T>.Create<RelValue<T>>(newbody);
     }
 
     public RelValue<T> Extend<T>(Func<Ttup, object> func)
-    where T : TupleBase, new() {
+    where T : TupBase, new() {
 
       var newbody = RelOps.Extend<Ttup, T>(this, func);
       return RelValue<T>.Create<RelValue<T>>(newbody);
     }
 
     public RelValue<T> Transform<T>(Func<Ttup, T> func)
-    where T : TupleBase, new() {
+    where T : TupBase, new() {
 
       var newbody = RelOps.Transform<Ttup, T>(this, func);
       return RelValue<T>.Create<RelValue<T>>(newbody);
     }
 
     public RelValue<T> Aggregate<T, T1>(Func<Ttup, T1, T1> func)
-    where T : TupleBase, new()
+    where T : TupBase, new()
     where T1 : new() {
 
       var newbody = RelOps.Aggregate<Ttup, T, T1>(this, func);
@@ -128,16 +128,16 @@ namespace AndlEra {
 
     // generate a new relation that is a natural join
     public RelValue<T> Join<T1, T>(RelValue<T1> other)
-    where T : TupleBase, new()
-    where T1 : TupleBase, new() {
+    where T : TupBase, new()
+    where T1 : TupBase, new() {
 
       var newbody = RelOps.Join<T, Ttup, T1>(this, other);
       return RelValue<T>.Create<RelValue<T>>(newbody);
     }
 
     public RelValue<T> AntiJoin<T1, T>(RelValue<T1> other)
-    where T : TupleBase, new()
-    where T1 : TupleBase, new() {
+    where T : TupBase, new()
+    where T1 : TupBase, new() {
 
       var newbody = RelOps.AntiJoin<T, Ttup, T1>(this, other);
       return RelValue<T>.Create<RelValue<T>>(newbody);

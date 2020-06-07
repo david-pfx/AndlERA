@@ -49,12 +49,12 @@
     <Compile Include="DataSource\SupplierData.cs" />
     <Compile Include="NonScalar\RelCons.cs" />
     <Compile Include="NonScalar\RelOps.cs" />
-    <Compile Include="NonScalar\RelationBase.cs" />
+    <Compile Include="NonScalar\RelBase.cs" />
     <Compile Include="NonScalar\RelValue.cs" />
     <Compile Include="NonScalar\RelVar.cs" />
-    <Compile Include="NonScalar\TupleBase.cs" />
+    <Compile Include="NonScalar\TupBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="NonScalar\RelationNodes.cs" />
+    <Compile Include="NonScalar\RelNodes.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Andl.Common\Andl.Common.csproj">

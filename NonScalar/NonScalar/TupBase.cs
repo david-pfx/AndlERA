@@ -10,9 +10,9 @@ using Andl.Common;
 namespace AndlEra {
   ///===========================================================================
   /// <summary>
-  /// Base type for tuples
+  /// Base type for relational tuples
   /// </summary>
-  public abstract class TupleBase : IEnumerable<object> {
+  public abstract class TupBase : IEnumerable<object> {
     // Ordered set of values, accessible to create in relation
     protected internal object[] Values { get; internal set; }
     // Calculated hash code, never changes, accessible to create in relation
@@ -30,8 +30,8 @@ namespace AndlEra {
     }
 
     public override bool Equals(object obj) {
-      if (!(obj is TupleBase)) return false;
-      var other = (TupleBase)obj;
+      if (!(obj is TupBase)) return false;
+      var other = (TupBase)obj;
       if (other.Values.Length != Values.Length) return false;
       for (int x = 0; x < Values.Length; ++x)
         if (!Values[x].Equals(other.Values[x])) return false;
@@ -47,12 +47,12 @@ namespace AndlEra {
         .Join(", ");
     }
 
-    public TupleBase() {
+    public TupBase() {
       Values = new object[0];
     }
 
     public static T Create<T>(params object[] values)
-    where T : TupleBase, new() {
+    where T : TupBase, new() {
       return new T() {
         Values = values,
         HashCode = CalcHashCode(values),
@@ -60,7 +60,7 @@ namespace AndlEra {
     }
 
     internal T Init<T>(object[] values)
-    where T : TupleBase {
+    where T : TupBase {
 
       Values = values;
       HashCode = CalcHashCode(values);

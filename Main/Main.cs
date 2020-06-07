@@ -41,23 +41,8 @@ namespace AndlEra {
       var spi = RelNode.Import(SourceKind.Csv, ".", "SP", "SNo:text,PNo:text,Qty:integer");
       var mmqi = RelNode.Import(SourceKind.Csv, ".", "MMQ", "MajorPNo:text,MinorPNo:text,Qty:number");
 
-      var v1 = new RelVar(si);
-      Show("RelVar", v1);
-      v1.Insert(RelNode.Data("SNo:text,SName:text,Status:integer,City:text", 
-        Tup.Data("S6", "White", 25, "Paris"),
-        Tup.Data("S7", "Black", 15, "London")));
-
-      Show("Insert P6 P7", v1);
-
-      v1.Update("Status,City", v => (int)v[0] >= 25, "Sydney");
-      Show("Move to Sydney", v1);
-
-      v1.Delete("City", v => (string)v[0] == "Sydney");
-      Show("Delete Sydneysiders", v1);
-      //return false;
-
       Show("Restrict", si
-        .Restrict("City", TupRestrict.F(v => (string)v[0] == "Paris")));
+        .Restrict("City", new FuncValue<string,bool>(v => v == "Paris")));
 
       Show("Project", si
         .Project("City"));
@@ -65,13 +50,11 @@ namespace AndlEra {
       Show("Rename", si
         .Rename("SNo,S#","SName,NAME","City,SCITY"));
 
-      Show("Extend", 
-        pi.Extend("Weight,WeightKg", TupExtend.F(v => (decimal)v[0] * 0.454m))
-          );
+      Show("Extend",
+        pi.Extend("Weight,WeightKg", new FuncValue<decimal,decimal>(a => a * 0.454m)));
 
       Show("Replace",
-        pi.Extend("Weight,Weight", TupExtend.F(v => (decimal)v[0] * 0.454m))
-        );
+        pi.Extend("Weight,Weight", new FuncValue<decimal,decimal>(a => a * 0.454m)));
 
       Show("Joins", 
         si.Join(spi),
@@ -95,20 +78,35 @@ namespace AndlEra {
 
       Show("Agg", pi
         .Project("Color,Weight")
-        .Aggregate("Weight,TotWeight", TupAggregate.F((v, a) => (decimal)v + (decimal)a))
+        .Aggregate("Weight,TotWeight", new FuncValue<decimal,decimal, decimal>((v, a) => v + a))
         );
 
       var mmexp = mmqi
         .Rename("Qty,ExpQty")
-        .While(TupWhile.F(tw => tw
+        .While(new FuncWhile(tw => tw
           .Rename("MinorPNo,zmatch")
           .Compose(mmqi.Rename("MajorPNo,zmatch"))
-          .Extend("Qty,ExpQty,ExpQty", TupExtend.F(v => (decimal)v[0] * (decimal)v[1]))
+          .Extend("Qty,ExpQty,ExpQty", new FuncValue<decimal,decimal, decimal>((v,w) => v * w))
           .Remove("Qty")));
       Show("While", mmexp);
       Show("Aggregated", mmexp
-        .Aggregate("ExpQty,TotQty", TupAggregate.F((v, a) => (decimal)v + (decimal)a))
+        .Aggregate("ExpQty,TotQty", new FuncValue<decimal, decimal, decimal>((v, a) => v + a))
         );
+
+      var v1 = new RelVar(si);
+      Show("RelVar", v1);
+      v1.Insert(RelNode.Data("SNo:text,SName:text,Status:integer,City:text",
+        Tup.Data("S6", "White", 25, "Paris"),
+        Tup.Data("S7", "Black", 15, "London")));
+
+      Show("Insert P6 P7", v1);
+
+      v1.Update("Status,City", v => (int)v[0] >= 25, "Sydney");
+      Show("Move to Sydney", v1);
+
+      v1.Delete("City", v => (string)v[0] == "Sydney");
+      Show("Delete Sydneysiders", v1);
+
       return true;
 
     }
@@ -170,28 +168,28 @@ namespace AndlEra {
   }
 
 
-  public class TupSX : TupleBase {
+  public class TupSX : TupBase {
     public readonly static string Heading = "SNo,SName,Status,Supplier City";
   }
-  public class Tup1 : TupleBase {
+  public class Tup1 : TupBase {
     public readonly static string Heading = "Supplier City";
   }
-  public class TupSSP : TupleBase {
+  public class TupSSP : TupBase {
     public readonly static string Heading = "SNo,SName,Status,City,PNo,Qty";
   }
-  public class TupPcolour : TupleBase {
+  public class TupPcolour : TupBase {
     public readonly static string Heading = "PNo,PName,Colour,Weight,City";
     public string Colour { get { return (string)Values[2]; } }
   }
 
-  public class TupPPno : TupleBase {
+  public class TupPPno : TupBase {
     public readonly static string Heading = "PNo,PName";
   }
 
-  public class TupPjoin : TupleBase {
+  public class TupPjoin : TupBase {
     public readonly static string Heading = "PNo,PName,SNo,Qty";
   }
-  public class TupAgg : TupleBase {
+  public class TupAgg : TupBase {
     public readonly static string Heading = "PNo,TotQty";
   }
 
@@ -203,13 +201,13 @@ namespace AndlEra {
       return Create<TupMMQA>(new object[] { major, minor, qty, aggqty });
     }
   }
-  public class TupMzA : TupleBase {
+  public class TupMzA : TupBase {
     public readonly static string Heading = "Major,zmatch,AggQty";
   }
-  public class TupzMQ : TupleBase {
+  public class TupzMQ : TupBase {
     public readonly static string Heading = "zmatch,Minor,Qty";
   }
-  public class TupMMT : TupleBase {
+  public class TupMMT : TupBase {
     public readonly static string Heading = "Major,Minor,TotQty";
   }
 
