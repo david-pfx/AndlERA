@@ -40,58 +40,63 @@ namespace AndlEra {
   /// <summary>
   /// Classes defining function values
   /// </summary>
-  public abstract class FuncValueBase {
-    public abstract object Call(object[] args);
+  public static class RelCon {
+    public static FuncValue<T1> Func<T1>(Func<T1> func) 
+      => new FuncValue<T1>(func);
+    public static FuncValue<T1, T1> Func<T1>(Func<T1, T1> func)
+      => new FuncValue<T1, T1>(func);
+    public static FuncValue<T1, T1, T1> Func<T1>(Func<T1, T1, T1> func)
+      => new FuncValue<T1, T1, T1>(func);
+
+
+    public static FuncValue<T1,T2> Func<T1, T2>(Func<T1, T2> func) 
+      => new FuncValue<T1, T2>(func);
+
+    public static FuncValue<T1,T2,T3> Func<T1, T2, T3>(Func<T1, T2, T3> func) 
+      => new FuncValue<T1, T2, T3>(func);
+    public static FuncValue<T1, T2, T3,T4> Func<T1, T2, T3, T4>(Func<T1, T2, T3, T4> func) 
+      => new FuncValue<T1, T2, T3, T4>(func);
+    public static FuncValue<T1,T2,T3,T4,T5> Func<T1, T2, T3, T4, T5>(Func<T1, T2, T3, T4, T5> func) 
+      => new FuncValue<T1, T2, T3, T4, T5>(func);
+    public static FuncValue<T1,T1,T1> Agg<T1>(Func<T1,T1,T1> func)
+      => new FuncValue<T1, T1, T1>(func);
+    public static FuncWhile While(Func<RelNode, RelNode> func) 
+      => new FuncWhile(func);
   }
-  public class FuncValue<T1> : FuncValueBase {
+
+  public abstract class RelFuncBase {
+    internal abstract object Call(object[] args);
+  }
+  public class FuncValue<T1> : RelFuncBase {
     Func<T1> _func { get; set; }
-    public override object Call(object[] args) => _func();
-    public FuncValue(Func<T1> extfunc) => _func = extfunc;
+    internal FuncValue(Func<T1> func) => _func = func;
+    internal override object Call(object[] args) => _func();
   }
-  public class FuncValue<T1, T2> : FuncValueBase {
+  public class FuncValue<T1, T2> : RelFuncBase {
     Func<T1, T2> _func { get; set; }
-    public override object Call(object[] args) => _func((T1)args[0]);
-    public FuncValue(Func<T1, T2> extfunc) => _func = extfunc;
+    internal override object Call(object[] args) => _func((T1)args[0]);
+    internal FuncValue(Func<T1, T2> func) => _func = func;
   }
-  public class FuncValue<T1, T2, T3> : FuncValueBase {
+  public class FuncValue<T1, T2, T3> : RelFuncBase {
     Func<T1, T2, T3> _func { get; set; }
-    public override object Call(object[] args) => _func((T1)args[0], (T2)args[1]);
-    public FuncValue(Func<T1, T2, T3> extfunc) => _func = extfunc;
+    internal override object Call(object[] args) => _func((T1)args[0], (T2)args[1]);
+    internal FuncValue(Func<T1, T2, T3> func) => _func = func;
   }
-  public class FuncValue<T1, T2, T3,T4> : FuncValueBase {
-    Func<T1, T2, T3,T4> _func { get; set; }
-    public override object Call(object[] args) => _func((T1)args[0], (T2)args[1], (T3)args[2]);
-    public FuncValue(Func<T1, T2, T3, T4> extfunc) => _func = extfunc;
+  public class FuncValue<T1, T2, T3, T4> : RelFuncBase {
+    Func<T1, T2, T3, T4> _func { get; set; }
+    internal FuncValue(Func<T1, T2, T3, T4> func) => _func = func;
+    internal override object Call(object[] args) => _func((T1)args[0], (T2)args[1], (T3)args[2]);
   }
-  public class FuncValue<T1, T2, T3,T4,T5> : FuncValueBase {
+  public class FuncValue<T1, T2, T3, T4, T5> : RelFuncBase {
     Func<T1, T2, T3, T4, T5> _func { get; set; }
-    public override object Call(object[] args) => _func((T1)args[0], (T2)args[1], (T3)args[2], (T4)args[3]);
-
-    public FuncValue(Func<T1, T2, T3, T4, T5> extfunc) => _func = extfunc;
-  }
-
-  ///===========================================================================
-  /// <summary>
-  /// Classes defining function values
-  /// </summary>
-  public abstract class FuncAgg {
-    public abstract object Call(object[] args);
-  }
-  public class FuncAgg<T1> : FuncAgg {
-    Func<T1> _func { get; set; }
-    public override object Call(object[] args) => _func();
-    public FuncAgg(Func<T1> extfunc) => _func = extfunc;
-  }
-  public class FuncAgg<T1, T2> : FuncAgg {
-    Func<T1, T2> _func { get; set; }
-    public override object Call(object[] args) => _func((T1)args[0]);
-    public FuncAgg(Func<T1, T2> extfunc) => _func = extfunc;
+    internal FuncValue(Func<T1, T2, T3, T4, T5> func) => _func = func;
+    internal override object Call(object[] args) => _func((T1)args[0], (T2)args[1], (T3)args[2], (T4)args[3]);
   }
 
   public class FuncWhile {
     Func<RelNode, RelNode> _func { get; set; }
-    public FuncWhile(Func<RelNode, RelNode> extfunc) => _func = extfunc;
-    public RelNode Call(RelNode arg) => _func(arg);
+    internal FuncWhile(Func<RelNode, RelNode> func) => _func = func;
+    internal RelNode Call(RelNode arg) => _func(arg);
   }
 
   ///===========================================================================
@@ -131,41 +136,47 @@ namespace AndlEra {
       return new WrapperNode(CommonHeading.Create(heading), source);
     }
 
+    // Construct a node from a stream
+    public static RelNode Create(string heading, IEnumerable<Tup> source) {
+
+      return new WrapperNode(CommonHeading.Create(heading), source);
+    }
+
     //--------------------------------------------------------------------------
     // RA Nodes
 
     public RelNode Project(string nodeheading) {
-      return new ProjectNode(this, nodeheading);
+      return new ProjectNode(this, this.Heading.Adapt(nodeheading));
     }
     public RelNode Remove(string nodeheading) {
-      return new ProjectNode(this, nodeheading, true);
+      return new ProjectNode(this, this.Heading.Adapt(nodeheading), true);
     }
     public RelNode Rename(params string[] nodeheadings) {
-      RelNode r = new RenameNode(this, nodeheadings[0]);
+      RelNode r = new RenameNode(this, this.Heading.Adapt(nodeheadings[0]));
       for (var i = 1; i < nodeheadings.Length; ++i)
-        r = new RenameNode(r, nodeheadings[i]);
+        r = new RenameNode(r, r.Heading.Adapt(nodeheadings[i]));
       return r;
     }
     public RelNode Group(string nodeheading) {
-      return new GroupNode(this, GroupingOp.Group, nodeheading);
+      return new GroupNode(this, GroupingOp.Group, this.Heading.Adapt(nodeheading));
     }
     public RelNode Wrap(string nodeheading) {
-      return new GroupNode(this, GroupingOp.Wrap, nodeheading);
+      return new GroupNode(this, GroupingOp.Wrap, this.Heading.Adapt(nodeheading));
     }
     public RelNode Ungroup(string nodeheading) {
-      return new UngroupNode(this, UngroupingOp.Ungroup, nodeheading);
+      return new UngroupNode(this, UngroupingOp.Ungroup, this.Heading.Adapt(nodeheading));
     }
     public RelNode Unwrap(string nodeheading) {
-      return new UngroupNode(this, UngroupingOp.Unwrap, nodeheading);
+      return new UngroupNode(this, UngroupingOp.Unwrap, this.Heading.Adapt(nodeheading));
     }
-    public RelNode Restrict(string nodeheading, FuncValueBase func) {
-      return new RestrictNode(this, nodeheading, func);
+    public RelNode Restrict(string nodeheading, RelFuncBase func) {
+      return new RestrictNode(this, this.Heading.Adapt(nodeheading), func);
     }
-    public RelNode Extend(string nodeheading, FuncValueBase func) {
-      return new ExtendNode(this, nodeheading, func);
+    public RelNode Extend(string nodeheading, RelFuncBase func) {
+      return new ExtendNode(this, this.Heading.Adapt(nodeheading), func);
     }
-    public RelNode Aggregate(string nodeheading, FuncValueBase func) {
-      return new AggregateNode(this, nodeheading, func);
+    public RelNode Aggregate(string nodeheading, RelFuncBase func) {
+      return new AggregateNode(this, this.Heading.Adapt(nodeheading), func);
     }
     public RelNode Union(RelNode other) {
       return new SetOpNode(this, SetOp.Union, other);
@@ -187,6 +198,9 @@ namespace AndlEra {
     }
     public RelNode Antijoin(RelNode other) {
       return new JoinOpNode(this, JoinOp.Antijoin, other);
+    }
+    public RelNode TranClose() {
+      return new TranCloseNode(this);
     }
     public RelNode While(FuncWhile func) {
       return new WhileNode(this, func);
@@ -233,9 +247,9 @@ namespace AndlEra {
     RelNode _source;
     int[] _map;
 
-    public ProjectNode(RelNode source, string nodeheading, bool isremove = false) {
+    public ProjectNode(RelNode source, CommonHeading nodeheading, bool isremove = false) {
       _source = source;
-      var _nodeheading = _source.Heading.Adapt(nodeheading);
+      var _nodeheading = nodeheading;
 
       Heading = (isremove) ? _source.Heading.Minus(_nodeheading) : _nodeheading;
       _map = Heading.CreateMap(_source.Heading);
@@ -265,9 +279,9 @@ namespace AndlEra {
     private CommonHeading _nodeheading;
     private int[] _map;
 
-    public RenameNode(RelNode source, string nodeheading) {
+    public RenameNode(RelNode source, CommonHeading nodeheading) {
       _source = source;
-      _nodeheading = _source.Heading.Adapt(nodeheading);
+      _nodeheading = nodeheading;
       _map = _nodeheading.CreateMap(_source.Heading);
       if (!(_map.Length == 2 && _map[0] >= 0 && _map[1] < 0)) throw Error.Fatal("invalid heading");
       Heading = _source.Heading.Rename(_nodeheading[0], _nodeheading[1]);
@@ -287,10 +301,10 @@ namespace AndlEra {
     private CommonHeading _nodeheading;
     private int[] _tmap, _map, _kmap;
 
-    public GroupNode(RelNode source, GroupingOp op, string nodeheading) {
+    public GroupNode(RelNode source, GroupingOp op, CommonHeading nodeheading) {
       _source = source;
       _op = op;
-      _nodeheading = _source.Heading.Adapt(nodeheading);
+      _nodeheading = nodeheading;
       // inner tuple(s) for TVA or RVA
       var tupheading = _nodeheading.Remove(_nodeheading.Fields.Last());
       _tmap = tupheading.CreateMap(_source.Heading);
@@ -339,10 +353,10 @@ namespace AndlEra {
     private CommonHeading _nodeheading;
     private int[] _nodemap, _map1, _map2;
 
-    public UngroupNode(RelNode source, UngroupingOp op, string nodeheading) {
+    public UngroupNode(RelNode source, UngroupingOp op, CommonHeading nodeheading) {
       _source = source;
       _op = op;
-      _nodeheading = _source.Heading.Adapt(nodeheading);
+      _nodeheading = nodeheading;
       _nodemap = _nodeheading.CreateMap(_source.Heading);
       if (!(_nodemap.Length == 1 && _nodemap[0] >= 0)) throw Error.Fatal("invalid heading");
       // on output replace one field by the TVA/RVA
@@ -390,13 +404,13 @@ namespace AndlEra {
   /// </summary>
   class RestrictNode : RelNode {
     RelNode _source;
-    FuncValueBase _restfunc;
+    RelFuncBase _restfunc;
     CommonHeading _restheading;
     int[] _restmap;
 
-    public RestrictNode(RelNode source, string nodeheading, FuncValueBase func) {
+    public RestrictNode(RelNode source, CommonHeading nodeheading, RelFuncBase func) {
       _source = source;
-      _restheading = _source.Heading.Adapt(nodeheading);
+      _restheading = nodeheading;
       _restfunc = func;
 
       Heading = _source.Heading;
@@ -422,17 +436,17 @@ namespace AndlEra {
   /// </summary>
   class ExtendNode : RelNode {
     RelNode _source;
-    FuncValueBase _extfunc;
-    //Func<TupBase, object> _extfunc;
+    RelFuncBase _func;
+    //Func<TupBase, object> _func;
     CommonHeading _nodeheading;
     private int[] _outmap;
     CommonHeading _argheading;
     int[] _argmap;
 
-    public ExtendNode(RelNode source, string nodeheading, FuncValueBase func) {
+    public ExtendNode(RelNode source, CommonHeading nodeheading, RelFuncBase func) {
       _source = source;
-      _nodeheading = _source.Heading.Adapt(nodeheading);
-      _extfunc = func;
+      _nodeheading = nodeheading;
+      _func = func;
 
       Heading = CommonHeading.Create(_source.Heading.Fields.Union(_nodeheading.Fields));
       // get the argument fields
@@ -449,7 +463,7 @@ namespace AndlEra {
       foreach (var tuple in _source) {
         // pick out the argument values, pass them to the function, get return
         var argtuple = RelOps.CreateByMap<Tup>(tuple, _argmap);
-        var result = _extfunc.Call(argtuple.Values);
+        var result = _func.Call(argtuple.Values);
         var newtuple = RelOps.CreateByMap<Tup>(tuple, _outmap, result);
         Logger.Assert(newtuple.Degree == Heading.Degree);
         yield return newtuple;
@@ -467,14 +481,14 @@ namespace AndlEra {
   class AggregateNode : RelNode {
     RelNode _source;
     CommonHeading _heading;
-    FuncValueBase _func;
+    RelFuncBase _func;
     private object _initial;
     private CommonHeading _jhead;
     private int[] _vmap, _jmap1, _jmap2;
 
-    public AggregateNode(RelNode source, string nodeheading, FuncValueBase func, object initial = null) {
+    public AggregateNode(RelNode source, CommonHeading nodeheading, RelFuncBase func, object initial = null) {
       _source = source;
-      _heading = _source.Heading.Adapt(nodeheading);
+      _heading = nodeheading;
       _func = func;
       _initial = initial;
 
@@ -631,7 +645,8 @@ namespace AndlEra {
     }
 
     // possible alternative???
-    IEnumerable<T> GetSemi<T>(bool isanti, IEnumerable<T> leftarg, IEnumerable<T> rightarg, int[] jmapleft, int[] jmapright)
+    IEnumerable<T> GetSemi<T>(bool isanti, IEnumerable<T> leftarg, IEnumerable<T> rightarg, 
+      int[] jmapleft, int[] jmapright)
     where T : TupBase,new() {
 
       var set = RelOps.BuildSet(rightarg, jmapright);
@@ -643,7 +658,35 @@ namespace AndlEra {
         }
       }
     }
+  }
 
+  ///===========================================================================
+  /// <summary>
+  /// implement transitive closure
+  /// heading is inferred, must have exactly two attributes
+  /// </summary>
+  class TranCloseNode : RelNode {
+    RelNode _source;
+
+    public TranCloseNode(RelNode source) {
+      _source = source;
+      Heading = _source.Heading;
+      if (!(source.Degree == 2)) throw Error.Fatal("transitive closure requires argument of degree 2");
+    }
+
+    public override IEnumerator<Tup> GetEnumerator() {
+      //var ret = RelValue<Tup>.Create(_source);
+      var ret = new RelVar(_source);
+      var h = _source.Heading.ToNames();
+      var joiner = "," + h[0] + "-" + h[1];  // unique
+      for (; ; ) {
+        var ttt = ret.ToRelNode().Rename(h[1] + joiner).Compose(ret.ToRelNode().Rename(h[0] + joiner));
+        var n = ret.Value.Count;
+        ret.Insert(ttt);
+        if (n == ret.Value.Count) break;
+      }
+      return ret.GetEnumerator();
+    }
   }
 
   ///===========================================================================

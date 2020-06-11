@@ -39,10 +39,10 @@ namespace AndlEra {
       var s8i = RelNode.Import(SourceKind.Csv, ".", "S8", "SNo:text,SName:text,Status:integer,City:text");
       var pi = RelNode.Import(SourceKind.Csv, ".", "P", "PNo:text,PName:text,Color:text,Weight:number,City:text");
       var spi = RelNode.Import(SourceKind.Csv, ".", "SP", "SNo:text,PNo:text,Qty:integer");
-      var mmqi = RelNode.Import(SourceKind.Csv, ".", "MMQ", "MajorPNo:text,MinorPNo:text,Qty:number");
 
       Show("Restrict", si
-        .Restrict("City", new FuncValue<string,bool>(v => v == "Paris")));
+        .Restrict("City", RelCon.Func<string,bool>(v => v == "Paris")));
+        //.Restrict("City", new FuncValue<string,bool>(v => v == "Paris")));
 
       Show("Project", si
         .Project("City"));
@@ -51,10 +51,10 @@ namespace AndlEra {
         .Rename("SNo,S#","SName,NAME","City,SCITY"));
 
       Show("Extend",
-        pi.Extend("Weight,WeightKg", new FuncValue<decimal,decimal>(a => a * 0.454m)));
+        pi.Extend("Weight,WeightKg", RelCon.Func<decimal>(a => a * 0.454m)));
 
       Show("Replace",
-        pi.Extend("Weight,Weight", new FuncValue<decimal,decimal>(a => a * 0.454m)));
+        pi.Extend("Weight,Weight", RelCon.Func<decimal>(a => a * 0.454m)));
 
       Show("Joins", 
         si.Join(spi),
@@ -78,19 +78,29 @@ namespace AndlEra {
 
       Show("Agg", pi
         .Project("Color,Weight")
-        .Aggregate("Weight,TotWeight", new FuncValue<decimal,decimal, decimal>((v, a) => v + a))
+        .Aggregate("Weight,TotWeight", RelCon.Agg<decimal>((v, a) => v + a))
         );
+
+      //var orgi = RelNode.Import(SourceKind.Csv, ".", "orgchart");
+      //Show("TClose", orgi
+      //  .TranClose());
+      var mmi = RelNode.Import(SourceKind.Csv, ".", "MMQ")
+        .Remove("QTY");
+      Show("TClose", mmi
+        .TranClose());
+
+      var mmqi = RelNode.Import(SourceKind.Csv, ".", "MMQ", "MajorPNo:text,MinorPNo:text,Qty:number");
 
       var mmexp = mmqi
         .Rename("Qty,ExpQty")
-        .While(new FuncWhile(tw => tw
+        .While(RelCon.While(tw => tw
           .Rename("MinorPNo,zmatch")
           .Compose(mmqi.Rename("MajorPNo,zmatch"))
-          .Extend("Qty,ExpQty,ExpQty", new FuncValue<decimal,decimal, decimal>((v,w) => v * w))
+          .Extend("Qty,ExpQty,ExpQty", RelCon.Func<decimal>((v,w) => v * w))
           .Remove("Qty")));
       Show("While", mmexp);
       Show("Aggregated", mmexp
-        .Aggregate("ExpQty,TotQty", new FuncValue<decimal, decimal, decimal>((v, a) => v + a))
+        .Aggregate("ExpQty,TotQty", RelCon.Agg<decimal>((v, a) => v + a))
         );
 
       var v1 = new RelVar(si);
