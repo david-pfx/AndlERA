@@ -112,7 +112,7 @@ namespace SupplierData {
   /// <summary>
   /// Generated relation type for S (suppliers)
   /// </summary>
-  public class RelS : RelValue<TupS> { }
+  public class RelS : RelValueST<TupS> { }
   /// <summary>
   /// Generated tuple type for S (suppliers)
   /// </summary>
@@ -133,7 +133,7 @@ namespace SupplierData {
   /// <summary>
   /// Generated relation type for P (products)
   /// </summary>
-  public class RelP : RelValue<TupP> { }
+  public class RelP : RelValueST<TupP> { }
 
   public class TupP : TupBase {
     public readonly static string Heading = "PNo,PName,Color,Weight,City";
@@ -153,7 +153,7 @@ namespace SupplierData {
   /// <summary>
   /// Generated relation type for SP (supplies)
   /// </summary>
-  public class RelSP : RelValue<TupSP> { }
+  public class RelSP : RelValueST<TupSP> { }
 
   /// <summary>
   /// Generated tuple type for SP (supplies)
@@ -174,7 +174,7 @@ namespace SupplierData {
   /// <summary>
   /// Generated relation type for J (jobs)
   /// </summary>
-  public class RelJ : RelValue<TupJ> { }
+  public class RelJ : RelValueST<TupJ> { }
   /// <summary>
   /// Generated tuple type for J (jobs)
   /// </summary>
@@ -194,7 +194,7 @@ namespace SupplierData {
   /// <summary>
   /// Generated relation type for SPJ (job supplies)
   /// </summary>
-  public class RelSPJ : RelValue<TupSPJ> { }
+  public class RelSPJ : RelValueST<TupSPJ> { }
 
   /// <summary>
   /// Generated tuple type for SPJ (job supplies)

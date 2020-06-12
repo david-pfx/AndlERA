@@ -123,11 +123,11 @@ namespace AndlEra {
 
     // basic samples, operators return relations
     static bool SampleWithTypes() {
-      Show("Seq", RelSequence.Create(5));
+      Show("Seq", RelSequenceST.Create(5));
       Show("SP", Supplier.SP);
 
-      var v1 = new RelVar<TupS>(Supplier.S);
-      var v2 = new RelVar<Tup1>(v1.Value
+      var v1 = new RelVarST<TupS>(Supplier.S);
+      var v2 = new RelVarST<Tup1>(v1.Value
         .Restrict(t => t.Status == 30)
         .Rename<TupSX>()    // "SNo", "SName", "Status", "Supplier City"
         .Project<Tup1>());    // "Supplier City"
@@ -203,7 +203,7 @@ namespace AndlEra {
     public readonly static string Heading = "PNo,TotQty";
   }
 
-  public class RelMMQA : RelValue<TupMMQA> { }
+  public class RelMMQA : RelValueST<TupMMQA> { }
   public class TupMMQA : TupMMQ {
     new public readonly static string Heading = "Major,Minor,Qty,AggQty";
     public int AggQty { get { return (int)Values[3]; } }

@@ -9,41 +9,41 @@ namespace AndlEra {
   /// <summary>
   /// The two empty relations DUM and DEE
   /// </summary>
-  public static class NoneData {
+  public static class NoneDataST {
     // Empty relation empty header is DUM
-    public static RelNone Zero = RelNone.Create<RelNone>(new List<TupNone> { });
+    public static RelNoneST Zero = RelNoneST.Create<RelNoneST>(new List<TupNoneST> { });
     // Full relation empty header is DEE
-    public static RelNone One = RelNone.Create<RelNone>(new List<TupNone> { new TupNone() });
+    public static RelNoneST One = RelNoneST.Create<RelNoneST>(new List<TupNoneST> { new TupNoneST() });
   }
 
   /// <summary>
   /// Tuple with degree of zero
   /// </summary>
-  public class RelNone : RelValue<TupNone> { }
+  public class RelNoneST : RelValueST<TupNoneST> { }
 
-  public class TupNone : TupBase {
+  public class TupNoneST : TupBase {
     public readonly static string Heading = "";
 
-    public static TupNone Create() {
-      return Create<TupNone>(new object[] { });
+    public static TupNoneST Create() {
+      return Create<TupNoneST>(new object[] { });
     }
   }
   ///===========================================================================
   /// <summary>
   /// A relation that is a sequence of numbers
   /// </summary>
-  public class TupSequence : TupBase {
+  public class TupSequenceST : TupBase {
     public readonly static string Heading = "N";
     public int N { get { return (int)Values[0]; } }
 
-    public static TupSequence Create(int N) {
-      return Create<TupSequence>(new object[] { N });
+    public static TupSequenceST Create(int N) {
+      return Create<TupSequenceST>(new object[] { N });
     }
   }
 
-  public class RelSequence : RelValue<TupSequence> {
-    public static RelSequence Create(int count) {
-      return RelSequence.Create<RelSequence>(Enumerable.Range(0, count).Select(n => TupSequence.Create(n)));
+  public class RelSequenceST : RelValueST<TupSequenceST> {
+    public static RelSequenceST Create(int count) {
+      return RelSequenceST.Create<RelSequenceST>(Enumerable.Range(0, count).Select(n => TupSequenceST.Create(n)));
     }
   }
 
@@ -51,21 +51,21 @@ namespace AndlEra {
   /// <summary>
   /// A relation that is an array of text strings
   /// </summary>
-  public class TupText : TupBase {
+  public class TupTextST : TupBase {
     public readonly static string Heading = "Seq,Line";
 
     public int Seq { get { return (int)Values[0]; } }
     public string Line { get { return (string)Values[1]; } }
 
-    public static TupText Create(int Seq, string Line) {
-      return Create<TupText>(new object[] { Seq, Line });
+    public static TupTextST Create(int Seq, string Line) {
+      return Create<TupTextST>(new object[] { Seq, Line });
     }
   }
 
-  public class RelText : RelValue<TupText> {
-    public static RelText Create(IList<string> text) {
-      return RelText.Create<RelText>(Enumerable.Range(0, text.Count)
-        .Select(n => TupText
+  public class RelTextST : RelValueST<TupTextST> {
+    public static RelTextST Create(IList<string> text) {
+      return RelTextST.Create<RelTextST>(Enumerable.Range(0, text.Count)
+        .Select(n => TupTextST
         .Create(n, text[n])));
     }
   }

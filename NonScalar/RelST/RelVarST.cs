@@ -13,13 +13,13 @@ namespace AndlEra {
   /// 
 
   // relvar based on tuple type
-  public class RelVar<T> : IEnumerable<T>
+  public class RelVarST<T> : IEnumerable<T>
   where T : TupBase, new() {
 
     // internal class to hold value as relation
-    public class Rel : RelValue<T> {
+    public class Rel : RelValueST<T> {
       public static new Rel Create(IEnumerable<T> tuples) {
-        return RelValue<T>.Create<Rel>(tuples);
+        return RelValueST<T>.Create<Rel>(tuples);
       }
     }
 
@@ -28,7 +28,7 @@ namespace AndlEra {
 
     public IEnumerator<T> GetEnumerator() => ((IEnumerable<T>)Value).GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)Value).GetEnumerator();
-    public static implicit operator RelValue<T>(RelVar<T> v) => v.Value;
+    public static implicit operator RelValueST<T>(RelVarST<T> v) => v.Value;
 
     public override bool Equals(object obj) {
       var other = obj as RelVar;
@@ -44,18 +44,18 @@ namespace AndlEra {
       return Value.Select(t => t.Format(Heading)).Join("\n");
     }
 
-    public RelVar() {
+    public RelVarST() {
       Value = Rel.Create(new T[0]);
-      Heading = RelBase<T>.Heading;
+      Heading = RelBaseST<T>.Heading;
     }
 
-    public RelVar(RelValue<T> tuples) {
+    public RelVarST(RelValueST<T> tuples) {
       Value = Rel.Create(tuples);
-      Heading = RelBase<T>.Heading;
+      Heading = RelBaseST<T>.Heading;
     }
 
-    public RelVar(RelNode value) {
-      Heading = RelBase<T>.Heading;
+    public RelVarST(RelNode value) {
+      Heading = RelBaseST<T>.Heading;
       Init(value);
     }
 
@@ -64,18 +64,18 @@ namespace AndlEra {
       var compat = equal || value.Heading.IsCompatible(Heading);
       if (!compat) throw Error.Fatal($"headings are not compatible: <{value.Heading}> and <{Heading}>");
       var map = Heading.CreateMap(value.Heading);
-      Value = Rel.Create(value.Select(t => RelOps.CreateByMap<T>(t, map)));
+      Value = Rel.Create(value.Select(t => RelStatic.CreateByMap<T>(t, map)));
     }
 
     // relational assignment
-    public void Assign(RelValue<T> value) {
+    public void Assign(RelValueST<T> value) {
       Value = Rel.Create(value);
     }
 
     // insert tuples, discard duplicates
-    public void Insert(RelValue<T> value) {
+    public void Insert(RelValueST<T> value) {
 
-      Value = Rel.Create(RelOps.Union(Value, value));
+      Value = Rel.Create(RelOpsST.Union(Value, value));
     }
 
     // update tuples that satisfy predicate
@@ -95,7 +95,7 @@ namespace AndlEra {
   /// <summary>
   /// Untyped relvar
   /// </summary>
-  public class RelVar : RelVar<Tup> {
+  public class RelVar : RelVarST<Tup> {
     public RelVar() {
       Value = Rel.Create(new Tup[0]);
       Heading = CommonHeading.Empty;
@@ -117,7 +117,7 @@ namespace AndlEra {
 
     public void Insert(RelNode node) {
 
-      Value = Rel.Create(RelOps.Union<Tup>(Value, node.Cast<Tup>()));
+      Value = Rel.Create(RelOpsST.Union<Tup>(Value, node.Cast<Tup>()));
     }
 
     // update tuples that satisfy predicate
@@ -129,8 +129,8 @@ namespace AndlEra {
       // map for replace tuple
       var head2 = Heading.Remove(head1.Fields.Last()).Append(CommonField.Empty);
       var map2 =  head2.CreateMap(Heading);
-      Value = Rel.Create(Value.Select(t => selfunc(RelOps.CreateByMap<Tup>(t, map1)) 
-        ? RelOps.CreateByMap<Tup>(t, map2, newvalue) : t));
+      Value = Rel.Create(Value.Select(t => selfunc(RelStatic.CreateByMap<Tup>(t, map1)) 
+        ? RelStatic.CreateByMap<Tup>(t, map2, newvalue) : t));
     }
 
     // remove tuples that satisfy predicate
@@ -138,7 +138,7 @@ namespace AndlEra {
 
       var head = CommonHeading.Create(heading);
       var map = head.CreateMap(Heading);
-      Value = Rel.Create(Value.Where(t => !selfunc(RelOps.CreateByMap<Tup>(t, map))));
+      Value = Rel.Create(Value.Where(t => !selfunc(RelStatic.CreateByMap<Tup>(t, map))));
     }
 
   }

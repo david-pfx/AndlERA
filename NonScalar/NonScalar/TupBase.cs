@@ -11,6 +11,8 @@ namespace AndlEra {
   ///===========================================================================
   /// <summary>
   /// Base type for relational tuples
+  /// Values but no heading
+  /// Gets heading from type, on request
   /// </summary>
   public abstract class TupBase : IEnumerable<object> {
     // Ordered set of values, accessible to create in relation
@@ -65,16 +67,6 @@ namespace AndlEra {
       Values = values;
       HashCode = CalcHashCode(values);
       return this as T;
-    }
-
-    // reflection hack to get heading value from tuple
-    // TODO: is this the best way to handle heading not found?
-    internal static CommonHeading GetHeading(Type ttype) {
-      var prop = ttype.GetField("Heading");
-      if (prop == null) return CommonHeading.Empty;
-      var heading = (string)prop.GetValue(null);
-      if (heading == null) return CommonHeading.Empty;
-      return CommonHeading.Create(heading);   // TODO: add types
     }
 
     //--- impl

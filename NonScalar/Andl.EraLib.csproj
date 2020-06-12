@@ -47,14 +47,15 @@
     <Compile Include="DataSource\RelationStream.cs" />
     <Compile Include="DataSource\SampleData.cs" />
     <Compile Include="DataSource\SupplierData.cs" />
-    <Compile Include="NonScalar\RelCons.cs" />
-    <Compile Include="NonScalar\RelOps.cs" />
-    <Compile Include="NonScalar\RelBase.cs" />
-    <Compile Include="NonScalar\RelValue.cs" />
-    <Compile Include="NonScalar\RelVar.cs" />
+    <Compile Include="RelST\RelConsST.cs" />
+    <Compile Include="RelST\RelOpsST.cs" />
+    <Compile Include="RelST\RelBaseST.cs" />
+    <Compile Include="RelST\RelValueST.cs" />
+    <Compile Include="RelST\RelVarST.cs" />
     <Compile Include="NonScalar\TupBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="NonScalar\RelNodes.cs" />
+    <Compile Include="NonScalar\RelStatic.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Andl.Common\Andl.Common.csproj">

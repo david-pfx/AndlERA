@@ -260,7 +260,7 @@ namespace AndlEra {
     public override IEnumerator<Tup> GetEnumerator() {
       var hash = new HashSet<TupBase>();
       foreach (var tuple in _source) {
-        var newtuple = RelOps.CreateByMap<Tup>(tuple, _map);
+        var newtuple = RelStatic.CreateByMap<Tup>(tuple, _map);
         if (hash.Contains(newtuple)) continue;
         hash.Add(newtuple);
         Logger.Assert(newtuple.Degree == Heading.Degree);
@@ -324,10 +324,10 @@ namespace AndlEra {
     }
 
     IEnumerator<Tup> GetGroupEnumerator() {
-      var index = RelOps.BuildIndex(_source, _kmap);
+      var index = RelStatic.BuildIndex(_source, _kmap);
       foreach (var kvp in index) {
         var rva = kvp.Value.Select(t => new CommonRow(_tmap.Select(x => t[x]))).ToArray();
-        var newtuple = RelOps.CreateByMap<Tup>(kvp.Key, _map, rva);
+        var newtuple = RelStatic.CreateByMap<Tup>(kvp.Key, _map, rva);
         Logger.Assert(newtuple.Degree == Heading.Degree);
         yield return newtuple;
       }
@@ -335,7 +335,7 @@ namespace AndlEra {
     IEnumerator<Tup> GetWrapEnumerator() {
       foreach (var tuple in _source) {
         var tva = new CommonRow(_tmap.Select(x => tuple[x]));
-        var newtuple = RelOps.CreateByMap<Tup>(tuple, _map, tva);
+        var newtuple = RelStatic.CreateByMap<Tup>(tuple, _map, tva);
         Logger.Assert(newtuple.Degree == Heading.Degree);
         yield return newtuple;
       }
@@ -377,7 +377,7 @@ namespace AndlEra {
       foreach (var tuple in _source) {
         var rva = (CommonRow[])tuple[_nodemap[0]];
         foreach (var row in rva) {
-          var newtuple = RelOps.CreateByMap<Tup>(tuple.Values, _map1, row.Values, _map2);
+          var newtuple = RelStatic.CreateByMap<Tup>(tuple.Values, _map1, row.Values, _map2);
           Logger.Assert(newtuple.Degree == Heading.Degree);
           yield return newtuple;
         }
@@ -388,7 +388,7 @@ namespace AndlEra {
     IEnumerator<Tup> GetUnwrapEnumerator() {
       foreach (var tuple in _source) {
         var row = (CommonRow)tuple[_nodemap[0]];
-        var newtuple = RelOps.CreateByMap<Tup>(tuple.Values, _map1, row.Values, _map2);
+        var newtuple = RelStatic.CreateByMap<Tup>(tuple.Values, _map1, row.Values, _map2);
         Logger.Assert(newtuple.Degree == Heading.Degree);
         yield return newtuple;
       }
@@ -420,7 +420,7 @@ namespace AndlEra {
 
     public override IEnumerator<Tup> GetEnumerator() {
       foreach (var tuple in _source) {
-        var newtuple = RelOps.CreateByMap<Tup>(tuple, _restmap);
+        var newtuple = RelStatic.CreateByMap<Tup>(tuple, _restmap);
         Logger.Assert(tuple.Degree == Heading.Degree);
         if ((bool)_restfunc.Call(newtuple.Values)) yield return tuple;
         //if (_restfunc(newtuple)) yield return tuple;
@@ -462,9 +462,9 @@ namespace AndlEra {
     public override IEnumerator<Tup> GetEnumerator() {
       foreach (var tuple in _source) {
         // pick out the argument values, pass them to the function, get return
-        var argtuple = RelOps.CreateByMap<Tup>(tuple, _argmap);
+        var argtuple = RelStatic.CreateByMap<Tup>(tuple, _argmap);
         var result = _func.Call(argtuple.Values);
-        var newtuple = RelOps.CreateByMap<Tup>(tuple, _outmap, result);
+        var newtuple = RelStatic.CreateByMap<Tup>(tuple, _outmap, result);
         Logger.Assert(newtuple.Degree == Heading.Degree);
         yield return newtuple;
       }
@@ -504,14 +504,14 @@ namespace AndlEra {
       var dict = new Dictionary<TupBase, object>();
 
       foreach (var tuple in _source) {
-        var tupkey = RelOps.CreateByMap<Tup>(tuple, _jmap1);
+        var tupkey = RelStatic.CreateByMap<Tup>(tuple, _jmap1);
         var value = tuple.Values[_vmap[0]];
         dict[tupkey] = (dict.ContainsKey(tupkey)) ? _func.Call(new object[] { value, dict[tupkey] })
              : (_initial != null) ? _func.Call(new object[] { value, dict[tupkey], _initial })
              : value;
       }
       foreach (var kv in dict) {
-        var newtuple = RelOps.CreateByMap<Tup>(kv.Key, _jmap2, kv.Value);
+        var newtuple = RelStatic.CreateByMap<Tup>(kv.Key, _jmap2, kv.Value);
         Logger.Assert(newtuple.Degree == Heading.Degree);
         yield return newtuple;
       }
@@ -549,14 +549,14 @@ namespace AndlEra {
           yield return tuple;
         }
         foreach (var tuple in _right) {
-          var newtuple = RelOps.CreateByMap<Tup>(tuple, _othermap);
+          var newtuple = RelStatic.CreateByMap<Tup>(tuple, _othermap);
           Logger.Assert(tuple.Degree == Heading.Degree);
           if (!hash.Contains(newtuple)) yield return newtuple;
         }
         break;
       case SetOp.Minus:
         foreach (var tuple in _right) {
-          var newtuple = RelOps.CreateByMap<Tup>(tuple, _othermap);
+          var newtuple = RelStatic.CreateByMap<Tup>(tuple, _othermap);
           hash.Add(newtuple);
         }
         foreach (var tuple in _left) {
@@ -569,7 +569,7 @@ namespace AndlEra {
           hash.Add(tuple);
         }
         foreach (var tuple in _right) {
-          var newtuple = RelOps.CreateByMap<Tup>(tuple, _othermap);
+          var newtuple = RelStatic.CreateByMap<Tup>(tuple, _othermap);
           Logger.Assert(tuple.Degree == Heading.Degree);
           if (hash.Contains(newtuple)) yield return newtuple;
         }
@@ -614,13 +614,13 @@ namespace AndlEra {
 
     // enumerator for full join and compose (only the output is different)
     IEnumerator<Tup> GetFull() {
-      var index = RelOps.BuildIndex(_rightarg, _jmapright);
+      var index = RelStatic.BuildIndex(_rightarg, _jmapright);
       var hash = new HashSet<TupBase>();
       foreach (var tuple in _leftarg) {
-        var key = RelOps.CreateByMap<Tup>(tuple, _jmapleft);
+        var key = RelStatic.CreateByMap<Tup>(tuple, _jmapleft);
         if (index.ContainsKey(key)) {
           foreach (var tother in index[key]) {
-            var newtuple = RelOps.CreateByMap<Tup>(tuple, _tmapleft, tother, _tmapright);
+            var newtuple = RelStatic.CreateByMap<Tup>(tuple, _tmapleft, tother, _tmapright);
             if (!hash.Contains(newtuple)) {
               hash.Add(newtuple);
               Logger.Assert(newtuple.Degree == Heading.Degree);
@@ -634,9 +634,9 @@ namespace AndlEra {
     // enumerator for semijoin and antijoin (only the logic test is different)
     IEnumerator<Tup> GetSemi(bool isanti) {
 
-      var set = RelOps.BuildSet(_rightarg, _jmapright);
+      var set = RelStatic.BuildSet(_rightarg, _jmapright);
       foreach (var tuple in _leftarg) {
-        var key = RelOps.CreateByMap<Tup>(tuple, _jmapleft);
+        var key = RelStatic.CreateByMap<Tup>(tuple, _jmapleft);
         if (!isanti == set.Contains(key)) {
           Logger.Assert(tuple.Degree == Heading.Degree);
           yield return (tuple);
@@ -649,9 +649,9 @@ namespace AndlEra {
       int[] jmapleft, int[] jmapright)
     where T : TupBase,new() {
 
-      var set = RelOps.BuildSet(rightarg, jmapright);
+      var set = RelStatic.BuildSet(rightarg, jmapright);
       foreach (var tuple in leftarg) {
-        var key = RelOps.CreateByMap<T>(tuple, jmapleft);
+        var key = RelStatic.CreateByMap<T>(tuple, jmapleft);
         if (!isanti == set.Contains(key)) {
           Logger.Assert(tuple.Degree == Heading.Degree);
           yield return (tuple);
@@ -724,7 +724,7 @@ namespace AndlEra {
             || map.Any(x => x < 0)) throw Error.Fatal($"heading mismatch: {result.Heading} {heading}");
           // convert compatible if needed
           foreach (var t in result) {
-            stack.Push(eq ? t : RelOps.CreateByMap<Tup>(t, map));
+            stack.Push(eq ? t : RelStatic.CreateByMap<Tup>(t, map));
           }
         }
       }
