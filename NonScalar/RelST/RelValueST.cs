@@ -16,6 +16,10 @@ namespace AndlEra {
   public class RelValueST<Ttup> : RelBaseST<Ttup>
   where Ttup : TupBase, new() {
 
+    static RelValueST() {
+      Heading = GetHeading(typeof(Ttup));
+    }
+
     public RelValueST() : base() { }
 
     // create new relation value from body as set

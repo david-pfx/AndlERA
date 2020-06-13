@@ -2,8 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using Andl.Common;
 
@@ -31,7 +29,7 @@ namespace AndlEra {
     public static implicit operator RelValueST<T>(RelVarST<T> v) => v.Value;
 
     public override bool Equals(object obj) {
-      var other = obj as RelVar;
+      var other = obj as RelVarST<T>;
       if (other == null) return false;
       return other.Heading.IsEqual(Heading) && other.Value.Equals(Value);
     }
@@ -89,58 +87,6 @@ namespace AndlEra {
 
       Value = Rel.Create(Value.Where(t => !selfunc(t)));
     }
-  }
-
-  ///===========================================================================
-  /// <summary>
-  /// Untyped relvar
-  /// </summary>
-  public class RelVar : RelVarST<Tup> {
-    public RelVar() {
-      Value = Rel.Create(new Tup[0]);
-      Heading = CommonHeading.Empty;
-    }
-
-    //public RelVar(RelationBase<T> tuples) {
-    //  Value = Rel.Create(tuples);
-    //  Heading = RelationBase<Ttup>.Heading;
-    //}
-
-    public RelVar(RelNode value) {
-      Heading = value.Heading;
-      Init(value);
-    }
-
-    public RelNode ToRelNode() {
-      return new WrapperNode(Heading, Value);
-    }
-
-    public void Insert(RelNode node) {
-
-      Value = Rel.Create(RelOpsST.Union<Tup>(Value, node.Cast<Tup>()));
-    }
-
-    // update tuples that satisfy predicate
-    public void Update(string heading, Func<Tup, bool> selfunc, object newvalue) {
-
-      // map for selection tuple
-      var head1 = CommonHeading.Create(heading);
-      var map1 = head1.CreateMap(Heading);
-      // map for replace tuple
-      var head2 = Heading.Remove(head1.Fields.Last()).Append(CommonField.Empty);
-      var map2 =  head2.CreateMap(Heading);
-      Value = Rel.Create(Value.Select(t => selfunc(RelStatic.CreateByMap<Tup>(t, map1)) 
-        ? RelStatic.CreateByMap<Tup>(t, map2, newvalue) : t));
-    }
-
-    // remove tuples that satisfy predicate
-    public void Delete(string heading, Func<Tup, bool> selfunc) {
-
-      var head = CommonHeading.Create(heading);
-      var map = head.CreateMap(Heading);
-      Value = Rel.Create(Value.Where(t => !selfunc(RelStatic.CreateByMap<Tup>(t, map))));
-    }
-
   }
 
 }

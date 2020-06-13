@@ -10,6 +10,7 @@ namespace AndlEra {
   /// <summary>
   /// Static library of RA functions, param by tuple type
   /// Input is Tuple stream, output is ISet
+  /// All headings obtained statically from class type
   /// </summary>
   internal static class RelOpsST {
 

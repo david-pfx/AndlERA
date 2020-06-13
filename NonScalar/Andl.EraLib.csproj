@@ -47,6 +47,8 @@
     <Compile Include="DataSource\RelationStream.cs" />
     <Compile Include="DataSource\SampleData.cs" />
     <Compile Include="DataSource\SupplierData.cs" />
+    <Compile Include="NonScalar\RelBase.cs" />
+    <Compile Include="NonScalar\RelVar.cs" />
     <Compile Include="RelST\RelConsST.cs" />
     <Compile Include="RelST\RelOpsST.cs" />
     <Compile Include="RelST\RelBaseST.cs" />
