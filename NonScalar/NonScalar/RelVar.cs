@@ -102,5 +102,38 @@ namespace AndlEra {
     // create new relation value from relnode
     public RelValue(RelNode node) 
       : this(node.Heading, node.AsEnumerable<Tup>()) { }
+
+    //--------------------------------------------------------------------------
+    // RA Operations
+
+    // return singleton tuple: error if none, random if more than one
+    public Tup Single() {
+      return Body.First();
+    }
+
+    public bool Contains(Tup tuple) {
+      return Body.Contains(tuple);
+    }
+
+    // this relation is a subset of other stream
+    public bool IsSubset(RelNode other) {
+      int count = 0;
+      foreach (var t in other) {
+        if (Body.Contains(t) && ++count == Count)
+          return true;
+      }
+      return false;
+    }
+
+    // this relation is a superset of other stream
+    public bool IsSuperset(RelNode other) {
+      return other.All(b => Body.Contains(b));
+    }
+
+    // this relation has no tuples in common with other
+    public bool IsDisjoint(RelNode other) {
+      return !other.Any(b => Body.Contains(b));
+    }
+
   }
 }

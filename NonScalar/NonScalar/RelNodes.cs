@@ -48,6 +48,10 @@ namespace AndlEra {
     public static FuncValue<T1, T1, T1> Func<T1>(Func<T1, T1, T1> func)
       => new FuncValue<T1, T1, T1>(func);
 
+    public static FuncValue<T1,bool> Pred<T1>(Func<T1,bool> func)
+      => new FuncValue<T1,bool>(func);
+    public static FuncValue<T1, T1,bool> Pred<T1>(Func<T1, T1,bool> func)
+      => new FuncValue<T1, T1,bool>(func);
 
     public static FuncValue<T1,T2> Func<T1, T2>(Func<T1, T2> func) 
       => new FuncValue<T1, T2>(func);
@@ -187,6 +191,7 @@ namespace AndlEra {
     public RelNode Intersect(RelNode other) {
       return new SetOpNode(this, SetOp.Intersect, other);
     }
+    // Joins TODO: special cases eg Cartesian product, Union etc
     public RelNode Join(RelNode other) {
       return new JoinOpNode(this, JoinOp.Full, other);
     }
@@ -253,7 +258,7 @@ namespace AndlEra {
 
       Heading = (isremove) ? _source.Heading.Minus(_nodeheading) : _nodeheading;
       _map = Heading.CreateMap(_source.Heading);
-      if (Heading.Degree >= _source.Heading.Degree) throw Error.Fatal("too many attributes for project");
+      if (Heading.Degree > _source.Heading.Degree) throw Error.Fatal("too many attributes for project");
       if (_map.Any(x => x < 0)) throw Error.Fatal("headings do not match");
     }
 

@@ -10,7 +10,9 @@ namespace AndlEra {
   class Program {
     static void Main(string[] args) {
       WriteLine("Andl Era");
-      WriteLine(SampleWithHeading() && SampleWithTypes());
+      //SampleWithHeading();
+      SampleSPP();
+      //SampleWithTypes();
     }
 
     static void Show(string msg, params RelNode[] node) {
@@ -33,7 +35,7 @@ namespace AndlEra {
     }
 
     // basic samples, operators return relations
-    static bool SampleWithHeading() {
+    static void SampleWithHeading() {
 
       var si = RelNode.Import(SourceKind.Csv, ".", "S", "SNo:text,SName:text,Status:integer,City:text");
       var s8i = RelNode.Import(SourceKind.Csv, ".", "S8", "SNo:text,SName:text,Status:integer,City:text");
@@ -81,9 +83,11 @@ namespace AndlEra {
         .Aggregate("Weight,TotWeight", RelCon.Agg<decimal>((v, a) => v + a))
         );
 
-      //var orgi = RelNode.Import(SourceKind.Csv, ".", "orgchart");
-      //Show("TClose", orgi
-      //  .TranClose());
+      var orgi = RelNode.Import(SourceKind.Csv, ".", "orgchart");
+      Show("TClose", orgi
+        .Restrict("boss", RelCon.Pred<string>(b => b != ""))
+        .TranClose());
+
       var mmi = RelNode.Import(SourceKind.Csv, ".", "MMQ")
         .Remove("QTY");
       Show("TClose", mmi
@@ -116,13 +120,94 @@ namespace AndlEra {
 
       v1.Delete("City", v => (string)v[0] == "Sydney");
       Show("Delete Sydneysiders", v1);
+    }
 
-      return true;
+    static void SampleSPP() {
+      // Some sample queries from https://web.njit.edu/~hassadi/Dbase_Courses/CIS631/Ex_03.html
 
+      var S = RelNode.Import(SourceKind.Csv, ".", "S");
+      var P = RelNode.Import(SourceKind.Csv, ".", "P");
+      var SP = RelNode.Import(SourceKind.Csv, ".", "SP");
+      var J = RelNode.Import(SourceKind.Csv, ".", "J");
+      var SPJ = RelNode.Import(SourceKind.Csv, ".", "SPJ", "S#,P#,J#,QTY:number");
+
+      Show("Q1. Get suppliers names who supply part 'P2'",
+        S.Join(SP)
+          .Restrict("P#", RelCon.Pred<string>(v => v == "P2"))
+          .Project("SNAME"),
+        S.Join(SP.Restrict("P#", RelCon.Pred<string>(v => v == "P2")))
+        .Project("SNAME"));
+
+      Show("Q2. Get suppliers names who supply at least one red part.",
+        S.Project("S#,SNAME")
+        .Join(SP.Project("S#,P#"))
+        .Join(P.Project("P#,COLOR"))
+        .Restrict("COLOR", RelCon.Pred<string>(t => t == "Red"))
+        .Project("SNAME"));
+
+      Show("Q3. Get the supplier names for suppliers who do not supply part 'P2'",
+        S .Antijoin(SP.Restrict("P#", RelCon.Pred<string>(v => v == "P2")))
+          .Project("SNAME"));
+
+      Show("Q4. Get the supplier names for suppliers who supply all parts.",
+        S .Antijoin(
+          S .Project("S#")
+            .Join(P.Project("P#"))
+            .Minus(SP.Project("S#,P#")))
+          .Join(S)
+          .Project("SNAME"));
+
+      Show("Q5. Get supplier numbers who supply at lease one of the parts supplied by supplier 'S2'.",
+        S .Restrict("S#", RelCon.Pred<string>(v => v == "S2"))
+          .Join(SP)
+          .Project("P#")
+          .Join(SP)
+          .Project("S#"));
+
+      var Sq6 = S.Project("S#,CITY");
+      Show("Q6. Get all pairs of supplier numbers such that two suppliers are 'colocated' (located in the same city).",
+        Sq6.Rename("S#,Sa")
+          .Join(Sq6.Rename("S#,Sb"))
+          .Restrict("Sa,Sb", RelCon.Pred<string>((a, b) => a.CompareTo(b) < 0))
+          .Remove("CITY"));
+
+      Show("Q7. Join the three tables and find the result of natural join with selected attributes.",
+        SP .Join(S)
+           .Join(P.Project("P#,PNAME,CITY")));
+
+      Show("Q8. Get all shipments where the quantity is in the range 300 to 750 inclusive.",
+        SPJ.Restrict("QTY", RelCon.Pred<decimal>(v => v >= 300 && v <= 750)));
+
+      Show("Q9. Get all supplier-number/part-number/project-number triples such that the indicated supplier, part, and project are all colocated (i.e., all in the same city).",
+        S .Join(J.Join(P))
+          .Project("S#,P#,J#"));
+
+      Show("Q10. Get all pairs of city names such that a supplier in the first city supplies a project in the second city.",
+        S.Rename("CITY,SCITY")
+          .Join(SPJ)
+          .Join(J.Rename("CITY,JCITY"))
+          .Project("SCITY,JCITY"));
+
+      Show("Q11. Get all cities in which at least one supplier, part, or project is located.",
+        S .Project("CITY")
+          .Union(P.Project("CITY"))
+          .Union(J.Project("CITY")));
+
+      Show("Q12. Get supplier-number/part-number pairs such that the indicated supplier does not supply the indicated part.",
+        S .Project("S#")
+          .Join(P.Project("P#"))
+          .Minus(SPJ.Project("S#,P#")));
+
+      Show("Q13. Get all pairs of part numbers and supplier numbers such that some supplier supplies both indicated parts.",
+        SPJ.Project("S#,P#")
+        .Rename("P#,PA")
+        .Join(SPJ.Project("S#,P#")
+          .Rename("P#,PB"))
+        .Restrict("PA,PB", RelCon.Pred<string>((a, b) => a.CompareTo(b) < 0)));
     }
 
     // basic samples, operators return relations
-    static bool SampleWithTypes() {
+    static void SampleWithTypes() {
       Show("Seq", RelSequenceST.Create(5));
       Show("SP", Supplier.SP);
 
@@ -173,7 +258,6 @@ namespace AndlEra {
 
       v1.Delete(t => t.City == "Sydney");
       Show("Delete Sydneysiders", v1);
-      return true;
     }
   }
 

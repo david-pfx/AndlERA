@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\family_tree.csv" />
+    <None Include="Data\J.csv" />
     <None Include="Data\MMQ.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -70,6 +71,7 @@
     <None Include="Data\SP.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Data\SPJ.csv" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

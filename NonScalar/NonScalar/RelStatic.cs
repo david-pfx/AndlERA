@@ -35,7 +35,7 @@ namespace AndlEra {
     where T : TupBase, new() {
 
       Logger.Assert(map1.Count == map2.Count);
-      Logger.Assert(map1.Count(x => x < 0) >= 1);
+      //Logger.Assert(map1.Count(x => x < 0) >= 1);
       return CreateByMap<T>(t1.Values, map1, t2.Values, map2);
     }
 
