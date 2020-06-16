@@ -43,8 +43,7 @@ namespace AndlEra {
       var spi = RelNode.Import(SourceKind.Csv, ".", "SP", "SNo:text,PNo:text,Qty:integer");
 
       Show("Restrict", si
-        .Restrict("City", RelCon.Func<string,bool>(v => v == "Paris")));
-        //.Restrict("City", new FuncValue<string,bool>(v => v == "Paris")));
+        .Restrict("City", Where.Text(v => v == "Paris")));
 
       Show("Project", si
         .Project("City"));
@@ -53,10 +52,10 @@ namespace AndlEra {
         .Rename("SNo,S#","SName,NAME","City,SCITY"));
 
       Show("Extend",
-        pi.Extend("Weight,WeightKg", RelCon.Func<decimal>(a => a * 0.454m)));
+        pi.Extend("Weight,WeightKg", Eval.Number(a => a * 0.454m)));
 
       Show("Replace",
-        pi.Extend("Weight,Weight", RelCon.Func<decimal>(a => a * 0.454m)));
+        pi.Extend("Weight,Weight", Eval.Number(a => a * 0.454m)));
 
       Show("Joins", 
         si.Join(spi),
@@ -80,12 +79,12 @@ namespace AndlEra {
 
       Show("Agg", pi
         .Project("Color,Weight")
-        .Aggregate("Weight,TotWeight", RelCon.Agg<decimal>((v, a) => v + a))
+        .Aggregate("Weight,TotWeight", Eval.Number((v, a) => v + a))
         );
 
       var orgi = RelNode.Import(SourceKind.Csv, ".", "orgchart");
       Show("TClose", orgi
-        .Restrict("boss", RelCon.Pred<string>(b => b != ""))
+        .Restrict("boss", Where.Text(b => b != ""))
         .TranClose());
 
       var mmi = RelNode.Import(SourceKind.Csv, ".", "MMQ")
@@ -97,14 +96,14 @@ namespace AndlEra {
 
       var mmexp = mmqi
         .Rename("Qty,ExpQty")
-        .While(RelCon.While(tw => tw
+        .While(Eval.While(tw => tw
           .Rename("MinorPNo,zmatch")
           .Compose(mmqi.Rename("MajorPNo,zmatch"))
-          .Extend("Qty,ExpQty,ExpQty", RelCon.Func<decimal>((v,w) => v * w))
+          .Extend("Qty,ExpQty,ExpQty", Eval.Number((v,w) => v * w))
           .Remove("Qty")));
       Show("While", mmexp);
       Show("Aggregated", mmexp
-        .Aggregate("ExpQty,TotQty", RelCon.Agg<decimal>((v, a) => v + a))
+        .Aggregate("ExpQty,TotQty", Eval.Number((v, a) => v + a))
         );
 
       var v1 = new RelVar(si);
@@ -133,20 +132,20 @@ namespace AndlEra {
 
       Show("Q1. Get suppliers names who supply part 'P2'",
         S.Join(SP)
-          .Restrict("P#", RelCon.Pred<string>(v => v == "P2"))
+          .Restrict("P#", Where.Text(v => v == "P2"))
           .Project("SNAME"),
-        S.Join(SP.Restrict("P#", RelCon.Pred<string>(v => v == "P2")))
+        S.Join(SP.Restrict("P#", Where.Text(v => v == "P2")))
         .Project("SNAME"));
 
       Show("Q2. Get suppliers names who supply at least one red part.",
         S.Project("S#,SNAME")
         .Join(SP.Project("S#,P#"))
         .Join(P.Project("P#,COLOR"))
-        .Restrict("COLOR", RelCon.Pred<string>(t => t == "Red"))
+        .Restrict("COLOR", Where.Text(t => t == "Red"))
         .Project("SNAME"));
 
       Show("Q3. Get the supplier names for suppliers who do not supply part 'P2'",
-        S .Antijoin(SP.Restrict("P#", RelCon.Pred<string>(v => v == "P2")))
+        S .Antijoin(SP.Restrict("P#", Where.Text(v => v == "P2")))
           .Project("SNAME"));
 
       Show("Q4. Get the supplier names for suppliers who supply all parts.",
@@ -158,7 +157,7 @@ namespace AndlEra {
           .Project("SNAME"));
 
       Show("Q5. Get supplier numbers who supply at lease one of the parts supplied by supplier 'S2'.",
-        S .Restrict("S#", RelCon.Pred<string>(v => v == "S2"))
+        S .Restrict("S#", Where.Text(v => v == "S2"))
           .Join(SP)
           .Project("P#")
           .Join(SP)
@@ -168,7 +167,7 @@ namespace AndlEra {
       Show("Q6. Get all pairs of supplier numbers such that two suppliers are 'colocated' (located in the same city).",
         Sq6.Rename("S#,Sa")
           .Join(Sq6.Rename("S#,Sb"))
-          .Restrict("Sa,Sb", RelCon.Pred<string>((a, b) => a.CompareTo(b) < 0))
+          .Restrict("Sa,Sb", Where.Text((a, b) => a.CompareTo(b) < 0))
           .Remove("CITY"));
 
       Show("Q7. Join the three tables and find the result of natural join with selected attributes.",
@@ -176,7 +175,7 @@ namespace AndlEra {
            .Join(P.Project("P#,PNAME,CITY")));
 
       Show("Q8. Get all shipments where the quantity is in the range 300 to 750 inclusive.",
-        SPJ.Restrict("QTY", RelCon.Pred<decimal>(v => v >= 300 && v <= 750)));
+        SPJ.Restrict("QTY", Where.Number(v => v >= 300 && v <= 750)));
 
       Show("Q9. Get all supplier-number/part-number/project-number triples such that the indicated supplier, part, and project are all colocated (i.e., all in the same city).",
         S .Join(J.Join(P))
@@ -203,7 +202,7 @@ namespace AndlEra {
         .Rename("P#,PA")
         .Join(SPJ.Project("S#,P#")
           .Rename("P#,PB"))
-        .Restrict("PA,PB", RelCon.Pred<string>((a, b) => a.CompareTo(b) < 0)));
+        .Restrict("PA,PB", Where.Text((a, b) => a.CompareTo(b) < 0)));
     }
 
     // basic samples, operators return relations

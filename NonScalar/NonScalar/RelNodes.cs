@@ -27,7 +27,7 @@ namespace AndlEra {
   // Minimal tuple type with null heading
   // Used by pipeline nodes to create tuples where 
   // the heading is not provided but is inferred from the source
-  public class Tup : TupBase { 
+  public class Tup : TupBase {
     public static Tup Data(params object[] values) {
       return Create<Tup>(values);
     }
@@ -40,32 +40,57 @@ namespace AndlEra {
   /// <summary>
   /// Classes defining function values
   /// </summary>
-  public static class RelCon {
-    public static FuncValue<T1> Func<T1>(Func<T1> func) 
-      => new FuncValue<T1>(func);
-    public static FuncValue<T1, T1> Func<T1>(Func<T1, T1> func)
-      => new FuncValue<T1, T1>(func);
-    public static FuncValue<T1, T1, T1> Func<T1>(Func<T1, T1, T1> func)
-      => new FuncValue<T1, T1, T1>(func);
 
-    public static FuncValue<T1,bool> Pred<T1>(Func<T1,bool> func)
-      => new FuncValue<T1,bool>(func);
-    public static FuncValue<T1, T1,bool> Pred<T1>(Func<T1, T1,bool> func)
-      => new FuncValue<T1, T1,bool>(func);
+  ///===========================================================================
+  public static class Eval {
+    public static FuncValue<int> Integer(Func<int> func)
+      => new FuncValue<int>(func);
+    public static FuncValue<int, int> Integer(Func<int, int> func)
+      => new FuncValue<int, int>(func);
+    public static FuncValue<int, int, int> Integer(Func<int, int, int> func)
+      => new FuncValue<int, int, int>(func);
 
-    public static FuncValue<T1,T2> Func<T1, T2>(Func<T1, T2> func) 
-      => new FuncValue<T1, T2>(func);
+    public static FuncValue<decimal> Number(Func<decimal> func)
+      => new FuncValue<decimal>(func);
+    public static FuncValue<decimal, decimal> Number(Func<decimal, decimal> func)
+      => new FuncValue<decimal, decimal>(func);
+    public static FuncValue<decimal, decimal, decimal> Number(Func<decimal, decimal, decimal> func)
+      => new FuncValue<decimal, decimal, decimal>(func);
 
-    public static FuncValue<T1,T2,T3> Func<T1, T2, T3>(Func<T1, T2, T3> func) 
-      => new FuncValue<T1, T2, T3>(func);
-    public static FuncValue<T1, T2, T3,T4> Func<T1, T2, T3, T4>(Func<T1, T2, T3, T4> func) 
-      => new FuncValue<T1, T2, T3, T4>(func);
-    public static FuncValue<T1,T2,T3,T4,T5> Func<T1, T2, T3, T4, T5>(Func<T1, T2, T3, T4, T5> func) 
-      => new FuncValue<T1, T2, T3, T4, T5>(func);
-    public static FuncValue<T1,T1,T1> Agg<T1>(Func<T1,T1,T1> func)
-      => new FuncValue<T1, T1, T1>(func);
-    public static FuncWhile While(Func<RelNode, RelNode> func) 
+    public static FuncValue<string> Text(Func<string> func)
+      => new FuncValue<string>(func);
+    public static FuncValue<string, string> Text(Func<string, string> func)
+      => new FuncValue<string, string>(func);
+    public static FuncValue<string, string, string> Text(Func<string, string, string> func)
+      => new FuncValue<string, string, string>(func);
+
+    public static FuncWhile While(Func<RelNode, RelNode> func)
       => new FuncWhile(func);
+  }
+
+  ///===========================================================================
+  public static class Where {
+    public static FuncValue<int, bool> Integer(Func<int, bool> func)
+      => new FuncValue<int, bool>(func);
+    public static FuncValue<int, int, bool> Integer(Func<int, int, bool> func)
+      => new FuncValue<int, int, bool>(func);
+    public static FuncValue<int, int, int, bool> Integer(Func<int, int, int, bool> func)
+      => new FuncValue<int, int, int, bool>(func);
+
+    public static FuncValue<decimal, bool> Number(Func<decimal, bool> func)
+      => new FuncValue<decimal, bool>(func);
+    public static FuncValue<decimal, decimal, bool> Number(Func<decimal, decimal, bool> func)
+      => new FuncValue<decimal, decimal, bool>(func);
+    public static FuncValue<decimal, decimal, decimal, bool> Number(Func<decimal, decimal, decimal, bool> func)
+      => new FuncValue<decimal, decimal, decimal, bool>(func);
+
+    public static FuncValue<string, bool> Text(Func<string, bool> func)
+  => new FuncValue<string, bool>(func);
+    public static FuncValue<string, string, bool> Text(Func<string, string, bool> func)
+      => new FuncValue<string, string, bool>(func);
+    public static FuncValue<string, string, string, bool> Text(Func<string, string, string, bool> func)
+      => new FuncValue<string, string, string, bool>(func);
+
   }
 
   public abstract class RelFuncBase {
@@ -258,8 +283,8 @@ namespace AndlEra {
 
       Heading = (isremove) ? _source.Heading.Minus(_nodeheading) : _nodeheading;
       _map = Heading.CreateMap(_source.Heading);
-      if (Heading.Degree > _source.Heading.Degree) throw Error.Fatal("too many attributes for project");
-      if (_map.Any(x => x < 0)) throw Error.Fatal("headings do not match");
+      if (Heading.Degree > _source.Heading.Degree) throw Error.Fatal("Project", "too many attributes");
+      if (_map.Any(x => x < 0)) throw Error.Fatal("Project", "heading does not match");
     }
 
     public override IEnumerator<Tup> GetEnumerator() {
@@ -288,7 +313,7 @@ namespace AndlEra {
       _source = source;
       _nodeheading = nodeheading;
       _map = _nodeheading.CreateMap(_source.Heading);
-      if (!(_map.Length == 2 && _map[0] >= 0 && _map[1] < 0)) throw Error.Fatal("invalid heading");
+      if (!(_map.Length == 2 && _map[0] >= 0 && _map[1] < 0)) throw Error.Fatal("Rename", "heading is invalid");
       Heading = _source.Heading.Rename(_nodeheading[0], _nodeheading[1]);
     }
 
@@ -320,7 +345,8 @@ namespace AndlEra {
       Heading = keyheading.Append(new CommonField(_nodeheading.Fields.Last().Name,
         (_op == GroupingOp.Group) ? CommonType.Table : CommonType.Row, tupheading.Fields));
       _map = Heading.CreateMap(keyheading);
-      if (!(_tmap.All(x => x >= 0) && _kmap.All(x => x >= 0) && _map.Last() < 0)) throw Error.Fatal("invalid heading");
+      if (!(_tmap.All(x => x >= 0) && _kmap.All(x => x >= 0) && _map.Last() < 0)) 
+        throw Error.Fatal("Group", "heading is not valid");
     }
 
     public override IEnumerator<Tup> GetEnumerator() {
@@ -363,7 +389,7 @@ namespace AndlEra {
       _op = op;
       _nodeheading = nodeheading;
       _nodemap = _nodeheading.CreateMap(_source.Heading);
-      if (!(_nodemap.Length == 1 && _nodemap[0] >= 0)) throw Error.Fatal("invalid heading");
+      if (!(_nodemap.Length == 1 && _nodemap[0] >= 0)) throw Error.Fatal("Ungroup", "heading is not valid");
       // on output replace one field by the TVA/RVA
       Heading = _source.Heading.Remove(_nodeheading[0]).Append(_nodeheading[0].Fields);
       // 
@@ -420,7 +446,7 @@ namespace AndlEra {
 
       Heading = _source.Heading;
       _restmap = _restheading.CreateMap(Heading);
-      if (_restmap.Any(x => x < 0)) throw Error.Fatal("invalid heading, must all match");
+      if (_restmap.Any(x => x < 0)) throw Error.Fatal("Restrict", "heading has unknown attribute");
     }
 
     public override IEnumerator<Tup> GetEnumerator() {
@@ -460,8 +486,8 @@ namespace AndlEra {
       // last field can extend or replace, remove name but retain place
       var outh = Heading.Rename(_nodeheading.Fields.Last(), CommonField.Empty);
       _outmap = Heading.CreateMap(outh);
-      if (_argmap.Any(x => x < 0)) throw Error.Fatal("invalid heading, field mismatch");
-      if (_outmap.Count(x => x < 0) != 1) throw Error.Fatal("invalid heading, return field mismatch"); // any use?
+      if (_argmap.Any(x => x < 0)) throw Error.Fatal("Extend", "heading has unknown attribute");
+      if (_outmap.Count(x => x < 0) != 1) throw Error.Fatal("Extend", "invalid heading, invalid new attribute"); // any use?
     }
 
     public override IEnumerator<Tup> GetEnumerator() {
@@ -502,7 +528,8 @@ namespace AndlEra {
       _jhead = _source.Heading.Minus(_heading);
       _jmap1 = _jhead.CreateMap(_source.Heading);
       _jmap2 = Heading.CreateMap(_jhead);
-      if (!(_heading.Degree == 2 && _jmap2.Length == Heading.Degree)) throw Error.Fatal("invalid heading");
+      if (!(_heading.Degree == 2 && _jmap2.Length == Heading.Degree)) 
+        throw Error.Fatal("Aggregate", "heading is not valid");
     }
 
     public override IEnumerator<Tup> GetEnumerator() {
@@ -541,7 +568,8 @@ namespace AndlEra {
       Heading = left.Heading;
       _othermap = Heading.CreateMap(right.Heading);
       if (_othermap.Length != Heading.Degree
-        || _othermap.Any(x => x < 0)) throw Error.Fatal("invalid heading, must be the same");
+        || _othermap.Any(x => x < 0)) 
+        throw Error.Fatal(setop.ToString(), "headings do not match");
     }
 
     public override IEnumerator<Tup> GetEnumerator() {
@@ -676,7 +704,7 @@ namespace AndlEra {
     public TranCloseNode(RelNode source) {
       _source = source;
       Heading = _source.Heading;
-      if (!(source.Degree == 2)) throw Error.Fatal("transitive closure requires argument of degree 2");
+      if (!(source.Degree == 2)) throw Error.Fatal("TranClose", "heading must is not of degree 2");
     }
 
     public override IEnumerator<Tup> GetEnumerator() {
@@ -726,7 +754,7 @@ namespace AndlEra {
           var eq = result.Heading.IsEqual(heading);
           var map = heading.CreateMap(result.Heading);
           if (result.Heading.Degree != heading.Degree 
-            || map.Any(x => x < 0)) throw Error.Fatal($"heading mismatch: {result.Heading} {heading}");
+            || map.Any(x => x < 0)) throw Error.Fatal("While", $"heading mismatch: {result.Heading} {heading}");
           // convert compatible if needed
           foreach (var t in result) {
             stack.Push(eq ? t : RelStatic.CreateByMap<Tup>(t, map));
