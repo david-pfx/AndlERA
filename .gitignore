@@ -3,6 +3,6 @@ bin
 obj
 Debug
 Release
-/Work
-/packages
 *.user
+/packages
+/Work
