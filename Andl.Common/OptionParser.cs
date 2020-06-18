@@ -1,14 +1,15 @@
-﻿/// Andl is A New Data Language. See andl.org.
+﻿/// Andl is A New Data Language. See http://andl.org.
 ///
-/// Copyright © David M. Bennett 2015-16 as an unpublished work. All rights reserved.
-///
+/// Copyright © David M. Bennett 2015-20 as an unpublished work. All rights reserved.
+/// 
+/// This work is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License. 
+/// To view a copy of this license, visit http://creativecommons.org/licenses/by-nc/4.0/.
+/// 
+/// In summary, you are free to share and adapt this software freely for any non-commercial purpose provided 
+/// you give due attribution and do not impose additional restrictions.
+/// 
 /// This software is provided in the hope that it will be useful, but with 
 /// absolutely no warranties. You assume all responsibility for its use.
-/// 
-/// This software is completely free to use for purposes of personal study. 
-/// For distribution, modification, commercial use or other purposes you must 
-/// comply with the terms of the licence originally supplied with it in 
-/// the file Licence.txt or at http://andl.org/Licence/.
 ///
 using System;
 using System.Collections.Generic;

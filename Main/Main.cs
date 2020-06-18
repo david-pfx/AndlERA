@@ -1,5 +1,19 @@
-﻿using System;
+﻿/// Andl is A New Data Language. See http://andl.org.
+///
+/// Copyright © David M. Bennett 2015-20 as an unpublished work. All rights reserved.
+/// 
+/// This work is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License. 
+/// To view a copy of this license, visit http://creativecommons.org/licenses/by-nc/4.0/.
+/// 
+/// In summary, you are free to share and adapt this software freely for any non-commercial purpose provided 
+/// you give due attribution and do not impose additional restrictions.
+/// 
+/// This software is provided in the hope that it will be useful, but with 
+/// absolutely no warranties. You assume all responsibility for its use.
+/// 
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 using Andl.Common;
@@ -8,11 +22,13 @@ using static System.Console;
 
 namespace AndlEra {
   class Program {
+    static string DataPath = @"..\TestSuite\Data";
+
     static void Main(string[] args) {
-      WriteLine("Andl Era");
-      //SampleWithHeading();
+      WriteLine($"Andl Era in {Directory.GetCurrentDirectory()}");
+      SampleWithHeading();
       SampleSPP();
-      //SampleWithTypes();
+      SampleWithTypes();
     }
 
     static void Show(string msg, params RelNode[] node) {
@@ -37,10 +53,10 @@ namespace AndlEra {
     // basic samples, operators return relations
     static void SampleWithHeading() {
 
-      var si = RelNode.Import(SourceKind.Csv, ".", "S", "SNo:text,SName:text,Status:integer,City:text");
-      var s8i = RelNode.Import(SourceKind.Csv, ".", "S8", "SNo:text,SName:text,Status:integer,City:text");
-      var pi = RelNode.Import(SourceKind.Csv, ".", "P", "PNo:text,PName:text,Color:text,Weight:number,City:text");
-      var spi = RelNode.Import(SourceKind.Csv, ".", "SP", "SNo:text,PNo:text,Qty:integer");
+      var si = RelNode.Import(SourceKind.Csv, DataPath, "S", "SNo:text,SName:text,Status:integer,City:text");
+      var s8i = RelNode.Import(SourceKind.Csv, DataPath, "S8", "SNo:text,SName:text,Status:integer,City:text");
+      var pi = RelNode.Import(SourceKind.Csv, DataPath, "P", "PNo:text,PName:text,Color:text,Weight:number,City:text");
+      var spi = RelNode.Import(SourceKind.Csv, DataPath, "SP", "SNo:text,PNo:text,Qty:integer");
 
       Show("Restrict", si
         .Restrict("City", Where.Text(v => v == "Paris")));
@@ -82,17 +98,17 @@ namespace AndlEra {
         .Aggregate("Weight,TotWeight", Eval.Number((v, a) => v + a))
         );
 
-      var orgi = RelNode.Import(SourceKind.Csv, ".", "orgchart");
+      var orgi = RelNode.Import(SourceKind.Csv, DataPath, "orgchart");
       Show("TClose", orgi
         .Restrict("boss", Where.Text(b => b != ""))
         .TranClose());
 
-      var mmi = RelNode.Import(SourceKind.Csv, ".", "MMQ")
+      var mmi = RelNode.Import(SourceKind.Csv, DataPath, "MMQ")
         .Remove("QTY");
       Show("TClose", mmi
         .TranClose());
 
-      var mmqi = RelNode.Import(SourceKind.Csv, ".", "MMQ", "MajorPNo:text,MinorPNo:text,Qty:number");
+      var mmqi = RelNode.Import(SourceKind.Csv, DataPath, "MMQ", "MajorPNo:text,MinorPNo:text,Qty:number");
 
       var mmexp = mmqi
         .Rename("Qty,ExpQty")
@@ -124,11 +140,11 @@ namespace AndlEra {
     static void SampleSPP() {
       // Some sample queries from https://web.njit.edu/~hassadi/Dbase_Courses/CIS631/Ex_03.html
 
-      var S = RelNode.Import(SourceKind.Csv, ".", "S");
-      var P = RelNode.Import(SourceKind.Csv, ".", "P");
-      var SP = RelNode.Import(SourceKind.Csv, ".", "SP");
-      var J = RelNode.Import(SourceKind.Csv, ".", "J");
-      var SPJ = RelNode.Import(SourceKind.Csv, ".", "SPJ", "S#,P#,J#,QTY:number");
+      var S = RelNode.Import(SourceKind.Csv, DataPath, "S");
+      var P = RelNode.Import(SourceKind.Csv, DataPath, "P");
+      var SP = RelNode.Import(SourceKind.Csv, DataPath, "SP");
+      var J = RelNode.Import(SourceKind.Csv, DataPath, "J");
+      var SPJ = RelNode.Import(SourceKind.Csv, DataPath, "SPJ", "S#,P#,J#,QTY:number");
 
       Show("Q1. Get suppliers names who supply part 'P2'",
         S.Join(SP)

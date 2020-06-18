@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{E24A4770-0EAD-46F0-9BBF-23893CBC8E4E}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		Readme.txt = Readme.txt
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Main", "Main\Main.csproj", "{C239242D-D7D0-4E8E-88FC-87DD2EE55FED}"
@@ -19,11 +20,13 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Work", "Work", "{3B0CB768-1F69-40FE-AF45-B4E6C66D379E}"
 	ProjectSection(SolutionItems) = preProject
 		Work\Chinook.sqlite = Work\Chinook.sqlite
+		Work\J.csv = Work\J.csv
 		Work\MMQ.csv = Work\MMQ.csv
 		Work\P.csv = Work\P.csv
 		Work\S.csv = Work\S.csv
 		Work\S8.csv = Work\S8.csv
 		Work\SP.csv = Work\SP.csv
+		Work\SPJ.csv = Work\SPJ.csv
 		Work\testfile.txt = Work\testfile.txt
 	EndProjectSection
 EndProject
