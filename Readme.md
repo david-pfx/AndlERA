@@ -1,4 +1,6 @@
-Andl is A New Database Language. See http://andl.org.
+# Andl Extended Relational Algebra
+
+Andl is A New Database Language. See <http://andl.org>.
 
 Andl ERA is an extended implementation of the Relational Algebra for manipulating
 relational data in any .NET language. While Andl itself is a full programming 
@@ -27,37 +29,35 @@ The core feature of Andl ERA is an implementation based on headings as a lit of
 attribute names. 
 
 The main differences from SQL are:
- * all joins are natural (by attribute name)
- * relations (tables) have no duplicate tuples (rows)
- * data values cannot be null.
 
-The main differences from Linq are:
- * provides sources, stores and updates as well as queries
- * many additional relational operations
+* all joins are natural (by attribute name)
+* relations (tables) have no duplicate tuples (rows)
+* data values cannot be null.
+
+
+* provides sources, stores and updates as well as queries
+* many additional relational operations
 
 Sample programs are included to demonstrate these capabilities. 
 
 A future release of Andl ERA will generate SQL so that queries can be
 executed on a relational database backend.
 
-BUILDING ANDL ERA
-=================
+## BUILDING ANDL ERA
 
-The source code can be downloaded from https://github.com/david-pfx/AndlEra.
+The source code can be downloaded from <https://github.com/david-pfx/AndlEra>.
 
 The project should build 'out of the box' in Visual Studio 2019 with the .NET 
 Framework 4.7, and possibly earlier versions. It builds an executable program 
 that runs the samples, a class file generator, class library and unit tests.
 
-
-LICENCE
-=======
+## LICENCE
 
 The source code files contain the following notice.
 
 /// Andl is A New Data Language. See http://andl.org.
 ///
-/// Copyright © David M. Bennett 2015-20 as an unpublished work. All rights reserved.
+/// Copyright ï¿½ David M. Bennett 2015-20 as an unpublished work. All rights reserved.
 /// 
 /// This work is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License. 
 /// To view a copy of this license, visit http://creativecommons.org/licenses/by-nc/4.0/.
